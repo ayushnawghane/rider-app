@@ -1,0 +1,7 @@
+{
+  "name": "rider app",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}
