@@ -8,9 +8,6 @@ import type {
   SosAlert,
   Notice,
   Faq,
-  LoginParams,
-  VerifyOtpParams,
-  RegisterParams,
   KycUploadParams,
   RideCreateParams,
   DisputeCreateParams,
@@ -20,56 +17,6 @@ import type {
 } from '../types';
 
 class AuthService {
-  async login({ phone }: LoginParams): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        phone,
-      });
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: 'An unexpected error occurred' };
-    }
-  }
-
-  async verifyOtp({ phone, otp }: VerifyOtpParams): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        phone,
-        token: otp,
-        type: 'sms',
-      });
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: 'An unexpected error occurred' };
-    }
-  }
-
-  async register({ phone, fullName, email }: RegisterParams): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { error } = await supabase.auth.signUp({
-        phone,
-      } as any);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: 'An unexpected error occurred' };
-    }
-  }
-
   async logout(): Promise<void> {
     await supabase.auth.signOut();
   }
@@ -99,18 +46,12 @@ class AuthService {
     }
   }
 
-  async updateProfile(params: ProfileUpdateParams): Promise<{ success: boolean; error?: string }> {
+  async updateProfile(params: ProfileUpdateParams, userId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        return { success: false, error: 'User not found' };
-      }
-
       const { error } = await supabase
         .from('profiles')
         .update(params)
-        .eq('id', user.id);
+        .eq('id', userId);
 
       if (error) {
         return { success: false, error: error.message };
@@ -150,6 +91,37 @@ class AuthService {
       return { success: true, documentUrl: publicUrl };
     } catch (error) {
       return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
+  async syncClerkUserToSupabase(clerkUser: any): Promise<void> {
+    try {
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', clerkUser.id)
+        .single();
+
+      const profileData = {
+        id: clerkUser.id,
+        email: clerkUser.primaryEmailAddress?.emailAddress || '',
+        full_name: clerkUser.fullName || clerkUser.firstName || 'User',
+        phone: clerkUser.phoneNumbers?.[0]?.phoneNumber || '',
+        avatar_url: clerkUser.imageUrl || null,
+      };
+
+      if (existingProfile) {
+        await supabase
+          .from('profiles')
+          .update(profileData)
+          .eq('id', clerkUser.id);
+      } else {
+        await supabase
+          .from('profiles')
+          .insert(profileData);
+      }
+    } catch (error) {
+      console.error('Error syncing Clerk user to Supabase:', error);
     }
   }
 

@@ -3,6 +3,8 @@ import { IonApp, IonRouterOutlet, IonLoading } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { Redirect, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { useClerk, useUser } from '@clerk/clerk-react';
+import { UserButton } from '@clerk/clerk-react';
 
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -32,9 +34,9 @@ import '@ionic/react/css/palettes/dark.system.css';
 import './theme/variables.css';
 
 const PrivateRoute: React.FC<{ component: React.ComponentType<any>; path: string; exact?: boolean }> = ({ component: Component, ...rest }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, isClerkLoaded } = useAuth();
 
-  if (loading) {
+  if (!isClerkLoaded || loading) {
     return <IonLoading isOpen message="Loading..." />;
   }
 
@@ -49,9 +51,9 @@ const PrivateRoute: React.FC<{ component: React.ComponentType<any>; path: string
 };
 
 const PublicRoute: React.FC<{ component: React.ComponentType<any>; path: string; exact?: boolean }> = ({ component: Component, ...rest }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, isClerkLoaded } = useAuth();
 
-  if (loading) {
+  if (!isClerkLoaded || loading) {
     return <IonLoading isOpen message="Loading..." />;
   }
 
