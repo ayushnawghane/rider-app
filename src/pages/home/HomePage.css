@@ -1,0 +1,284 @@
+.home-toolbar {
+  --background: var(--ion-color-primary);
+  --color: white;
+}
+
+.app-title {
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-menu ion-button {
+  --color: white;
+}
+
+.user-avatar-small {
+  width: 32px;
+  height: 32px;
+}
+
+.home-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.welcome-section {
+  margin-bottom: 24px;
+}
+
+.welcome-section h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ion-color-dark);
+}
+
+.welcome-section .subtitle {
+  margin: 4px 0 0;
+  color: var(--ion-color-medium);
+  font-size: 0.9rem;
+}
+
+.active-ride-card {
+  border-radius: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.active-ride-card ion-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+}
+
+.active-ride-card .card-icon {
+  margin-right: 8px;
+}
+
+.ride-info {
+  margin: 16px 0;
+}
+
+.ride-route {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.route-point {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.route-point ion-icon {
+  color: var(--ion-color-primary);
+  font-size: 20px;
+}
+
+.route-line {
+  width: 2px;
+  height: 20px;
+  background: linear-gradient(to bottom, var(--ion-color-primary), transparent);
+  margin-left: 9px;
+}
+
+.ride-details {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ion-color-medium);
+  font-size: 0.85rem;
+}
+
+.detail-item ion-icon {
+  font-size: 16px;
+}
+
+.no-ride-card {
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+.no-ride-content {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.no-ride-icon {
+  font-size: 48px;
+  color: var(--ion-color-medium);
+  margin-bottom: 16px;
+}
+
+.no-ride-content h3 {
+  margin: 0 0 8px;
+  color: var(--ion-color-dark);
+}
+
+.no-ride-content p {
+  margin: 0;
+  color: var(--ion-color-medium);
+  font-size: 0.9rem;
+}
+
+.upload-ride-btn {
+  margin-top: 8px;
+  margin-bottom: 24px;
+  height: 48px;
+  font-weight: 600;
+  --border-radius: 12px;
+}
+
+.quick-actions {
+  margin-bottom: 24px;
+}
+
+.quick-actions h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: var(--ion-color-dark);
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 8px;
+  background: var(--ion-color-light);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.action-item:hover {
+  transform: translateY(-2px);
+  background: var(--ion-color-light-tint);
+}
+
+.action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--ion-color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-icon ion-icon {
+  font-size: 20px;
+  color: white;
+}
+
+.action-icon.sos {
+  background: var(--ion-color-danger);
+}
+
+.action-item span {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ion-color-dark);
+  text-align: center;
+}
+
+.recent-section {
+  margin-bottom: 80px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.section-header h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--ion-color-dark);
+}
+
+.recent-list {
+  background: transparent;
+}
+
+.recent-item {
+  --background: var(--ion-color-light);
+  --border-radius: 12px;
+  margin-bottom: 8px;
+  padding: 0 8px;
+}
+
+.recent-item-content {
+  width: 100%;
+  padding: 12px 0;
+}
+
+.recent-route {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--ion-color-dark);
+}
+
+.recent-route ion-icon {
+  color: var(--ion-color-medium);
+  font-size: 16px;
+}
+
+.recent-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.8rem;
+  color: var(--ion-color-medium);
+}
+
+.sos-fab {
+  margin-bottom: 24px;
+  margin-right: 16px;
+}
+
+.sos-fab ion-fab-button {
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.home-skeleton {
+  padding: 24px 0;
+}
+
+.home-skeleton ion-skeleton-text {
+  margin-bottom: 16px;
+}
+
+@media (max-width: 400px) {
+  .action-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

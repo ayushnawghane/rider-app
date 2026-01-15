@@ -1,116 +1,106 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonInput, IonItem, IonLabel, IonLoading, IonText, IonCard, IonCardContent, IonIcon } from '@ionic/react';
-import { useState } from 'react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonLoading, IonCard, IonCardContent, IonIcon, IonText } from '@ionic/react';
+import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router';
+import { SignUp } from '@clerk/clerk-react';
 import { useAuth } from '../../context/AuthContext';
+import { chevronBackOutline, logoGoogle, logoApple } from 'ionicons/icons';
 
-interface RegisterPageProps {}
-
-const RegisterPage: React.FC<RegisterPageProps> = () => {
-  const [phone, setPhone] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const { register } = useAuth();
+const RegisterPage: React.FC = () => {
+  const [showClerkSignUp, setShowClerkSignUp] = useState(false);
+  const { user, isClerkLoaded } = useAuth();
   const history = useHistory();
 
-  const handleRegister = async () => {
-    if (!phone || !fullName || !email) {
-      setError('All fields are required');
-      return;
+  useEffect(() => {
+    if (isClerkLoaded && user) {
+      history.replace('/home');
     }
-
-    if (phone.length < 10) {
-      setError('Please enter a valid phone number');
-      return;
-    }
-
-    if (!email.includes('@')) {
-      setError('Please enter a valid email');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    const result = await register(phone, fullName, email);
-
-    if (result.success) {
-      history.replace('/login');
-    } else {
-      setError(result.error || 'Registration failed');
-    }
-
-    setLoading(false);
-  };
+  }, [isClerkLoaded, user, history]);
 
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Register</IonTitle>
+          <IonButton slot="start" fill="clear" onClick={() => history.goBack()}>
+            <IonIcon icon={chevronBackOutline} />
+          </IonButton>
+          <IonTitle>Create Account</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent className="ion-padding">
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-          <IonCard>
-            <IonCardContent>
-              <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Create Account</h2>
-              
-              <IonItem>
-                <IonLabel position="floating">Full Name</IonLabel>
-                <IonInput
-                  type="text"
-                  value={fullName}
-                  onIonChange={(e) => setFullName(e.detail.value || '')}
-                  placeholder="John Doe"
-                />
-              </IonItem>
+      <IonContent className="ion-padding ion-flex-center">
+        <div className="register-container">
+          <div className="register-header">
+            <h1>Join RiderApp</h1>
+            <p>Create your account to get started</p>
+          </div>
 
-              <IonItem style={{ marginTop: '8px' }}>
-                <IonLabel position="floating">Phone Number</IonLabel>
-                <IonInput
-                  type="tel"
-                  value={phone}
-                  onIonChange={(e) => setPhone(e.detail.value || '')}
-                  placeholder="+1234567890"
-                />
-              </IonItem>
+          {!showClerkSignUp ? (
+            <div className="register-options">
+              <IonCard className="register-card">
+                <IonCardContent>
+                  <IonButton
+                    expand="block"
+                    className="register-btn primary-btn"
+                    onClick={() => setShowClerkSignUp(true)}
+                  >
+                    Sign Up with Email or Phone
+                  </IonButton>
 
-              <IonItem style={{ marginTop: '8px' }}>
-                <IonLabel position="floating">Email</IonLabel>
-                <IonInput
-                  type="email"
-                  value={email}
-                  onIonChange={(e) => setEmail(e.detail.value || '')}
-                  placeholder="john@example.com"
+                  <div className="divider">
+                    <span>or continue with</span>
+                  </div>
+
+                  <div className="social-buttons">
+                    <IonButton fill="outline" className="social-btn">
+                      <IonIcon icon={logoGoogle} slot="start" />
+                      Google
+                    </IonButton>
+                    <IonButton fill="outline" className="social-btn">
+                      <IonIcon icon={logoApple} slot="start" />
+                      Apple
+                    </IonButton>
+                  </div>
+
+                  <div className="login-link">
+                    <IonText>
+                      Already have an account?{' '}
+                      <a onClick={() => history.push('/login')}>Sign in</a>
+                    </IonText>
+                  </div>
+                </IonCardContent>
+              </IonCard>
+            </div>
+          ) : (
+            <IonCard className="clerk-card">
+              <IonCardContent>
+                <SignUp
+                  afterSignInUrl="/home"
+                  afterSignUpUrl="/home"
+                  appearance={{
+                    elements: {
+                      rootBox: 'clerk-root-box',
+                      card: 'clerk-card-box',
+                      headerTitle: 'clerk-header-title',
+                      headerSubtitle: 'clerk-header-subtitle',
+                      formButtonPrimary: 'clerk-btn-primary',
+                      formFieldLabel: 'clerk-form-label',
+                      footerActionLink: 'clerk-footer-link',
+                    },
+                  }}
                 />
-              </IonItem>
-              
-              {error && <IonText color="danger"><p>{error}</p></IonText>}
-              
-              <IonButton
-                expand="block"
-                onClick={handleRegister}
-                disabled={loading}
-                style={{ marginTop: '16px' }}
-              >
-                {loading ? 'Registering...' : 'Register'}
-              </IonButton>
-              
-              <IonButton
-                fill="clear"
-                onClick={() => history.goBack()}
-                disabled={loading}
-                style={{ marginTop: '8px' }}
-              >
-                Already have an account? Login
-              </IonButton>
-            </IonCardContent>
-          </IonCard>
+                <IonButton
+                  fill="clear"
+                  className="back-btn"
+                  onClick={() => setShowClerkSignUp(false)}
+                >
+                  <IonIcon icon={chevronBackOutline} slot="start" />
+                  Back
+                </IonButton>
+              </IonCardContent>
+            </IonCard>
+          )}
         </div>
       </IonContent>
-      <IonLoading isOpen={loading} message="Please wait..." />
+      <IonLoading isOpen={!isClerkLoaded} message="Loading..." />
     </IonPage>
   );
 };

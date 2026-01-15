@@ -1,135 +1,106 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonInput, IonItem, IonLabel, IonLoading, IonText, IonCard, IonCardContent, IonIcon } from '@ionic/react';
-import { useState } from 'react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonLoading, IonCard, IonCardContent, IonIcon, IonText } from '@ionic/react';
+import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router';
+import { SignIn } from '@clerk/clerk-react';
 import { useAuth } from '../../context/AuthContext';
-import { callOutline, chevronBackOutline } from 'ionicons/icons';
+import { chevronBackOutline, logoGoogle, logoApple } from 'ionicons/icons';
 
 const LoginPage: React.FC = () => {
-  const [phone, setPhone] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState('');
-  const { login, verifyOtp } = useAuth();
+  const [showClerkSignIn, setShowClerkSignIn] = useState(false);
+  const { user, isClerkLoaded } = useAuth();
   const history = useHistory();
 
-  const handleSendOtp = async () => {
-    if (!phone || phone.length < 10) {
-      setError('Please enter a valid phone number');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    const result = await login(phone);
-
-    if (result.success) {
-      setOtpSent(true);
-    } else {
-      setError(result.error || 'Failed to send OTP');
-    }
-
-    setLoading(false);
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!otp || otp.length < 4) {
-      setError('Please enter a valid OTP');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    const result = await verifyOtp(phone, otp);
-
-    if (result.success) {
+  useEffect(() => {
+    if (isClerkLoaded && user) {
       history.replace('/home');
-    } else {
-      setError(result.error || 'Invalid OTP');
     }
-
-    setLoading(false);
-  };
+  }, [isClerkLoaded, user, history]);
 
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonButton slot="start" fill="clear">
+          <IonButton slot="start" fill="clear" onClick={() => history.goBack()}>
             <IonIcon icon={chevronBackOutline} />
           </IonButton>
-          <IonTitle>Login</IonTitle>
+          <IonTitle>Welcome Back</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent className="ion-padding">
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-          <IonCard>
-            <IonCardContent>
-              <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Welcome to RiderApp</h2>
-              
-              {!otpSent ? (
-                <>
-                  <IonItem>
-                    <IonLabel position="floating">Phone Number</IonLabel>
-                    <IonInput
-                      type="tel"
-                      value={phone}
-                      onIonChange={(e) => setPhone(e.detail.value || '')}
-                      placeholder="+1234567890"
-                    />
-                  </IonItem>
-                  
-                  {error && <IonText color="danger"><p>{error}</p></IonText>}
-                  
+      <IonContent className="ion-padding ion-flex-center">
+        <div className="login-container">
+          <div className="login-header">
+            <h1>RiderApp</h1>
+            <p>Sign in to continue to your account</p>
+          </div>
+
+          {!showClerkSignIn ? (
+            <div className="login-options">
+              <IonCard className="login-card">
+                <IonCardContent>
                   <IonButton
                     expand="block"
-                    onClick={handleSendOtp}
-                    disabled={loading}
-                    style={{ marginTop: '16px' }}
+                    className="login-btn primary-btn"
+                    onClick={() => setShowClerkSignIn(true)}
                   >
-                    {loading ? 'Sending...' : 'Send OTP'}
+                    Sign In with Email or Phone
                   </IonButton>
-                </>
-              ) : (
-                <>
-                  <IonItem>
-                    <IonLabel position="floating">Enter OTP</IonLabel>
-                    <IonInput
-                      type="number"
-                      value={otp}
-                      onIonChange={(e) => setOtp(e.detail.value || '')}
-                      placeholder="123456"
-                    />
-                  </IonItem>
-                  
-                  {error && <IonText color="danger"><p>{error}</p></IonText>}
-                  
-                  <IonButton
-                    expand="block"
-                    onClick={handleVerifyOtp}
-                    disabled={loading}
-                    style={{ marginTop: '16px' }}
-                  >
-                    {loading ? 'Verifying...' : 'Verify & Login'}
-                  </IonButton>
-                  
-                  <IonButton
-                    fill="clear"
-                    onClick={() => setOtpSent(false)}
-                    disabled={loading}
-                    style={{ marginTop: '8px' }}
-                  >
-                    Change Phone Number
-                  </IonButton>
-                </>
-              )}
-            </IonCardContent>
-          </IonCard>
+
+                  <div className="divider">
+                    <span>or continue with</span>
+                  </div>
+
+                  <div className="social-buttons">
+                    <IonButton fill="outline" className="social-btn">
+                      <IonIcon icon={logoGoogle} slot="start" />
+                      Google
+                    </IonButton>
+                    <IonButton fill="outline" className="social-btn">
+                      <IonIcon icon={logoApple} slot="start" />
+                      Apple
+                    </IonButton>
+                  </div>
+
+                  <div className="register-link">
+                    <IonText>
+                      Don't have an account?{' '}
+                      <a onClick={() => history.push('/register')}>Sign up</a>
+                    </IonText>
+                  </div>
+                </IonCardContent>
+              </IonCard>
+            </div>
+          ) : (
+            <IonCard className="clerk-card">
+              <IonCardContent>
+                <SignIn
+                  afterSignInUrl="/home"
+                  afterSignUpUrl="/home"
+                  appearance={{
+                    elements: {
+                      rootBox: 'clerk-root-box',
+                      card: 'clerk-card-box',
+                      headerTitle: 'clerk-header-title',
+                      headerSubtitle: 'clerk-header-subtitle',
+                      formButtonPrimary: 'clerk-btn-primary',
+                      formFieldLabel: 'clerk-form-label',
+                      footerActionLink: 'clerk-footer-link',
+                    },
+                  }}
+                />
+                <IonButton
+                  fill="clear"
+                  className="back-btn"
+                  onClick={() => setShowClerkSignIn(false)}
+                >
+                  <IonIcon icon={chevronBackOutline} slot="start" />
+                  Back
+                </IonButton>
+              </IonCardContent>
+            </IonCard>
+          )}
         </div>
       </IonContent>
-      <IonLoading isOpen={loading} message="Please wait..." />
+      <IonLoading isOpen={!isClerkLoaded} message="Loading..." />
     </IonPage>
   );
 };
