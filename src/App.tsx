@@ -3,7 +3,6 @@ import { IonApp, IonRouterOutlet, IonLoading } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { Redirect, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { useClerk, useUser } from '@clerk/clerk-react';
 import { UserButton } from '@clerk/clerk-react';
 
 import LoginPage from './pages/auth/LoginPage';
@@ -22,15 +21,6 @@ import NotificationsPage from './pages/profile/NotificationsPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 
 import '@ionic/react/css/core.css';
-import '@ionic/react/css/normalize.css';
-import '@ionic/react/css/structure.css';
-import '@ionic/react/css/typography.css';
-import '@ionic/react/css/padding.css';
-import '@ionic/react/css/float-elements.css';
-import '@ionic/react/css/text-alignment.css';
-import '@ionic/react/css/text-transformation.css';
-import '@ionic/react/css/flex-utils.css';
-import '@ionic/react/css/palettes/dark.system.css';
 import './theme/variables.css';
 
 const PrivateRoute: React.FC<{ component: React.ComponentType<any>; path: string; exact?: boolean }> = ({ component: Component, ...rest }) => {
