@@ -121,7 +121,7 @@ const HomePage = () => {
                     </div>
                   </div>
                   <button
-                    onClick={() => history.push(`/rides/${activeRide.id}`)}
+                    onClick={() => history.push(`/rides/active/${activeRide.id}`)}
                     className="icon-btn text-primary-600"
                   >
                     <MoreHorizontal className="w-5 h-5" />
@@ -168,10 +168,10 @@ const HomePage = () => {
                 </div>
 
                 <button
-                  onClick={() => history.push(`/rides/${activeRide.id}`)}
+                  onClick={() => history.push(`/rides/active/${activeRide.id}`)}
                   className="w-full btn btn-primary mt-4"
                 >
-                  View Details
+                  Track Ride
                 </button>
               </div>
             ) : (

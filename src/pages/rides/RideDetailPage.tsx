@@ -2,8 +2,9 @@ import { IonContent, IonPage } from '@ionic/react';
 import { useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { rideService } from '../../services';
-import { ArrowLeft, Phone, MessageSquare, ShieldAlert, MapPin, Navigation, Calendar, Car, DollarSign, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { rideService, mapsService } from '../../services';
+import { MapComponent } from '../../components/maps';
+import { ArrowLeft, Phone, MessageSquare, ShieldAlert, MapPin, Navigation, Calendar, Car, DollarSign, Clock, CheckCircle2, AlertTriangle, Route } from 'lucide-react';
 import type { Ride } from '../../types';
 
 const RideDetailPage = () => {
@@ -11,6 +12,7 @@ const RideDetailPage = () => {
   const { user } = useAuth();
   const [ride, setRide] = useState<Ride | null>(null);
   const [loading, setLoading] = useState(true);
+  const [routePath, setRoutePath] = useState<Array<{ lat: number; lng: number }>>([]);
   const history = useHistory();
 
   useEffect(() => {
@@ -18,6 +20,19 @@ const RideDetailPage = () => {
       const result = await rideService.getRideById(id);
       if (result.success && result.ride) {
         setRide(result.ride);
+        
+        // Calculate route if coordinates are available
+        if (result.ride.startLocationCoords && result.ride.endLocationCoords) {
+          const route = await mapsService.calculateRoute(
+            { lat: result.ride.startLocationCoords.lat, lng: result.ride.startLocationCoords.lng },
+            { lat: result.ride.endLocationCoords.lat, lng: result.ride.endLocationCoords.lng }
+          );
+          
+          if (route) {
+            const decodedPath = mapsService.decodePolyline(route.polyline);
+            setRoutePath(decodedPath);
+          }
+        }
       }
       setLoading(false);
     };
@@ -60,6 +75,21 @@ const RideDetailPage = () => {
     return statusMap[status as keyof typeof statusMap] || statusMap.pending;
   };
 
+  // Prepare markers for map
+  const markers = ride ? [
+    ...(ride.startLocationCoords ? [{
+      position: { lat: ride.startLocationCoords.lat, lng: ride.startLocationCoords.lng },
+      title: 'Pickup',
+    }] : []),
+    ...(ride.endLocationCoords ? [{
+      position: { lat: ride.endLocationCoords.lat, lng: ride.endLocationCoords.lng },
+      title: 'Drop',
+    }] : []),
+  ] : [];
+
+  // Calculate map center
+  const mapCenter = ride?.startLocationCoords || { lat: 28.6139, lng: 77.2090 };
+
   if (loading) {
     return (
       <IonPage>
@@ -68,7 +98,7 @@ const RideDetailPage = () => {
             <div className="space-y-4">
               <div className="h-8 bg-gray-200 rounded-lg animate-pulse w-3/4" />
               <div className="card p-6 space-y-4">
-                <div className="h-20 bg-gray-200 rounded-xl animate-pulse" />
+                <div className="h-48 bg-gray-200 rounded-xl animate-pulse" />
                 <div className="space-y-3">
                   <div className="h-4 bg-gray-200 rounded animate-pulse" />
                   <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" />
@@ -107,6 +137,7 @@ const RideDetailPage = () => {
   }
 
   const status = getStatusBadge(ride.status);
+  const hasMapData = markers.length > 0;
 
   return (
     <IonPage>
@@ -123,6 +154,26 @@ const RideDetailPage = () => {
           </header>
 
           <div className="space-y-6 pb-8">
+            {/* Map Section */}
+            {hasMapData && (
+              <div className="card overflow-hidden">
+                <div className="h-64">
+                  <MapComponent
+                    center={mapCenter}
+                    markers={markers}
+                    routePath={routePath}
+                    fitBounds={true}
+                  />
+                </div>
+                <div className="p-4 border-t border-gray-100">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Route className="w-4 h-4" />
+                    <span>Route snapshot • {ride.distance ? `${ride.distance} km` : 'Distance unavailable'}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="card p-6 animate-fade-in">
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-3">
