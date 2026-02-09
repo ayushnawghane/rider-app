@@ -150,15 +150,8 @@ CREATE POLICY "Users can view own profile" ON profiles
 CREATE POLICY "Users can update own profile" ON profiles
     FOR UPDATE USING (auth.uid() = id);
 
-CREATE POLICY "Admins can view all profiles" ON profiles
-    FOR SELECT USING (
-        EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-    );
-
-CREATE POLICY "Admins can update all profiles" ON profiles
-    FOR UPDATE USING (
-        EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-    );
+-- Note: Admin policies removed to prevent infinite recursion
+-- Admin checks should be done in application layer or using JWT claims
 
 -- Rides policies
 CREATE POLICY "Users can view own rides" ON rides
@@ -170,11 +163,6 @@ CREATE POLICY "Users can create own rides" ON rides
 CREATE POLICY "Users can update own rides" ON rides
     FOR UPDATE USING (auth.uid() = user_id);
 
-CREATE POLICY "Admins can view all rides" ON rides
-    FOR SELECT USING (
-        EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-    );
-
 -- Disputes policies
 CREATE POLICY "Users can view own disputes" ON disputes
     FOR SELECT USING (auth.uid() = user_id);
@@ -185,23 +173,13 @@ CREATE POLICY "Users can create own disputes" ON disputes
 CREATE POLICY "Users can update own disputes" ON disputes
     FOR UPDATE USING (auth.uid() = user_id);
 
-CREATE POLICY "Admins can view all disputes" ON disputes
-    FOR SELECT USING (
-        EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-    );
-
-CREATE POLICY "Admins can update all disputes" ON disputes
-    FOR UPDATE USING (
-        EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-    );
-
 -- Messages policies
 CREATE POLICY "Users can view own messages" ON messages
     FOR SELECT USING (
         EXISTS (
             SELECT 1 FROM disputes 
             WHERE id = messages.dispute_id AND user_id = auth.uid()
-        ) OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+        )
     );
 
 CREATE POLICY "Users can create own messages" ON messages
@@ -210,16 +188,6 @@ CREATE POLICY "Users can create own messages" ON messages
             SELECT 1 FROM disputes 
             WHERE id = messages.dispute_id AND user_id = auth.uid()
         )
-    );
-
-CREATE POLICY "Admins can view all messages" ON messages
-    FOR SELECT USING (
-        EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-    );
-
-CREATE POLICY "Admins can create messages" ON messages
-    FOR INSERT WITH CHECK (
-        EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
     );
 
 -- Notifications policies
@@ -236,28 +204,13 @@ CREATE POLICY "Users can view own SOS alerts" ON sos_alerts
 CREATE POLICY "Users can create own SOS alerts" ON sos_alerts
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Admins can view all SOS alerts" ON sos_alerts
-    FOR SELECT USING (
-        EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-    );
-
 -- Notices policies (public read)
 CREATE POLICY "Anyone can view notices" ON notices
     FOR SELECT USING (true);
 
-CREATE POLICY "Admins can manage notices" ON notices
-    FOR ALL USING (
-        EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-    );
-
 -- FAQ policies (public read)
 CREATE POLICY "Anyone can view FAQ" ON faq
     FOR SELECT USING (true);
-
-CREATE POLICY "Admins can manage FAQ" ON faq
-    FOR ALL USING (
-        EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-    );
 
 -- Storage Buckets (run in Supabase Storage UI or via API)
 -- Create 'kyc-documents' bucket for KYC documents

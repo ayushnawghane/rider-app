@@ -12,6 +12,7 @@ import HomePage from './pages/home/HomePage';
 import UploadRidePage from './pages/rides/UploadRidePage';
 import RideHistoryPage from './pages/rides/RideHistoryPage';
 import RideDetailPage from './pages/rides/RideDetailPage';
+import ActiveRidePage from './pages/rides/ActiveRidePage';
 import SupportPage from './pages/support/SupportPage';
 import NewDisputePage from './pages/support/NewDisputePage';
 import DisputeChatPage from './pages/support/DisputeChatPage';
@@ -69,6 +70,7 @@ const App: React.FC = () => {
             <PrivateRoute component={UploadRidePage} path="/rides/upload" exact />
             <PrivateRoute component={RideHistoryPage} path="/rides/history" exact />
             <PrivateRoute component={RideDetailPage} path="/rides/:id" exact />
+            <PrivateRoute component={ActiveRidePage} path="/rides/active/:id" exact />
             <PrivateRoute component={SupportPage} path="/support" exact />
             <PrivateRoute component={NewDisputePage} path="/support/dispute/new" exact />
             <PrivateRoute component={DisputeChatPage} path="/support/dispute/:id" exact />
