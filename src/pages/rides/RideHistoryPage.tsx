@@ -91,7 +91,7 @@ const RideHistoryPage = () => {
               <p className="text-gray-500 mt-1">{rides.length} ride{rides.length !== 1 ? 's' : ''} found</p>
             </div>
             <button
-              onClick={() => history.push('/rides/upload')}
+              onClick={() => history.push('/upload-ride')}
               className="p-3 bg-primary-500 text-white rounded-xl hover:bg-primary-600 active:scale-95 transition-all"
             >
               <Plus className="w-6 h-6" />
@@ -104,7 +104,7 @@ const RideHistoryPage = () => {
               <h2 className="text-xl font-bold text-gray-900 mb-2">No Rides Yet</h2>
               <p className="text-gray-500 mb-6">Upload your first ride to get started</p>
               <button
-                onClick={() => history.push('/rides/upload')}
+                onClick={() => history.push('/upload-ride')}
                 className="w-full btn btn-primary"
               >
                 Upload Ride

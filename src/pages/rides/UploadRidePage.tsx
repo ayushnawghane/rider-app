@@ -9,13 +9,50 @@ import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { rideService } from '../../services';
 import { LocationSearch, RoutePreview } from '../../components/maps';
+import { LoadScript, useJsApiLoader } from '@react-google-maps/api';
 import { ArrowLeft, MapPin, Calendar, Car, Navigation, CheckCircle2, AlertCircle } from 'lucide-react';
 import type { Location, RideEstimate } from '../../types/maps';
+
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+const libraries: ("places")[] = ['places'];
+
+const MapLoadingFallback = () => (
+  <div style={{ 
+    height: '200px', 
+    background: '#f3f4f6', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    borderRadius: '12px'
+  }}>
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ 
+        width: '32px', 
+        height: '32px', 
+        border: '3px solid #e5e7eb', 
+        borderTopColor: '#6366f1', 
+        borderRadius: '50%', 
+        animation: 'spin 1s linear infinite',
+        margin: '0 auto 8px'
+      }} />
+      <p style={{ color: '#6b7280', fontSize: '14px', margin: 0 }}>Loading maps...</p>
+    </div>
+    <style>{`
+      @keyframes spin { to { transform: rotate(360deg); } }
+    `}</style>
+  </div>
+);
 
 const UploadRidePage = () => {
   const { user } = useAuth();
   const history = useHistory();
   
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries,
+  });
+
   const [step, setStep] = useState<'locations' | 'preview' | 'details' | 'success'>('locations');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -298,48 +335,79 @@ const UploadRidePage = () => {
     </div>
   );
 
-  return (
-    <IonPage>
-      <IonContent className="ion-padding bg-gray-50">
-        <div className="max-w-2xl mx-auto px-4 py-6">
-          {/* Header */}
-          {step !== 'preview' && (
-            <header className="mb-6">
-              <button
-                onClick={() => {
-                  if (step === 'locations') {
-                    history.goBack();
-                  } else if (step === 'details') {
-                    setStep('locations');
-                  } else if (step === 'success') {
-                    setStep('locations');
-                  }
-                }}
-                className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                Back
+  if (loadError) {
+    return (
+      <IonPage>
+        <IonContent className="ion-padding bg-gray-50">
+          <div className="max-w-2xl mx-auto px-4 py-6">
+            <div className="card p-8 text-center">
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Maps Failed to Load</h2>
+              <p className="text-gray-500 mb-4">Please check your internet connection and refresh the page.</p>
+              <button onClick={() => window.location.reload()} className="btn btn-primary">
+                Refresh Page
               </button>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {step === 'locations' && 'Add Ride'}
-                {step === 'details' && 'Confirm Ride'}
-                {step === 'success' && 'Success!'}
-              </h1>
-              <p className="text-gray-500 mt-1">
-                {step === 'locations' && 'Select pickup and drop locations'}
-                {step === 'details' && 'Add final details to complete'}
-              </p>
-            </header>
-          )}
+            </div>
+          </div>
+        </IonContent>
+      </IonPage>
+    );
+  }
 
-          {/* Step Content */}
-          {step === 'locations' && renderLocationsStep()}
-          {step === 'preview' && renderPreviewStep()}
-          {step === 'details' && renderDetailsStep()}
-          {step === 'success' && renderSuccessStep()}
-        </div>
-      </IonContent>
-    </IonPage>
+  if (!isLoaded) {
+    return (
+      <IonPage>
+        <IonContent className="ion-padding bg-gray-50">
+          <div className="max-w-2xl mx-auto px-4 py-6">
+            <MapLoadingFallback />
+          </div>
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  return (
+      <IonPage>
+        <IonContent className="ion-padding bg-gray-50">
+          <div className="max-w-2xl mx-auto px-4 py-6">
+            {/* Header */}
+            {step !== 'preview' && (
+              <header className="mb-6">
+                <button
+                  onClick={() => {
+                    if (step === 'locations') {
+                      history.goBack();
+                    } else if (step === 'details') {
+                      setStep('locations');
+                    } else if (step === 'success') {
+                      setStep('locations');
+                    }
+                  }}
+                  className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  Back
+                </button>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {step === 'locations' && 'Add Ride'}
+                  {step === 'details' && 'Confirm Ride'}
+                  {step === 'success' && 'Success!'}
+                </h1>
+                <p className="text-gray-500 mt-1">
+                  {step === 'locations' && 'Select pickup and drop locations'}
+                  {step === 'details' && 'Add final details to complete'}
+                </p>
+              </header>
+            )}
+
+            {/* Step Content */}
+            {step === 'locations' && renderLocationsStep()}
+            {step === 'preview' && renderPreviewStep()}
+            {step === 'details' && renderDetailsStep()}
+            {step === 'success' && renderSuccessStep()}
+          </div>
+        </IonContent>
+      </IonPage>
   );
 };
 

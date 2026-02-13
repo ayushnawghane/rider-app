@@ -87,7 +87,7 @@ const HomePage = () => {
             </div>
 
             <button
-              onClick={() => history.push('/rides/upload')}
+              onClick={() => history.push('/upload-ride')}
               className="w-full btn btn-primary flex items-center justify-center gap-3 py-4 shadow-medium"
             >
               <Plus className="w-6 h-6" />
@@ -190,7 +190,7 @@ const HomePage = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={() => history.push('/rides/upload')}
+                  onClick={() => history.push('/upload-ride')}
                   className="card p-4 hover:shadow-medium transition-all text-left group"
                 >
                   <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
