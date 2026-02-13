@@ -67,13 +67,13 @@ const App: React.FC = () => {
             <PublicRoute component={LoginPage} path="/login" exact />
             <PublicRoute component={RegisterPage} path="/register" exact />
             <PrivateRoute component={HomePage} path="/home" exact />
-            <PrivateRoute component={UploadRidePage} path="/rides/upload" exact />
+            <PrivateRoute component={UploadRidePage} path="/upload-ride" />
             <PrivateRoute component={RideHistoryPage} path="/rides/history" exact />
             <PrivateRoute component={RideDetailPage} path="/rides/:id" exact />
-            <PrivateRoute component={ActiveRidePage} path="/rides/active/:id" exact />
+            <PrivateRoute component={ActiveRidePage} path="/rides/active/:id" />
             <PrivateRoute component={SupportPage} path="/support" exact />
             <PrivateRoute component={NewDisputePage} path="/support/dispute/new" exact />
-            <PrivateRoute component={DisputeChatPage} path="/support/dispute/:id" exact />
+            <PrivateRoute component={DisputeChatPage} path="/support/dispute/:id" />
             <PrivateRoute component={SafetyPage} path="/safety" exact />
             <PrivateRoute component={SafetyPage} path="/safety/sos" exact />
             <PrivateRoute component={ProfilePage} path="/profile" exact />
