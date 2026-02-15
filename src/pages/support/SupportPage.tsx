@@ -4,6 +4,7 @@ import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { disputeService } from '../../services';
 import { ArrowLeft, Plus, MessageSquare, HelpCircle, CheckCircle2, Clock2, XCircle, ChevronRight, AlertTriangle } from 'lucide-react';
+import { SkeletonList } from '../../components/Skeleton';
 import type { Dispute } from '../../types';
 
 const SupportPage = () => {
@@ -59,15 +60,7 @@ const SupportPage = () => {
             <header className="mb-6">
               <h1 className="text-2xl font-bold text-gray-900">Support & Disputes</h1>
             </header>
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="card p-4 animate-pulse">
-                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-3" />
-                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
-                  <div className="h-4 bg-gray-200 rounded w-2/3" />
-                </div>
-              ))}
-            </div>
+            <SkeletonList count={3} lines={3} />
           </div>
         </IonContent>
       </IonPage>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { rideService } from '../../services';
+import { SkeletonList } from '../../components/Skeleton';
 import type { Ride } from '../../types';
 
 const RideHistoryPage = () => {
@@ -138,12 +139,6 @@ const RideHistoryPage = () => {
     };
   };
 
-  const skeletonStyle: React.CSSProperties = {
-    background: '#e5e7eb',
-    borderRadius: '8px',
-    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-  };
-
   const primaryButtonStyle: React.CSSProperties = {
     width: '100%',
     padding: '14px 24px',
@@ -166,22 +161,8 @@ const RideHistoryPage = () => {
               <h1 style={titleStyle}>Ride History</h1>
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {[1, 2, 3].map((i) => (
-              <div key={i} style={cardStyle}>
-                <div style={{ ...skeletonStyle, height: '20px', width: '75%', marginBottom: '12px' }} />
-                <div style={{ ...skeletonStyle, height: '16px', width: '50%', marginBottom: '8px' }} />
-                <div style={{ ...skeletonStyle, height: '16px', width: '66%' }} />
-              </div>
-            ))}
-          </div>
+          <SkeletonList count={3} lines={3} />
         </div>
-        <style>{`
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: .5; }
-          }
-        `}</style>
       </div>
     );
   }

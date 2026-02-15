@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { IonApp, IonRouterOutlet, IonLoading } from '@ionic/react';
+import { IonApp, IonRouterOutlet } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { Redirect, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LocationPermission } from './components/permissions';
 import { locationService } from './services';
+import LoadingOverlay from './components/LoadingOverlay';
 
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import KycUploadPage from './pages/auth/KycUploadPage';
+import SSOCallback from './pages/auth/SSOCallback';
 import HomePage from './pages/home/HomePage';
 import UploadRidePage from './pages/rides/UploadRidePage';
 import RideHistoryPage from './pages/rides/RideHistoryPage';
@@ -29,7 +31,7 @@ const PrivateRoute: React.FC<{ component: React.ComponentType<Record<string, unk
   const { user, loading, isClerkLoaded } = useAuth();
 
   if (!isClerkLoaded || loading) {
-    return <IonLoading isOpen message="Loading..." />;
+    return <LoadingOverlay isOpen message="Loading..." />;
   }
 
   return (
@@ -46,7 +48,7 @@ const PublicRoute: React.FC<{ component: React.ComponentType<Record<string, unkn
   const { user, loading, isClerkLoaded } = useAuth();
 
   if (!isClerkLoaded || loading) {
-    return <IonLoading isOpen message="Loading..." />;
+    return <LoadingOverlay isOpen message="Loading..." />;
   }
 
   return (
@@ -121,6 +123,7 @@ const AppContent: React.FC = () => {
         <IonRouterOutlet>
           <PublicRoute component={LoginPage} path="/login" exact />
           <PublicRoute component={RegisterPage} path="/register" exact />
+          <Route path="/sso-callback" component={SSOCallback} exact />
           <PrivateRoute component={HomePage} path="/home" exact />
           <PrivateRoute component={UploadRidePage} path="/upload-ride" />
           <PrivateRoute component={RideHistoryPage} path="/rides/history" exact />

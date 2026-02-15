@@ -3,6 +3,8 @@ import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { UserButton } from '@clerk/clerk-react';
 import { rideService } from '../../services';
+import { Skeleton, SkeletonCard } from '../../components/Skeleton';
+import LoadingOverlay from '../../components/LoadingOverlay';
 import type { Ride } from '../../types';
 
 const HomePage = () => {
@@ -232,28 +234,10 @@ const HomePage = () => {
     zIndex: 50
   };
 
-  const skeletonStyle: React.CSSProperties = {
-    background: '#e5e7eb',
-    borderRadius: '8px',
-    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-  };
-
-  if (!isClerkLoaded) {
+  if (!isClerkLoaded || loading) {
     return (
       <div style={containerStyle}>
-        <div style={contentStyle}>
-          <div style={{ paddingTop: '24px' }}>
-            <div style={{ ...skeletonStyle, height: '32px', width: '60%', marginBottom: '8px' }} />
-            <div style={{ ...skeletonStyle, height: '20px', width: '40%', marginBottom: '24px' }} />
-            <div style={{ ...skeletonStyle, height: '100px', borderRadius: '16px' }} />
-          </div>
-        </div>
-        <style>{`
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: .5; }
-          }
-        `}</style>
+        <LoadingOverlay isOpen variant="fullscreen" message={!isClerkLoaded ? "Initializing..." : "Loading your rides..."} />
       </div>
     );
   }
@@ -291,9 +275,7 @@ const HomePage = () => {
         </div>
 
         <div style={{ paddingBottom: '100px' }}>
-          {loading ? (
-            <div style={{ ...skeletonStyle, height: '200px', borderRadius: '16px' }} />
-          ) : activeRide ? (
+          {activeRide ? (
             <div style={cardStyle}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

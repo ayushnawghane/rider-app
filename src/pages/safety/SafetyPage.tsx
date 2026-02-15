@@ -4,11 +4,12 @@ import { useAuth } from '../../context/AuthContext';
 import { sosService, locationService } from '../../services';
 import { MapComponent } from '../../components/maps';
 import Button from '../../components/Button';
+import LoadingOverlay from '../../components/LoadingOverlay';
 
 
 const emergencyContacts = [
   { id: 1, name: 'Emergency Services', number: '112' },
-  { id: 2, name: 'RiderApp Support', number: 'support@riderapp.com' },
+  { id: 2, name: 'Blink Car Support', number: 'support@blinkcar.com' },
 ];
 
 const safetyTips = [
@@ -419,45 +420,11 @@ const SafetyPage: React.FC = () => {
         </div>
       )}
 
-      {/* Loading Overlay */}
-      {loading && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 999
-        }}>
-          <div style={{
-            background: 'white',
-            padding: '24px',
-            borderRadius: '12px',
-            textAlign: 'center'
-          }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              border: '3px solid #e5e7eb',
-              borderTopColor: '#6366f1',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto 12px'
-            }} />
-            <p style={{ margin: 0, color: '#4b5563' }}>Sending SOS alert...</p>
-          </div>
-        </div>
-      )}
-
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+      <LoadingOverlay 
+        isOpen={loading} 
+        variant="fullscreen" 
+        message="Sending SOS alert..."
+      />
     </div>
   );
 };
