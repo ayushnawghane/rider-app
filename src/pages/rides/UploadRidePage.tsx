@@ -1,38 +1,30 @@
-/**
- * UploadRidePage
- * Map-first ride upload with location search and route preview
- */
-
-import { IonContent, IonPage } from '@ionic/react';
 import { useState } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { rideService } from '../../services';
 import { LocationSearch, RoutePreview } from '../../components/maps';
-import { LoadScript, useJsApiLoader } from '@react-google-maps/api';
-import { ArrowLeft, MapPin, Calendar, Car, Navigation, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useJsApiLoader } from '@react-google-maps/api';
 import type { Location, RideEstimate } from '../../types/maps';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-
 const libraries: ("places")[] = ['places'];
 
 const MapLoadingFallback = () => (
-  <div style={{ 
-    height: '200px', 
-    background: '#f3f4f6', 
-    display: 'flex', 
-    alignItems: 'center', 
+  <div style={{
+    height: '200px',
+    background: '#f3f4f6',
+    display: 'flex',
+    alignItems: 'center',
     justifyContent: 'center',
     borderRadius: '12px'
   }}>
     <div style={{ textAlign: 'center' }}>
-      <div style={{ 
-        width: '32px', 
-        height: '32px', 
-        border: '3px solid #e5e7eb', 
-        borderTopColor: '#6366f1', 
-        borderRadius: '50%', 
+      <div style={{
+        width: '32px',
+        height: '32px',
+        border: '3px solid #e5e7eb',
+        borderTopColor: '#6366f1',
+        borderRadius: '50%',
         animation: 'spin 1s linear infinite',
         margin: '0 auto 8px'
       }} />
@@ -47,7 +39,7 @@ const MapLoadingFallback = () => (
 const UploadRidePage = () => {
   const { user } = useAuth();
   const history = useHistory();
-  
+
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries,
@@ -56,15 +48,105 @@ const UploadRidePage = () => {
   const [step, setStep] = useState<'locations' | 'preview' | 'details' | 'success'>('locations');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const [pickup, setPickup] = useState<Location | null>(null);
   const [drop, setDrop] = useState<Location | null>(null);
   const [selectedEstimate, setSelectedEstimate] = useState<RideEstimate | null>(null);
-  
+
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [startTime, setStartTime] = useState('');
   const [vehicleNumber, setVehicleNumber] = useState('');
   const [referenceId, setReferenceId] = useState('');
+
+  const containerStyle: React.CSSProperties = {
+    height: '100vh',
+    overflow: 'auto',
+    background: '#f9fafb',
+    WebkitOverflowScrolling: 'touch'
+  };
+
+  const contentStyle: React.CSSProperties = {
+    maxWidth: '680px',
+    margin: '0 auto',
+    padding: '16px'
+  };
+
+  const backButtonStyle: React.CSSProperties = {
+    background: 'transparent',
+    border: 'none',
+    padding: '8px 0',
+    cursor: 'pointer',
+    fontSize: '16px',
+    color: '#6b7280',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    marginBottom: '8px'
+  };
+
+  const titleStyle: React.CSSProperties = {
+    fontSize: '24px',
+    fontWeight: '700',
+    color: '#1f2937',
+    margin: '0 0 4px 0'
+  };
+
+  const subtitleStyle: React.CSSProperties = {
+    fontSize: '14px',
+    color: '#6b7280',
+    margin: 0
+  };
+
+  const cardStyle: React.CSSProperties = {
+    background: 'white',
+    borderRadius: '16px',
+    padding: '24px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    marginBottom: '16px'
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '14px 16px',
+    background: '#f9fafb',
+    borderRadius: '12px',
+    border: '1px solid #e5e7eb',
+    fontSize: '16px',
+    outline: 'none'
+  };
+
+  const primaryButtonStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '16px 24px',
+    background: '#6366f1',
+    color: 'white',
+    borderRadius: '12px',
+    fontSize: '16px',
+    fontWeight: '600',
+    border: 'none',
+    cursor: 'pointer',
+    marginTop: '16px'
+  };
+
+  const secondaryButtonStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '14px 24px',
+    background: '#f3f4f6',
+    color: '#374151',
+    borderRadius: '12px',
+    fontSize: '16px',
+    fontWeight: '600',
+    border: 'none',
+    cursor: 'pointer',
+    marginTop: '12px'
+  };
+
+  const sectionTitleStyle: React.CSSProperties = {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: '#1f2937',
+    margin: '0 0 16px 0'
+  };
 
   const handlePickupSelect = (location: Location) => {
     setPickup(location);
@@ -115,18 +197,26 @@ const UploadRidePage = () => {
   };
 
   const renderLocationsStep = () => (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl p-6 shadow-soft">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Where are you going?</h2>
-        
-        <div className="space-y-4">
-          {/* Pickup Search */}
-          <div className="relative">
-            <div className="absolute left-0 top-0 bottom-0 w-8 flex flex-col items-center">
-              <div className="w-3 h-3 rounded-full bg-primary-500 mt-5" />
-              <div className="w-0.5 flex-1 bg-gray-200 my-1" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={cardStyle}>
+        <h2 style={sectionTitleStyle}>Where are you going?</h2>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ position: 'relative' }}>
+            <div style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: '32px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#6366f1', marginTop: '20px' }} />
+              <div style={{ width: '2px', flex: 1, background: '#e5e7eb', margin: '4px 0' }} />
             </div>
-            <div className="pl-10">
+            <div style={{ paddingLeft: '40px' }}>
               <LocationSearch
                 placeholder="Enter pickup location"
                 value={pickup?.address}
@@ -137,12 +227,20 @@ const UploadRidePage = () => {
             </div>
           </div>
 
-          {/* Drop Search */}
-          <div className="relative">
-            <div className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center">
-              <div className="w-3 h-3 rounded-full bg-success-500" />
+          <div style={{ position: 'relative' }}>
+            <div style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#22c55e' }} />
             </div>
-            <div className="pl-10">
+            <div style={{ paddingLeft: '40px' }}>
               <LocationSearch
                 placeholder="Enter drop location"
                 value={drop?.address}
@@ -157,28 +255,47 @@ const UploadRidePage = () => {
         {pickup && drop && (
           <button
             onClick={() => setStep('preview')}
-            className="w-full btn btn-primary mt-6 py-4"
+            style={primaryButtonStyle}
           >
             Preview Route
           </button>
         )}
       </div>
 
-      {/* Recent Locations (placeholder) */}
-      <div className="bg-white rounded-2xl p-6 shadow-soft">
-        <h3 className="text-sm font-medium text-gray-500 mb-3">Recent Locations</h3>
-        <div className="space-y-2">
+      <div style={cardStyle}>
+        <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#6b7280', margin: '0 0 12px 0' }}>Recent Locations</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {['Home', 'Work', 'Airport'].map((location, index) => (
             <button
               key={index}
-              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px',
+                borderRadius: '12px',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                textAlign: 'left'
+              }}
             >
-              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                <MapPin className="w-5 h-5 text-gray-500" />
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                background: '#f3f4f6',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px'
+              }}>
+                📍
               </div>
               <div>
-                <p className="font-medium text-gray-900">{location}</p>
-                <p className="text-sm text-gray-500">Recent location</p>
+                <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937', margin: 0 }}>{location}</p>
+                <p style={{ fontSize: '12px', color: '#6b7280', margin: '2px 0 0 0' }}>Recent location</p>
               </div>
             </button>
           ))}
@@ -188,7 +305,7 @@ const UploadRidePage = () => {
   );
 
   const renderPreviewStep = () => (
-    <div className="h-[calc(100vh-120px)] -mx-4 -mt-4">
+    <div style={{ height: 'calc(100vh - 100px)', margin: '-16px' }}>
       <RoutePreview
         pickup={pickup}
         drop={drop}
@@ -199,104 +316,138 @@ const UploadRidePage = () => {
   );
 
   const renderDetailsStep = () => (
-    <div className="space-y-6">
-      <div className="card p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Ride Details</h2>
-        
-        {/* Selected Route Summary */}
-        <div className="bg-gray-50 rounded-xl p-4 mb-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-primary-600" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={cardStyle}>
+        <h2 style={sectionTitleStyle}>Ride Details</h2>
+
+        <div style={{
+          background: '#f9fafb',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '24px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              background: '#e0e7ff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px'
+            }}>
+              📍
             </div>
-            <div className="flex-1">
-              <p className="text-sm text-gray-500">From</p>
-              <p className="font-medium text-gray-900 truncate">{pickup?.address}</p>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>From</p>
+              <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937', margin: '2px 0 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {pickup?.address}
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-success-100 rounded-lg flex items-center justify-center">
-              <Navigation className="w-5 h-5 text-success-600" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              background: '#dcfce7',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px'
+            }}>
+              🏁
             </div>
-            <div className="flex-1">
-              <p className="text-sm text-gray-500">To</p>
-              <p className="font-medium text-gray-900 truncate">{drop?.address}</p>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>To</p>
+              <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937', margin: '2px 0 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {drop?.address}
+              </p>
             </div>
           </div>
           {selectedEstimate && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">{selectedEstimate.name}</span>
-                <span className="font-bold text-lg">{selectedEstimate.currency}{selectedEstimate.price}</span>
+            <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ color: '#4b5563' }}>{selectedEstimate.name}</span>
+                <span style={{ fontWeight: '700', fontSize: '18px' }}>
+                  {selectedEstimate.currency}{selectedEstimate.price}
+                </span>
               </div>
             </div>
           )}
         </div>
 
-        {/* Date & Time */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Date & Time</label>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full input pl-10"
-              />
-            </div>
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+            Date & Time
+          </label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              style={inputStyle}
+            />
             <input
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="input"
+              style={inputStyle}
             />
           </div>
         </div>
 
-        {/* Vehicle Number */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Vehicle Number <span className="text-gray-400">(Optional)</span>
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+            Vehicle Number <span style={{ color: '#9ca3af' }}>(Optional)</span>
           </label>
-          <div className="relative">
-            <Car className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              value={vehicleNumber}
-              onChange={(e) => setVehicleNumber(e.target.value)}
-              placeholder="e.g., ABC 1234"
-              className="w-full input pl-10"
-            />
-          </div>
+          <input
+            type="text"
+            value={vehicleNumber}
+            onChange={(e) => setVehicleNumber(e.target.value)}
+            placeholder="e.g., ABC 1234"
+            style={inputStyle}
+          />
         </div>
 
-        {/* Reference ID */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Reference ID <span className="text-gray-400">(Optional)</span>
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+            Reference ID <span style={{ color: '#9ca3af' }}>(Optional)</span>
           </label>
           <input
             type="text"
             value={referenceId}
             onChange={(e) => setReferenceId(e.target.value)}
             placeholder="Booking reference or ticket number"
-            className="input"
+            style={inputStyle}
           />
         </div>
 
         {error && (
-          <div className="p-4 bg-danger-50 border border-danger-200 rounded-xl flex items-start gap-3 mb-4">
-            <AlertCircle className="w-5 h-5 text-danger-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-danger-900">{error}</p>
+          <div style={{
+            padding: '16px',
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '12px',
+            marginBottom: '16px'
+          }}>
+            <span style={{ fontSize: '20px' }}>⚠️</span>
+            <p style={{ fontSize: '14px', color: '#b91c1c', margin: 0 }}>{error}</p>
           </div>
         )}
 
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full btn btn-primary py-4"
+          style={{
+            ...primaryButtonStyle,
+            opacity: loading ? 0.7 : 1,
+            cursor: loading ? 'not-allowed' : 'pointer'
+          }}
         >
           {loading ? 'Creating Ride...' : 'Confirm Ride'}
         </button>
@@ -305,16 +456,26 @@ const UploadRidePage = () => {
   );
 
   const renderSuccessStep = () => (
-    <div className="card p-8 text-center animate-fade-in">
-      <div className="w-20 h-20 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <CheckCircle2 className="w-10 h-10 text-success-600" />
+    <div style={{ ...cardStyle, textAlign: 'center', padding: '40px 24px' }}>
+      <div style={{
+        width: '80px',
+        height: '80px',
+        background: '#dcfce7',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: '0 auto 24px',
+        fontSize: '40px'
+      }}>
+        ✅
       </div>
-      <h2 className="text-xl font-bold text-gray-900 mb-2">Ride Created Successfully!</h2>
-      <p className="text-gray-500 mb-6">Your ride has been added to your history.</p>
-      <div className="space-y-3">
+      <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1f2937', margin: '0 0 8px' }}>Ride Created Successfully!</h2>
+      <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 24px' }}>Your ride has been added to your history.</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <button
           onClick={() => history.replace('/rides/history')}
-          className="w-full btn btn-primary"
+          style={primaryButtonStyle}
         >
           View My Rides
         </button>
@@ -327,7 +488,7 @@ const UploadRidePage = () => {
             setVehicleNumber('');
             setReferenceId('');
           }}
-          className="w-full btn btn-secondary"
+          style={secondaryButtonStyle}
         >
           Create Another Ride
         </button>
@@ -337,77 +498,69 @@ const UploadRidePage = () => {
 
   if (loadError) {
     return (
-      <IonPage>
-        <IonContent className="ion-padding bg-gray-50">
-          <div className="max-w-2xl mx-auto px-4 py-6">
-            <div className="card p-8 text-center">
-              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Maps Failed to Load</h2>
-              <p className="text-gray-500 mb-4">Please check your internet connection and refresh the page.</p>
-              <button onClick={() => window.location.reload()} className="btn btn-primary">
-                Refresh Page
-              </button>
-            </div>
+      <div style={containerStyle}>
+        <div style={contentStyle}>
+          <div style={{ ...cardStyle, textAlign: 'center' }}>
+            <span style={{ fontSize: '48px' }}>⚠️</span>
+            <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1f2937', margin: '16px 0 8px' }}>Maps Failed to Load</h2>
+            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 24px' }}>Please check your internet connection and refresh the page.</p>
+            <button onClick={() => window.location.reload()} style={primaryButtonStyle}>
+              Refresh Page
+            </button>
           </div>
-        </IonContent>
-      </IonPage>
+        </div>
+      </div>
     );
   }
 
   if (!isLoaded) {
     return (
-      <IonPage>
-        <IonContent className="ion-padding bg-gray-50">
-          <div className="max-w-2xl mx-auto px-4 py-6">
-            <MapLoadingFallback />
-          </div>
-        </IonContent>
-      </IonPage>
+      <div style={containerStyle}>
+        <div style={contentStyle}>
+          <MapLoadingFallback />
+        </div>
+      </div>
     );
   }
 
   return (
-      <IonPage>
-        <IonContent className="ion-padding bg-gray-50">
-          <div className="max-w-2xl mx-auto px-4 py-6">
-            {/* Header */}
-            {step !== 'preview' && (
-              <header className="mb-6">
-                <button
-                  onClick={() => {
-                    if (step === 'locations') {
-                      history.goBack();
-                    } else if (step === 'details') {
-                      setStep('locations');
-                    } else if (step === 'success') {
-                      setStep('locations');
-                    }
-                  }}
-                  className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                  Back
-                </button>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {step === 'locations' && 'Add Ride'}
-                  {step === 'details' && 'Confirm Ride'}
-                  {step === 'success' && 'Success!'}
-                </h1>
-                <p className="text-gray-500 mt-1">
-                  {step === 'locations' && 'Select pickup and drop locations'}
-                  {step === 'details' && 'Add final details to complete'}
-                </p>
-              </header>
-            )}
-
-            {/* Step Content */}
-            {step === 'locations' && renderLocationsStep()}
-            {step === 'preview' && renderPreviewStep()}
-            {step === 'details' && renderDetailsStep()}
-            {step === 'success' && renderSuccessStep()}
+    <div style={containerStyle}>
+      <div style={contentStyle}>
+        {step !== 'preview' && (
+          <div style={{ marginBottom: '24px' }}>
+            <button
+              onClick={() => {
+                if (step === 'locations') {
+                  history.goBack();
+                } else if (step === 'details') {
+                  setStep('locations');
+                } else if (step === 'success') {
+                  setStep('locations');
+                }
+              }}
+              style={backButtonStyle}
+            >
+              <span>←</span>
+              <span>Back</span>
+            </button>
+            <h1 style={titleStyle}>
+              {step === 'locations' && 'Add Ride'}
+              {step === 'details' && 'Confirm Ride'}
+              {step === 'success' && 'Success!'}
+            </h1>
+            <p style={subtitleStyle}>
+              {step === 'locations' && 'Select pickup and drop locations'}
+              {step === 'details' && 'Add final details to complete'}
+            </p>
           </div>
-        </IonContent>
-      </IonPage>
+        )}
+
+        {step === 'locations' && renderLocationsStep()}
+        {step === 'preview' && renderPreviewStep()}
+        {step === 'details' && renderDetailsStep()}
+        {step === 'success' && renderSuccessStep()}
+      </div>
+    </div>
   );
 };
 
