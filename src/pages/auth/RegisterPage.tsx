@@ -1,9 +1,7 @@
-import { IonContent, IonPage } from '@ionic/react';
 import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router';
 import { SignUp } from '@clerk/clerk-react';
 import { useAuth } from '../../context/AuthContext';
-import { ArrowLeft, UserPlus, ShieldCheck, Clock, Globe } from 'lucide-react';
 
 const RegisterPage = () => {
   const [showClerkSignUp, setShowClerkSignUp] = useState(false);
@@ -16,135 +14,319 @@ const RegisterPage = () => {
     }
   }, [isClerkLoaded, user, history]);
 
+  const containerStyle: React.CSSProperties = {
+    height: '100vh',
+    overflow: 'auto',
+    background: '#f9fafb',
+    WebkitOverflowScrolling: 'touch'
+  };
+
+  const contentStyle: React.CSSProperties = {
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    padding: '24px 16px'
+  };
+
+  const backButtonStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '16px',
+    left: '16px',
+    background: 'transparent',
+    border: 'none',
+    padding: '12px',
+    cursor: 'pointer',
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  };
+
+  const logoContainerStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: '32px'
+  };
+
+  const logoStyle: React.CSSProperties = {
+    width: '80px',
+    height: '80px',
+    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+    borderRadius: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 10px 25px rgba(99, 102, 241, 0.3)'
+  };
+
+  const logoTextStyle: React.CSSProperties = {
+    color: 'white',
+    fontSize: '32px',
+    fontWeight: '700'
+  };
+
+  const titleStyle: React.CSSProperties = {
+    fontSize: '28px',
+    fontWeight: '700',
+    color: '#1f2937',
+    textAlign: 'center',
+    margin: '0 0 8px 0'
+  };
+
+  const subtitleStyle: React.CSSProperties = {
+    fontSize: '16px',
+    color: '#6b7280',
+    textAlign: 'center',
+    margin: '0 0 32px 0'
+  };
+
+  const buttonBaseStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '16px 24px',
+    borderRadius: '12px',
+    fontSize: '16px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    border: 'none',
+    transition: 'all 0.2s',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '12px'
+  };
+
+  const primaryButtonStyle: React.CSSProperties = {
+    ...buttonBaseStyle,
+    background: '#6366f1',
+    color: 'white',
+    boxShadow: '0 4px 6px rgba(99, 102, 241, 0.2)'
+  };
+
+  const secondaryButtonStyle: React.CSSProperties = {
+    ...buttonBaseStyle,
+    background: 'white',
+    color: '#374151',
+    border: '1px solid #e5e7eb'
+  };
+
+  const dividerStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    margin: '24px 0'
+  };
+
+  const dividerLineStyle: React.CSSProperties = {
+    flex: 1,
+    height: '1px',
+    background: '#e5e7eb'
+  };
+
+  const dividerTextStyle: React.CSSProperties = {
+    padding: '0 16px',
+    color: '#9ca3af',
+    fontSize: '14px'
+  };
+
+  const featureCardStyle = (bgColor: string, borderColor: string): React.CSSProperties => ({
+    background: bgColor,
+    border: `1px solid ${borderColor}`,
+    borderRadius: '12px',
+    padding: '16px',
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '12px'
+  });
+
+  const featureIconStyle = (fontSize: string): React.CSSProperties => ({
+    fontSize,
+    flexShrink: 0,
+    marginTop: '2px'
+  });
+
+  const featureTitleStyle: React.CSSProperties = {
+    fontSize: '14px',
+    fontWeight: '600',
+    margin: '0 0 4px 0'
+  };
+
+  const featureTextStyle: React.CSSProperties = {
+    fontSize: '14px',
+    margin: 0
+  };
+
+  const footerStyle: React.CSSProperties = {
+    textAlign: 'center',
+    marginTop: '32px'
+  };
+
+  const footerTextStyle: React.CSSProperties = {
+    fontSize: '14px',
+    color: '#6b7280'
+  };
+
+  const footerLinkStyle: React.CSSProperties = {
+    color: '#6366f1',
+    fontWeight: '600',
+    textDecoration: 'none',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: 0
+  };
+
+  const cardStyle: React.CSSProperties = {
+    background: 'white',
+    borderRadius: '16px',
+    padding: '24px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+  };
+
   return (
-    <IonPage>
-      <IonContent className="ion-padding bg-gray-50">
-        <div className="min-h-screen flex flex-col">
-          {!showClerkSignUp ? (
-            <div className="flex-1 flex flex-col justify-center px-4 animate-fade-in">
-              <button
-                onClick={() => history.goBack()}
-                className="absolute top-4 left-4 p-2 hover:bg-gray-100 rounded-xl transition-colors"
-              >
-                <ArrowLeft className="w-6 h-6 text-gray-600" />
-              </button>
+    <div style={containerStyle}>
+      {!showClerkSignUp ? (
+        <div style={contentStyle}>
+          <button 
+            onClick={() => history.goBack()}
+            style={backButtonStyle}
+          >
+            <span style={{ fontSize: '24px' }}>←</span>
+          </button>
 
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl mb-6 shadow-medium">
-                  <span className="text-white text-3xl font-bold">R</span>
-                </div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
-                <p className="text-gray-500">Join RiderApp today</p>
-              </div>
-
-              <div className="space-y-3 max-w-md mx-auto w-full mb-8">
-                <button
-                  onClick={() => setShowClerkSignUp(true)}
-                  className="w-full btn btn-primary flex items-center justify-center gap-3 py-4"
-                >
-                  <UserPlus className="w-5 h-5" />
-                  Sign Up with Email or Phone
-                </button>
-
-                <div className="relative py-4">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200" />
-                  </div>
-                  <div className="relative flex justify-center">
-                    <span className="px-4 bg-gray-50 text-sm text-gray-500">or continue with</span>
-                  </div>
-                </div>
-
-                <button className="w-full btn btn-secondary flex items-center justify-center gap-3">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                  </svg>
-                  Google
-                </button>
-
-                <button className="w-full btn btn-secondary flex items-center justify-center gap-3">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.21-1.96 1.07-3.11-1.05.05-2.31.74-3.02 1.61-.69.84-1.22 2.04-1.07 3.11 1.17.09 2.36-.85 3.02-1.61z" />
-                  </svg>
-                  Apple
-                </button>
-              </div>
-
-              <div className="max-w-md mx-auto space-y-3">
-                <div className="bg-success-50 border border-success-100 rounded-xl p-4 flex gap-3">
-                  <ShieldCheck className="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-success-900">Secure & Private</p>
-                    <p className="text-sm text-success-700 mt-1">Your information is encrypted and secure</p>
-                  </div>
-                </div>
-
-                <div className="bg-primary-50 border border-primary-100 rounded-xl p-4 flex gap-3">
-                  <Clock className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-primary-900">Quick Verification</p>
-                    <p className="text-sm text-primary-700 mt-1">Get verified in minutes with email or phone</p>
-                  </div>
-                </div>
-
-                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
-                  <Globe className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-blue-900">Global Access</p>
-                    <p className="text-sm text-blue-700 mt-1">Access your rides from anywhere in the world</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8 text-center">
-                <p className="text-gray-500">
-                  Already have an account?{' '}
-                  <button onClick={() => history.push('/login')} className="text-primary-600 font-medium hover:text-primary-700">
-                    Sign in
-                  </button>
-                </p>
+          <div style={{ maxWidth: '360px', width: '100%', margin: '0 auto' }}>
+            <div style={logoContainerStyle}>
+              <div style={logoStyle}>
+                <span style={logoTextStyle}>R</span>
               </div>
             </div>
-          ) : (
-            <div className="flex-1 flex flex-col justify-center px-4 animate-slide-up">
-              <div className="max-w-md mx-auto w-full">
-                <button
-                  onClick={() => setShowClerkSignUp(false)}
-                  className="mb-6 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                  Back
-                </button>
 
-                <div className="card p-6">
-                  <SignUp
-                    afterSignInUrl="/home"
-                    afterSignUpUrl="/home"
-                    appearance={{
-                      elements: {
-                        rootBox: 'clerk-root-box',
-                        card: 'clerk-card-box',
-                        headerTitle: 'text-2xl font-bold text-gray-900',
-                        headerSubtitle: 'text-gray-500 mt-2',
-                        formButtonPrimary: 'btn btn-primary py-4 text-base',
-                        formFieldLabel: 'clerk-form-label',
-                        footerActionLink: 'clerk-footer-link',
-                        socialButtonsBlockButton: 'btn btn-secondary',
-                        dividerText: 'text-sm text-gray-500',
-                        formFieldInput: 'input',
-                      },
-                    }}
-                  />
+            <h1 style={titleStyle}>Create Account</h1>
+            <p style={subtitleStyle}>Join RiderApp today</p>
+
+            <button
+              onClick={() => setShowClerkSignUp(true)}
+              style={primaryButtonStyle}
+            >
+              <span>👤</span>
+              Sign Up with Email or Phone
+            </button>
+
+            <div style={dividerStyle}>
+              <div style={dividerLineStyle} />
+              <span style={dividerTextStyle}>or continue with</span>
+              <div style={dividerLineStyle} />
+            </div>
+
+            <button style={secondaryButtonStyle}>
+              <svg width="20" height="20" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              </svg>
+              Google
+            </button>
+
+            <button style={{ ...secondaryButtonStyle, marginTop: '12px' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.21-1.96 1.07-3.11-1.05.05-2.31.74-3.02 1.61-.69.84-1.22 2.04-1.07 3.11 1.17.09 2.36-.85 3.02-1.61z" />
+              </svg>
+              Apple
+            </button>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '32px' }}>
+              <div style={featureCardStyle('#f0fdf4', '#bbf7d0')}>
+                <span style={featureIconStyle('20px')}>🛡️</span>
+                <div>
+                  <p style={{ ...featureTitleStyle, color: '#166534' }}>Secure & Private</p>
+                  <p style={{ ...featureTextStyle, color: '#16a34a' }}>Your information is encrypted and secure</p>
+                </div>
+              </div>
+
+              <div style={featureCardStyle('#eff6ff', '#bfdbfe')}>
+                <span style={featureIconStyle('20px')}>⏱️</span>
+                <div>
+                  <p style={{ ...featureTitleStyle, color: '#1e40af' }}>Quick Verification</p>
+                  <p style={{ ...featureTextStyle, color: '#3b82f6' }}>Get verified in minutes with email or phone</p>
+                </div>
+              </div>
+
+              <div style={featureCardStyle('#eff6ff', '#bfdbfe')}>
+                <span style={featureIconStyle('20px')}>🌍</span>
+                <div>
+                  <p style={{ ...featureTitleStyle, color: '#1e40af' }}>Global Access</p>
+                  <p style={{ ...featureTextStyle, color: '#3b82f6' }}>Access your rides from anywhere in the world</p>
                 </div>
               </div>
             </div>
-          )}
+
+            <div style={footerStyle}>
+              <p style={footerTextStyle}>
+                Already have an account?{' '}
+                <button 
+                  onClick={() => history.push('/login')}
+                  style={footerLinkStyle}
+                >
+                  Sign in
+                </button>
+              </p>
+            </div>
+          </div>
         </div>
-      </IonContent>
-    </IonPage>
+      ) : (
+        <div style={contentStyle}>
+          <div style={{ maxWidth: '360px', width: '100%', margin: '0 auto' }}>
+            <button
+              onClick={() => setShowClerkSignUp(false)}
+              style={{
+                ...backButtonStyle,
+                position: 'static',
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                color: '#6b7280'
+              }}
+            >
+              <span style={{ fontSize: '20px' }}>←</span>
+              <span>Back</span>
+            </button>
+
+            <div style={cardStyle}>
+              <SignUp
+                afterSignInUrl="/home"
+                afterSignUpUrl="/home"
+                appearance={{
+                  elements: {
+                    rootBox: { width: '100%' },
+                    card: { boxShadow: 'none', border: 'none' },
+                    headerTitle: { fontSize: '24px', fontWeight: '700', color: '#1f2937' },
+                    headerSubtitle: { color: '#6b7280', marginTop: '8px' },
+                    formButtonPrimary: { 
+                      background: '#6366f1',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      fontSize: '16px',
+                      fontWeight: '600'
+                    },
+                    formFieldLabel: { color: '#374151', fontWeight: '500' },
+                    footerActionLink: { color: '#6366f1' },
+                    socialButtonsBlockButton: { borderRadius: '12px' },
+                    dividerText: { color: '#9ca3af' },
+                    formFieldInput: { 
+                      borderRadius: '12px',
+                      border: '1px solid #e5e7eb',
+                      padding: '12px 16px'
+                    },
+                  },
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

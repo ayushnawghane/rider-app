@@ -1,46 +1,37 @@
-import { IonContent, IonPage, IonRefresher, IonRefresherContent } from '@ionic/react';
 import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { rideService } from '../../services';
-import { ArrowLeft, Plus, Car, Calendar, MapPin, Navigation, CheckCircle2, Clock2, XCircle, ChevronRight } from 'lucide-react';
 import type { Ride } from '../../types';
 
 const RideHistoryPage = () => {
   const { user } = useAuth();
   const [rides, setRides] = useState<Ride[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const history = useHistory();
 
-  const fetchRides = async () => {
-    if (!user) return;
-
-    const result = await rideService.getRides(user.id);
-    if (result.success && result.rides) {
-      setRides(result.rides);
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
+    const fetchRides = async () => {
+      if (!user) return;
+
+      const result = await rideService.getRides(user.id);
+      if (result.success && result.rides) {
+        setRides(result.rides);
+      }
+      setLoading(false);
+    };
+
     fetchRides();
   }, [user]);
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchRides();
-    setRefreshing(false);
-  };
-
   const getStatusBadge = (status: string) => {
-    const statusMap = {
-      active: { icon: CheckCircle2, color: 'status-active', label: 'Active' },
-      pending: { icon: Clock2, color: 'status-pending', label: 'Pending' },
-      completed: { icon: CheckCircle2, color: 'status-completed', label: 'Completed' },
-      cancelled: { icon: XCircle, color: 'status-cancelled', label: 'Cancelled' },
+    const statusMap: Record<string, { color: string; bgColor: string; icon: string; label: string }> = {
+      active: { color: '#16a34a', bgColor: '#dcfce7', icon: '✓', label: 'Active' },
+      pending: { color: '#d97706', bgColor: '#fef3c7', icon: '⏳', label: 'Pending' },
+      completed: { color: '#2563eb', bgColor: '#dbeafe', icon: '✓', label: 'Completed' },
+      cancelled: { color: '#dc2626', bgColor: '#fee2e2', icon: '✕', label: 'Cancelled' },
     };
-    return statusMap[status as keyof typeof statusMap] || statusMap.pending;
+    return statusMap[status] || statusMap.pending;
   };
 
   const formatDate = (dateString: string) => {
@@ -54,108 +45,242 @@ const RideHistoryPage = () => {
     });
   };
 
+  const containerStyle: React.CSSProperties = {
+    height: '100vh',
+    overflow: 'auto',
+    background: '#f9fafb',
+    padding: '16px',
+    WebkitOverflowScrolling: 'touch'
+  };
+
+  const contentStyle: React.CSSProperties = {
+    maxWidth: '680px',
+    margin: '0 auto'
+  };
+
+  const headerStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '24px',
+    paddingTop: '8px'
+  };
+
+  const backButtonStyle: React.CSSProperties = {
+    background: 'transparent',
+    border: 'none',
+    padding: '8px',
+    cursor: 'pointer',
+    fontSize: '24px',
+    display: 'flex',
+    alignItems: 'center'
+  };
+
+  const titleStyle: React.CSSProperties = {
+    fontSize: '20px',
+    fontWeight: '600',
+    color: '#1f2937',
+    margin: 0
+  };
+
+  const subtitleStyle: React.CSSProperties = {
+    fontSize: '14px',
+    color: '#6b7280',
+    margin: '4px 0 0 0'
+  };
+
+  const addButtonStyle: React.CSSProperties = {
+    width: '44px',
+    height: '44px',
+    borderRadius: '12px',
+    background: '#6366f1',
+    border: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    fontSize: '24px',
+    color: 'white'
+  };
+
+  const cardStyle: React.CSSProperties = {
+    background: 'white',
+    borderRadius: '16px',
+    padding: '24px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    marginBottom: '12px'
+  };
+
+  const rideItemStyle: React.CSSProperties = {
+    background: 'white',
+    borderRadius: '16px',
+    padding: '16px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    marginBottom: '12px',
+    border: 'none',
+    width: '100%',
+    cursor: 'pointer',
+    textAlign: 'left'
+  };
+
+  const statusBadgeStyle = (status: string): React.CSSProperties => {
+    const statusInfo = getStatusBadge(status);
+    return {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '4px',
+      padding: '4px 10px',
+      borderRadius: '8px',
+      background: statusInfo.bgColor,
+      color: statusInfo.color,
+      fontSize: '12px',
+      fontWeight: '500'
+    };
+  };
+
+  const skeletonStyle: React.CSSProperties = {
+    background: '#e5e7eb',
+    borderRadius: '8px',
+    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+  };
+
+  const primaryButtonStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '14px 24px',
+    background: '#6366f1',
+    color: 'white',
+    borderRadius: '12px',
+    fontSize: '16px',
+    fontWeight: '600',
+    border: 'none',
+    cursor: 'pointer',
+    marginTop: '16px'
+  };
+
   if (loading) {
     return (
-      <IonPage>
-        <IonContent className="ion-padding bg-gray-50">
-          <div className="max-w-2xl mx-auto px-4 py-6">
-            <header className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">Ride History</h1>
-            </header>
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="card p-4 animate-pulse">
-                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-3" />
-                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
-                  <div className="h-4 bg-gray-200 rounded w-2/3" />
-                </div>
-              ))}
+      <div style={containerStyle}>
+        <div style={contentStyle}>
+          <div style={headerStyle}>
+            <div>
+              <h1 style={titleStyle}>Ride History</h1>
             </div>
           </div>
-        </IonContent>
-      </IonPage>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {[1, 2, 3].map((i) => (
+              <div key={i} style={cardStyle}>
+                <div style={{ ...skeletonStyle, height: '20px', width: '75%', marginBottom: '12px' }} />
+                <div style={{ ...skeletonStyle, height: '16px', width: '50%', marginBottom: '8px' }} />
+                <div style={{ ...skeletonStyle, height: '16px', width: '66%' }} />
+              </div>
+            ))}
+          </div>
+        </div>
+        <style>{`
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+          }
+        `}</style>
+      </div>
     );
   }
 
   return (
-    <IonPage>
-      <IonContent className="ion-padding bg-gray-50">
-        <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
-          <IonRefresherContent />
-        </IonRefresher>
+    <div style={containerStyle}>
+      <div style={contentStyle}>
+        <div style={headerStyle}>
+          <div>
+            <button
+              onClick={() => history.goBack()}
+              style={backButtonStyle}
+            >
+              ←
+            </button>
+            <h1 style={titleStyle}>Ride History</h1>
+            <p style={subtitleStyle}>{rides.length} ride{rides.length !== 1 ? 's' : ''} found</p>
+          </div>
+          <button
+            onClick={() => history.push('/upload-ride')}
+            style={addButtonStyle}
+          >
+            +
+          </button>
+        </div>
 
-        <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
-          <header className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Ride History</h1>
-              <p className="text-gray-500 mt-1">{rides.length} ride{rides.length !== 1 ? 's' : ''} found</p>
-            </div>
+        {rides.length === 0 ? (
+          <div style={{ ...cardStyle, textAlign: 'center', padding: '40px 24px' }}>
+            <span style={{ fontSize: '64px' }}>🚗</span>
+            <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#1f2937', margin: '16px 0 8px' }}>No Rides Yet</h2>
+            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 24px' }}>Upload your first ride to get started</p>
             <button
               onClick={() => history.push('/upload-ride')}
-              className="p-3 bg-primary-500 text-white rounded-xl hover:bg-primary-600 active:scale-95 transition-all"
+              style={primaryButtonStyle}
             >
-              <Plus className="w-6 h-6" />
+              Upload Ride
             </button>
-          </header>
-
-          {rides.length === 0 ? (
-            <div className="card p-8 text-center animate-fade-in">
-              <Car className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">No Rides Yet</h2>
-              <p className="text-gray-500 mb-6">Upload your first ride to get started</p>
-              <button
-                onClick={() => history.push('/upload-ride')}
-                className="w-full btn btn-primary"
-              >
-                Upload Ride
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {rides.map((ride) => {
-                const status = getStatusBadge(ride.status);
-                return (
-                  <button
-                    key={ride.id}
-                    onClick={() => history.push(`/rides/${ride.id}`)}
-                    className="card p-4 text-left hover:shadow-medium transition-all w-full animate-fade-in"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <Car className="w-6 h-6 text-primary-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                          <span className="font-medium text-gray-900 truncate">{ride.startLocation}</span>
-                          <Navigation className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                          <span className="font-medium text-gray-900 truncate">{ride.endLocation}</span>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm">
-                          <span className={`badge ${status.color} flex items-center gap-1.5`}>
-                            <status.icon className="w-3.5 h-3.5" />
-                            {status.label}
-                          </span>
-                          <span className="text-gray-500 flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5" />
-                            {formatDate(ride.date)}
-                          </span>
-                        </div>
-                        <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
-                          <span className="bg-gray-100 px-2 py-1 rounded-lg">{ride.vehicleType}</span>
-                          <span className="bg-gray-100 px-2 py-1 rounded-lg">{ride.vehicleNumber}</span>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {rides.map((ride) => {
+              const status = getStatusBadge(ride.status);
+              return (
+                <button
+                  key={ride.id}
+                  onClick={() => history.push(`/rides/${ride.id}`)}
+                  style={rideItemStyle}
+                >
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '12px',
+                      background: '#e0e7ff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '24px',
+                      flexShrink: 0
+                    }}>
+                      🚗
                     </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </IonContent>
-    </IonPage>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '14px', color: '#9ca3af' }}>📍</span>
+                        <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {ride.startLocation}
+                        </span>
+                        <span style={{ fontSize: '14px', color: '#9ca3af' }}>→</span>
+                        <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {ride.endLocation}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                        <span style={statusBadgeStyle(ride.status)}>
+                          {status.icon} {status.label}
+                        </span>
+                        <span style={{ fontSize: '13px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          📅 {formatDate(ride.date)}
+                        </span>
+                      </div>
+                      <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
+                        <span style={{ fontSize: '12px', color: '#4b5563', background: '#f3f4f6', padding: '4px 8px', borderRadius: '6px' }}>
+                          {ride.vehicleType}
+                        </span>
+                        <span style={{ fontSize: '12px', color: '#4b5563', background: '#f3f4f6', padding: '4px 8px', borderRadius: '6px' }}>
+                          {ride.vehicleNumber}
+                        </span>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '24px', color: '#9ca3af', alignSelf: 'center' }}>›</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
