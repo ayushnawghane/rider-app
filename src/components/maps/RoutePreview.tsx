@@ -1,11 +1,5 @@
-/**
- * RoutePreview Component
- * Shows map with route and ride options in a bottom sheet
- */
-
-import React, { useState, useEffect } from 'react';
-import { MapPin, Navigation, Clock, Users, ChevronRight, Car, CarFront, Crown, Armchair } from 'lucide-react';
-import MapComponent from './MapComponent';
+import React, { useEffect, useState } from 'react';
+import { GoogleMap, Marker, Polyline } from '@react-google-maps/api';
 import { mapsService } from '../../services';
 import { Location, RouteData, RideEstimate } from '../../types/maps';
 
@@ -15,14 +9,13 @@ interface RoutePreviewProps {
   onRideSelect?: (estimate: RideEstimate) => void;
   onConfirm?: (estimate: RideEstimate) => void;
   showEstimates?: boolean;
-  className?: string;
 }
 
-const vehicleIcons: Record<string, React.ReactNode> = {
-  economy: <Car className="w-6 h-6" />,
-  comfort: <Armchair className="w-6 h-6" />,
-  premium: <Crown className="w-6 h-6" />,
-  suv: <CarFront className="w-6 h-6" />,
+const vehicleEmojis: Record<string, string> = {
+  economy: '🚗',
+  comfort: '⭐',
+  premium: '💎',
+  suv: '🚙',
 };
 
 const RoutePreview: React.FC<RoutePreviewProps> = ({
@@ -31,13 +24,13 @@ const RoutePreview: React.FC<RoutePreviewProps> = ({
   onRideSelect,
   onConfirm,
   showEstimates = true,
-  className = '',
 }) => {
   const [routeData, setRouteData] = useState<RouteData | null>(null);
   const [estimates, setEstimates] = useState<RideEstimate[]>([]);
   const [selectedEstimate, setSelectedEstimate] = useState<RideEstimate | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [routePath, setRoutePath] = useState<Array<{ lat: number; lng: number }>>([]);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
 
   // Calculate route when pickup or drop changes
   useEffect(() => {
@@ -75,58 +68,247 @@ const RoutePreview: React.FC<RoutePreviewProps> = ({
     calculateRoute();
   }, [pickup, drop]);
 
+  // Fit bounds when map loads or markers change
+  useEffect(() => {
+    if (map && pickup && drop) {
+      const bounds = new google.maps.LatLngBounds();
+      bounds.extend({ lat: pickup.lat, lng: pickup.lng });
+      bounds.extend({ lat: drop.lat, lng: drop.lng });
+      map.fitBounds(bounds);
+    }
+  }, [map, pickup, drop]);
+
   const handleEstimateSelect = (estimate: RideEstimate) => {
     setSelectedEstimate(estimate);
     onRideSelect?.(estimate);
   };
 
-  const markers = [
-    ...(pickup ? [{ position: { lat: pickup.lat, lng: pickup.lng }, title: 'Pickup', icon: '/marker-pickup.svg' }] : []),
-    ...(drop ? [{ position: { lat: drop.lat, lng: drop.lng }, title: 'Drop', icon: '/marker-drop.svg' }] : []),
-  ];
-
-  // Calculate map center
   const mapCenter = pickup || drop || { lat: 28.6139, lng: 77.2090 };
 
+  const mapContainerStyle: React.CSSProperties = {
+    width: '100%',
+    height: '100%'
+  };
+
+  const mapOptions: google.maps.MapOptions = {
+    disableDefaultUI: false,
+    zoomControl: true,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+    styles: [
+      {
+        featureType: 'poi',
+        elementType: 'labels',
+        stylers: [{ visibility: 'off' }],
+      },
+    ],
+  };
+
+  const containerStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100%'
+  };
+
+  const mapSectionStyle: React.CSSProperties = {
+    flex: 1,
+    position: 'relative',
+    minHeight: '300px'
+  };
+
+  const routeInfoOverlayStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '16px',
+    left: '16px',
+    right: '16px',
+    background: 'rgba(255,255,255,0.95)',
+    backdropFilter: 'blur(4px)',
+    borderRadius: '12px',
+    padding: '12px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+  };
+
+  const bottomSheetStyle: React.CSSProperties = {
+    background: 'white',
+    borderRadius: '24px 24px 0 0',
+    boxShadow: '0 -4px 20px rgba(0,0,0,0.1)',
+    marginTop: '-24px',
+    position: 'relative',
+    zIndex: 10
+  };
+
+  const handleBarStyle: React.CSSProperties = {
+    display: 'flex',
+    justifyContent: 'center',
+    paddingTop: '12px',
+    paddingBottom: '8px'
+  };
+
+  const handleStyle: React.CSSProperties = {
+    width: '48px',
+    height: '4px',
+    background: '#d1d5db',
+    borderRadius: '2px'
+  };
+
+  const contentStyle: React.CSSProperties = {
+    padding: '0 16px',
+    paddingBottom: selectedEstimate ? '100px' : '24px',
+    maxHeight: '50vh',
+    overflowY: 'auto'
+  };
+
+  const titleStyle: React.CSSProperties = {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: '#1f2937',
+    margin: '0 0 16px 0'
+  };
+
+  const estimateCardStyle = (isSelected: boolean): React.CSSProperties => ({
+    width: '100%',
+    padding: '16px',
+    background: isSelected ? '#eef2ff' : 'white',
+    borderRadius: '12px',
+    border: isSelected ? '2px solid #6366f1' : '1px solid #e5e7eb',
+    marginBottom: '8px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    transition: 'all 0.2s'
+  });
+
+  const iconContainerStyle = (isSelected: boolean): React.CSSProperties => ({
+    width: '48px',
+    height: '48px',
+    borderRadius: '12px',
+    background: isSelected ? '#e0e7ff' : '#f3f4f6',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '24px'
+  });
+
+  const priceStyle: React.CSSProperties = {
+    fontWeight: '700',
+    fontSize: '18px',
+    color: '#1f2937'
+  };
+
+  const ctaContainerStyle: React.CSSProperties = {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: '16px',
+    background: 'white',
+    borderTop: '1px solid #e5e7eb'
+  };
+
+  const primaryButtonStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '16px 24px',
+    background: '#6366f1',
+    color: 'white',
+    borderRadius: '12px',
+    fontSize: '16px',
+    fontWeight: '600',
+    border: 'none',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px'
+  };
+
+  const skeletonStyle: React.CSSProperties = {
+    background: '#e5e7eb',
+    borderRadius: '8px',
+    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+  };
+
   return (
-    <div className={`flex flex-col h-full ${className}`}>
+    <div style={containerStyle}>
       {/* Map Section */}
-      <div className="flex-1 relative min-h-[300px]">
-        <MapComponent
+      <div style={mapSectionStyle}>
+        <GoogleMap
+          mapContainerStyle={mapContainerStyle}
           center={mapCenter}
-          markers={markers}
-          routePath={routePath}
-          fitBounds={markers.length > 0}
-          className="rounded-t-2xl overflow-hidden"
-        />
+          zoom={14}
+          options={mapOptions}
+          onLoad={setMap}
+        >
+          {/* Pickup Marker */}
+          {pickup && (
+            <Marker
+              position={{ lat: pickup.lat, lng: pickup.lng }}
+              title="Pickup"
+              icon={{
+                url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTIiIGZpbGw9IiM2MzY2ZjEiLz4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iNiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+',
+                scaledSize: new google.maps.Size(32, 32)
+              }}
+            />
+          )}
+
+          {/* Drop Marker */}
+          {drop && (
+            <Marker
+              position={{ lat: drop.lat, lng: drop.lng }}
+              title="Drop"
+              icon={{
+                url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTIiIGZpbGw9IiMyMmM1NWUiLz4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iNiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+',
+                scaledSize: new google.maps.Size(32, 32)
+              }}
+            />
+          )}
+
+          {/* Route Polyline */}
+          {routePath.length > 0 && (
+            <Polyline
+              path={routePath}
+              options={{
+                strokeColor: '#6366f1',
+                strokeOpacity: 0.8,
+                strokeWeight: 4,
+                clickable: false,
+                draggable: false,
+                editable: false,
+                visible: true,
+                zIndex: 1,
+              }}
+            />
+          )}
+        </GoogleMap>
 
         {/* Route Info Overlay */}
         {routeData && (
-          <div className="absolute top-4 left-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-3 shadow-medium">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-primary-600" />
-                  <span className="text-sm text-gray-600 truncate max-w-[120px]">
+          <div style={routeInfoOverlayStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '16px' }}>📍</span>
+                  <span style={{ fontSize: '13px', color: '#4b5563', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {pickup?.name || 'Pickup'}
                   </span>
                 </div>
-                <Navigation className="w-4 h-4 text-gray-400" />
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-success-600" />
-                  <span className="text-sm text-gray-600 truncate max-w-[120px]">
+                <span style={{ fontSize: '14px', color: '#9ca3af' }}>→</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '16px' }}>🏁</span>
+                  <span style={{ fontSize: '13px', color: '#4b5563', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {drop?.name || 'Drop'}
                   </span>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-4 mt-2 pt-2 border-t border-gray-100">
-              <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                <Navigation className="w-4 h-4" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #f3f4f6' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#4b5563' }}>
+                <span>📏</span>
                 {routeData.distance}
               </div>
-              <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                <Clock className="w-4 h-4" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#4b5563' }}>
+                <span>⏱️</span>
                 {routeData.duration}
               </div>
             </div>
@@ -136,87 +318,88 @@ const RoutePreview: React.FC<RoutePreviewProps> = ({
 
       {/* Bottom Sheet - Ride Options */}
       {showEstimates && (
-        <div className="bg-white rounded-t-3xl shadow-strong -mt-6 relative z-10">
+        <div style={bottomSheetStyle}>
           {/* Handle bar */}
-          <div className="flex justify-center pt-3 pb-2">
-            <div className="w-12 h-1 bg-gray-300 rounded-full" />
+          <div style={handleBarStyle}>
+            <div style={handleStyle} />
           </div>
 
-          <div className="px-4 pb-24 max-h-[50vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Choose a ride</h3>
+          <div style={contentStyle}>
+            <h3 style={titleStyle}>Choose a ride</h3>
 
             {isLoading ? (
-              <div className="space-y-3">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="card p-4 animate-pulse">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gray-200 rounded-xl" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-200 rounded w-24" />
-                        <div className="h-3 bg-gray-200 rounded w-32" />
+                  <div key={i} style={{ padding: '16px', background: 'white', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ ...skeletonStyle, width: '48px', height: '48px', borderRadius: '12px' }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ ...skeletonStyle, height: '16px', width: '80px', marginBottom: '8px' }} />
+                        <div style={{ ...skeletonStyle, height: '12px', width: '120px' }} />
                       </div>
-                      <div className="h-6 bg-gray-200 rounded w-16" />
+                      <div style={{ ...skeletonStyle, height: '20px', width: '60px' }} />
                     </div>
                   </div>
                 ))}
+                <style>{`
+                  @keyframes pulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: .5; }
+                  }
+                `}</style>
               </div>
             ) : estimates.length > 0 ? (
-              <div className="space-y-2">
+              <div>
                 {estimates.map((estimate) => (
                   <button
                     key={estimate.type}
                     onClick={() => handleEstimateSelect(estimate)}
-                    className={`w-full card p-4 transition-all ${
-                      selectedEstimate?.type === estimate.type
-                        ? 'ring-2 ring-primary-500 bg-primary-50'
-                        : 'hover:bg-gray-50'
-                    }`}
+                    style={estimateCardStyle(selectedEstimate?.type === estimate.type)}
+                    type="button"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        selectedEstimate?.type === estimate.type
-                          ? 'bg-primary-100 text-primary-600'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {vehicleIcons[estimate.type] || <Car className="w-6 h-6" />}
+                    <div style={iconContainerStyle(selectedEstimate?.type === estimate.type)}>
+                      {vehicleEmojis[estimate.type] || '🚗'}
+                    </div>
+                    <div style={{ flex: 1, textAlign: 'left' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <h4 style={{ fontSize: '15px', fontWeight: '600', color: '#1f2937', margin: 0 }}>
+                          {estimate.name}
+                        </h4>
+                        <span style={{ fontSize: '12px', color: '#6b7280' }}>• {estimate.eta}</span>
                       </div>
-                      <div className="flex-1 text-left">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-gray-900">{estimate.name}</h4>
-                          <span className="text-xs text-gray-500">• {estimate.eta}</span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Users className="w-3.5 h-3.5 text-gray-400" />
-                          <span className="text-sm text-gray-500">{estimate.capacity}</span>
-                        </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                        <span style={{ fontSize: '13px', color: '#6b7280' }}>👥 {estimate.capacity}</span>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-lg text-gray-900">
-                          {estimate.currency}{estimate.price}
-                        </p>
-                        <p className="text-xs text-gray-500">est. fare</p>
-                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={priceStyle}>
+                        {estimate.currency}{estimate.price}
+                      </p>
+                      <p style={{ fontSize: '11px', color: '#9ca3af', margin: 0 }}>est. fare</p>
                     </div>
                   </button>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <Car className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">Select pickup and drop locations to see ride options</p>
+              <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                <span style={{ fontSize: '48px' }}>🚗</span>
+                <p style={{ fontSize: '14px', color: '#6b7280', margin: '12px 0 0 0' }}>
+                  Select pickup and drop locations to see ride options
+                </p>
               </div>
             )}
           </div>
 
           {/* Sticky CTA */}
           {selectedEstimate && (
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100">
+            <div style={ctaContainerStyle}>
               <button
                 onClick={() => onConfirm?.(selectedEstimate)}
-                className="w-full btn btn-primary py-4 flex items-center justify-center gap-2"
+                style={primaryButtonStyle}
+                type="button"
               >
                 Choose {selectedEstimate.name}
-                <ChevronRight className="w-5 h-5" />
+                <span>›</span>
               </button>
             </div>
           )}

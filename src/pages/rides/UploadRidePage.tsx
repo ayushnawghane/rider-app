@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { rideService } from '../../services';
+import { rideService, mapsService } from '../../services';
 import { LocationSearch, RoutePreview } from '../../components/maps';
 import { useJsApiLoader } from '@react-google-maps/api';
 import type { Location, RideEstimate } from '../../types/maps';
@@ -44,6 +44,13 @@ const UploadRidePage = () => {
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries,
   });
+
+  // Initialize maps service when Google Maps is loaded
+  useEffect(() => {
+    if (isLoaded) {
+      mapsService.initialize();
+    }
+  }, [isLoaded]);
 
   const [step, setStep] = useState<'locations' | 'preview' | 'details' | 'success'>('locations');
   const [loading, setLoading] = useState(false);
