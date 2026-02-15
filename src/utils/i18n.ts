@@ -1,5 +1,5 @@
 export default {
-  opening: 'Welcome to RiderApp',
+  opening: 'Welcome to Blink Car',
   logout: 'Logout',
   login: 'Login',
   register: 'Register',

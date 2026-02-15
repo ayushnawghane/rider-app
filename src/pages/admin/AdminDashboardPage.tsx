@@ -1,4 +1,5 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonList, IonItem, IonLabel, IonBadge, IonCard, IonCardContent, IonLoading } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonList, IonItem, IonLabel, IonBadge, IonCard, IonCardContent } from '@ionic/react';
+import LoadingOverlay from '../../components/LoadingOverlay';
 import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
@@ -65,7 +66,13 @@ const AdminDashboardPage: React.FC = () => {
   }
 
   if (loading) {
-    return <IonLoading isOpen message="Loading dashboard..." />;
+    return (
+      <IonPage>
+        <IonContent>
+          <LoadingOverlay isOpen variant="fullscreen" message="Loading dashboard..." />
+        </IonContent>
+      </IonPage>
+    );
   }
 
   return (

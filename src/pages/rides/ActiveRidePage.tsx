@@ -1,4 +1,5 @@
-import { IonContent, IonPage, IonButton, IonLoading, IonToast } from '@ionic/react';
+import { IonContent, IonPage, IonButton, IonToast } from '@ionic/react';
+import LoadingOverlay from '../../components/LoadingOverlay';
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
@@ -161,9 +162,7 @@ const ActiveRidePage = () => {
     return (
       <IonPage>
         <IonContent className="ion-padding bg-gray-50">
-          <div className="h-screen flex items-center justify-center">
-            <IonLoading isOpen message="Loading ride details..." />
-          </div>
+          <LoadingOverlay isOpen variant="fullscreen" message="Loading ride details..." />
         </IonContent>
       </IonPage>
     );
