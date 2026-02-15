@@ -8,27 +8,71 @@ import { Location, RouteData, RideEstimate } from '../types/maps';
 class GoogleMapsService {
   private geocoder: google.maps.Geocoder | null = null;
   private directionsService: google.maps.DirectionsService | null = null;
-  private placesService: google.maps.places.AutocompleteService | null = null;
-  private placesSessionToken: google.maps.places.AutocompleteSessionToken | null = null;
+  private autocompleteService: google.maps.places.AutocompleteService | null = null;
+  private placesService: google.maps.places.PlacesService | null = null;
+  private sessionToken: google.maps.places.AutocompleteSessionToken | null = null;
+  private placesServiceDiv: HTMLDivElement | null = null;
 
-  constructor() {
-    this.initializeServices();
-  }
+  /**
+   * Initialize Google Maps services
+   * Should be called after Google Maps API is loaded
+   */
+  initialize(): boolean {
+    if (typeof window === 'undefined' || !window.google || !window.google.maps) {
+      console.warn('Google Maps API not available');
+      return false;
+    }
 
-  private initializeServices() {
-    if (typeof window !== 'undefined' && window.google) {
+    try {
+      // Initialize services
       this.geocoder = new google.maps.Geocoder();
       this.directionsService = new google.maps.DirectionsService();
-      this.placesService = new google.maps.places.AutocompleteService();
-      this.placesSessionToken = new google.maps.places.AutocompleteSessionToken();
+      
+      if (window.google.maps.places) {
+        this.autocompleteService = new google.maps.places.AutocompleteService();
+        this.sessionToken = new google.maps.places.AutocompleteSessionToken();
+        
+        // Create a hidden div for PlacesService
+        if (!this.placesServiceDiv) {
+          this.placesServiceDiv = document.createElement('div');
+          this.placesServiceDiv.style.display = 'none';
+          document.body.appendChild(this.placesServiceDiv);
+        }
+        this.placesService = new google.maps.places.PlacesService(this.placesServiceDiv);
+      }
+
+      console.log('Google Maps services initialized successfully');
+      return true;
+    } catch (error) {
+      console.error('Error initializing Google Maps services:', error);
+      return false;
     }
+  }
+
+  /**
+   * Check if services are initialized
+   */
+  isInitialized(): boolean {
+    return !!(
+      typeof window !== 'undefined' &&
+      window.google &&
+      window.google.maps &&
+      this.geocoder &&
+      this.autocompleteService
+    );
+  }
+
+  /**
+   * Ensure services are initialized
+   */
+  private ensureInitialized(): boolean {
+    if (this.isInitialized()) return true;
+    return this.initialize();
   }
 
   // Geocode address to coordinates
   async geocodeAddress(address: string): Promise<Location | null> {
-    if (!this.geocoder) {
-      this.initializeServices();
-    }
+    if (!this.ensureInitialized()) return null;
 
     return new Promise((resolve) => {
       this.geocoder?.geocode({ address }, (results, status) => {
@@ -43,6 +87,7 @@ class GoogleMapsService {
             placeId: results[0].place_id,
           });
         } else {
+          console.warn('Geocoding failed:', status);
           resolve(null);
         }
       });
@@ -51,9 +96,7 @@ class GoogleMapsService {
 
   // Reverse geocode coordinates to address
   async reverseGeocode(lat: number, lng: number): Promise<Location | null> {
-    if (!this.geocoder) {
-      this.initializeServices();
-    }
+    if (!this.ensureInitialized()) return null;
 
     return new Promise((resolve) => {
       this.geocoder?.geocode({ location: { lat, lng } }, (results, status) => {
@@ -67,6 +110,7 @@ class GoogleMapsService {
             placeId: results[0].place_id,
           });
         } else {
+          console.warn('Reverse geocoding failed:', status);
           resolve(null);
         }
       });
@@ -75,21 +119,31 @@ class GoogleMapsService {
 
   // Get autocomplete predictions
   async getPlacePredictions(input: string): Promise<google.maps.places.AutocompletePrediction[]> {
-    if (!this.placesService) {
-      this.initializeServices();
+    if (!this.ensureInitialized()) {
+      console.warn('Google Maps services not initialized');
+      return [];
+    }
+
+    if (!this.autocompleteService) {
+      console.warn('Autocomplete service not available');
+      return [];
     }
 
     return new Promise((resolve) => {
-      this.placesService?.getPlacePredictions(
+      this.autocompleteService?.getPlacePredictions(
         {
           input,
-          sessionToken: this.placesSessionToken || undefined,
+          sessionToken: this.sessionToken || undefined,
           types: ['geocode', 'establishment'],
+          componentRestrictions: undefined, // Add country restriction if needed
         },
         (predictions, status) => {
           if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
             resolve(predictions);
           } else {
+            if (status !== google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+              console.warn('Autocomplete failed:', status);
+            }
             resolve([]);
           }
         }
@@ -99,28 +153,35 @@ class GoogleMapsService {
 
   // Get place details
   async getPlaceDetails(placeId: string): Promise<Location | null> {
-    return new Promise((resolve) => {
-      const service = new google.maps.places.PlacesService(
-        document.createElement('div')
-      );
+    if (!this.ensureInitialized()) return null;
 
-      service.getDetails(
+    if (!this.placesService) {
+      console.warn('Places service not available');
+      return null;
+    }
+
+    return new Promise((resolve) => {
+      this.placesService?.getDetails(
         {
           placeId,
           fields: ['name', 'formatted_address', 'geometry', 'place_id'],
-          sessionToken: this.placesSessionToken || undefined,
+          sessionToken: this.sessionToken || undefined,
         },
         (place, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && place && place.geometry) {
+          if (status === google.maps.places.PlacesServiceStatus.OK && place && place.geometry && place.geometry.location) {
+            // Reset session token after place details (for billing optimization)
+            this.resetSessionToken();
+            
             resolve({
               id: place.place_id || placeId,
               name: place.name || place.formatted_address?.split(',')[0] || '',
               address: place.formatted_address || '',
-              lat: place.geometry.location?.lat() || 0,
-              lng: place.geometry.location?.lng() || 0,
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
               placeId: place.place_id,
             });
           } else {
+            console.warn('Place details failed:', status);
             resolve(null);
           }
         }
@@ -133,9 +194,7 @@ class GoogleMapsService {
     origin: { lat: number; lng: number } | string,
     destination: { lat: number; lng: number } | string
   ): Promise<RouteData | null> {
-    if (!this.directionsService) {
-      this.initializeServices();
-    }
+    if (!this.ensureInitialized()) return null;
 
     return new Promise((resolve) => {
       this.directionsService?.route(
@@ -161,6 +220,7 @@ class GoogleMapsService {
               legs: route.legs,
             });
           } else {
+            console.warn('Route calculation failed:', status);
             resolve(null);
           }
         }
@@ -264,7 +324,22 @@ class GoogleMapsService {
 
   // Reset session token for billing optimization
   resetSessionToken() {
-    this.placesSessionToken = new google.maps.places.AutocompleteSessionToken();
+    if (typeof window !== 'undefined' && window.google?.maps?.places) {
+      this.sessionToken = new google.maps.places.AutocompleteSessionToken();
+    }
+  }
+
+  // Cleanup
+  cleanup() {
+    if (this.placesServiceDiv && document.body.contains(this.placesServiceDiv)) {
+      document.body.removeChild(this.placesServiceDiv);
+    }
+    this.placesServiceDiv = null;
+    this.placesService = null;
+    this.autocompleteService = null;
+    this.geocoder = null;
+    this.directionsService = null;
+    this.sessionToken = null;
   }
 }
 
