@@ -13,6 +13,8 @@ import KycUploadPage from './pages/auth/KycUploadPage';
 import SSOCallback from './pages/auth/SSOCallback';
 import HomePage from './pages/home/HomePage';
 import UploadRidePage from './pages/rides/UploadRidePage';
+import PublishRidePage from './pages/rides/PublishRidePage';
+import FindRidePage from './pages/rides/FindRidePage';
 import RideHistoryPage from './pages/rides/RideHistoryPage';
 import RideDetailPage from './pages/rides/RideDetailPage';
 import ActiveRidePage from './pages/rides/ActiveRidePage';
@@ -22,6 +24,7 @@ import DisputeChatPage from './pages/support/DisputeChatPage';
 import SafetyPage from './pages/safety/SafetyPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import NotificationsPage from './pages/profile/NotificationsPage';
+import RewardsPage from './pages/rewards/RewardsPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 
 import '@ionic/react/css/core.css';
@@ -125,10 +128,14 @@ const AppContent: React.FC = () => {
           <PublicRoute component={RegisterPage} path="/register" exact />
           <Route path="/sso-callback" component={SSOCallback} exact />
           <PrivateRoute component={HomePage} path="/home" exact />
+          <PrivateRoute component={HomePage} path="/" exact />
           <PrivateRoute component={UploadRidePage} path="/upload-ride" />
+          <PrivateRoute component={PublishRidePage} path="/publish-ride" exact />
+          <PrivateRoute component={FindRidePage} path="/find-ride" exact />
           <PrivateRoute component={RideHistoryPage} path="/rides/history" exact />
           <PrivateRoute component={RideDetailPage} path="/rides/:id" exact />
           <PrivateRoute component={ActiveRidePage} path="/rides/active/:id" />
+          <PrivateRoute component={RewardsPage} path="/rewards" exact />
           <PrivateRoute component={SupportPage} path="/support" exact />
           <PrivateRoute component={NewDisputePage} path="/support/dispute/new" exact />
           <PrivateRoute component={DisputeChatPage} path="/support/dispute/:id" />
