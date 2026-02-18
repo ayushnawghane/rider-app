@@ -2,6 +2,8 @@ export interface User {
   id: string;
   email: string;
   fullName: string;
+  firstName?: string;
+  lastName?: string;
   phone: string;
   kycStatus: 'pending' | 'approved' | 'rejected';
   kycDocumentUrl?: string;
@@ -11,6 +13,92 @@ export interface User {
   role: 'rider' | 'driver' | 'admin';
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UserStats {
+  level: number;
+  points: number;
+  ridesTaken: number;
+  ridesPublished: number;
+  rating: number;
+}
+
+export interface PublishedRide {
+  id: string;
+  driverId: string;
+  driver?: {
+    id: string;
+    name: string;
+    avatar: string;
+    rating: number;
+    phone: string;
+  };
+  startLocation: string;
+  endLocation: string;
+  startLat: number;
+  startLng: number;
+  endLat: number;
+  endLng: number;
+  routePolyline?: string;
+  distance: number;
+  duration: number;
+  departureTime: string;
+  availableSeats: number;
+  bookedSeats: number;
+  pricePerSeat: number;
+  vehicleType: string;
+  vehicleNumber: string;
+  status: 'active' | 'completed' | 'cancelled' | 'in_progress';
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Booking {
+  id: string;
+  rideId: string;
+  ride?: PublishedRide;
+  passengerId: string;
+  passenger?: User;
+  seatsBooked: number;
+  totalPrice: number;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  bookingTime: string;
+  pickupLocation?: string;
+  dropLocation?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Reward {
+  id: string;
+  userId: string;
+  points: number;
+  action: 'publish_ride' | 'complete_ride' | 'weekly_streak' | 'referral' | 'five_star_rating';
+  description: string;
+  rideId?: string;
+  createdAt: string;
+}
+
+export interface Achievement {
+  id: string;
+  userId: string;
+  badgeId: string;
+  badgeName: string;
+  badgeIcon: string;
+  badgeColor: string;
+  description: string;
+  earnedAt: string;
+}
+
+export interface Badge {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  description: string;
+  criteria: string;
+  pointsReward: number;
 }
 
 export interface Ride {

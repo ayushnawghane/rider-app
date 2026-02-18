@@ -1,5 +1,6 @@
 export { authService } from './auth';
 export { rideService } from './ride';
+export { carpoolService } from './carpool';
 export { disputeService } from './dispute';
 export { messageService } from './message';
 export { notificationService } from './notification';
