@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router';
+import { IonContent, IonPage } from '@ionic/react';
 import { useAuth } from '../../context/AuthContext';
 import { 
   MapPin, 
@@ -171,14 +172,20 @@ const FindRidePage = () => {
 
   if (!isClerkLoaded) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
-      </div>
+      <IonPage>
+        <IonContent className="bg-gray-50">
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
+          </div>
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <IonPage>
+      <IonContent className="bg-gray-50">
+        <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
       {/* Header */}
       <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 pt-12 pb-6 px-4">
         <div className="flex items-center gap-4 mb-4">
@@ -440,7 +447,9 @@ const FindRidePage = () => {
           </div>
         </div>
       )}
-    </div>
+        </div>
+      </IonContent>
+    </IonPage>
   );
 };
 

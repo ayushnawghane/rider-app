@@ -18,7 +18,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
   icon = 'default',
 }) => {
   const [inputValue, setInputValue] = useState(value);
-  const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [predictions, setPredictions] = useState<Array<google.maps.places.AutocompleteSuggestion | google.maps.places.AutocompletePrediction>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showPredictions, setShowPredictions] = useState(false);
   const [mapsError, setMapsError] = useState(false);
@@ -46,6 +46,14 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
     // Check if Google Maps is loaded
     if (typeof window === 'undefined' || !window.google || !window.google.maps) {
       console.error('Google Maps not loaded');
+      setMapsError(true);
+      return;
+    }
+
+    // Initialize maps service if needed
+    const initialized = await mapsService.initialize();
+    if (!initialized) {
+      console.error('Failed to initialize Google Maps service');
       setMapsError(true);
       return;
     }
@@ -78,12 +86,16 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
     }, 300);
   };
 
-  const handlePredictionSelect = async (prediction: google.maps.places.AutocompletePrediction) => {
+  const handlePredictionSelect = async (
+    suggestion: google.maps.places.AutocompleteSuggestion | google.maps.places.AutocompletePrediction
+  ) => {
     setIsLoading(true);
     setShowPredictions(false);
 
     try {
-      const location = await mapsService.getPlaceDetails(prediction.place_id);
+      const location = 'placePrediction' in suggestion
+        ? await mapsService.getPlaceDetailsFromSuggestion(suggestion)
+        : await mapsService.getPlaceDetails(suggestion.place_id);
       if (location) {
         setInputValue(location.address);
         onLocationSelect(location);
@@ -207,6 +219,23 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
     color: '#dc2626'
   };
 
+  // Helper to get display text from suggestion
+  const getSuggestionText = (
+    suggestion: google.maps.places.AutocompleteSuggestion | google.maps.places.AutocompletePrediction
+  ) => {
+    if ('placePrediction' in suggestion) {
+      const prediction = suggestion.placePrediction;
+      return {
+        mainText: prediction.mainText?.text || '',
+        secondaryText: prediction.secondaryText?.text || ''
+      };
+    }
+    return {
+      mainText: suggestion.structured_formatting?.main_text || suggestion.description || '',
+      secondaryText: suggestion.structured_formatting?.secondary_text || ''
+    };
+  };
+
   return (
     <div style={containerStyle}>
       {mapsError && (
@@ -244,42 +273,45 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
       {/* Predictions Dropdown */}
       {showPredictions && predictions.length > 0 && (
         <div style={dropdownStyle}>
-          {predictions.map((prediction, index) => (
-            <button
-              key={prediction.place_id}
-              onClick={() => handlePredictionSelect(prediction)}
-              style={{
-                ...predictionItemStyle,
-                borderBottom: index === predictions.length - 1 ? 'none' : '1px solid #f3f4f6'
-              }}
-              type="button"
-            >
-              <span style={{ fontSize: '18px', marginTop: '2px' }}>📍</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#1f2937',
-                  margin: '0 0 2px 0',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  {prediction.structured_formatting.main_text}
-                </p>
-                <p style={{
-                  fontSize: '13px',
-                  color: '#6b7280',
-                  margin: 0,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  {prediction.structured_formatting.secondary_text}
-                </p>
-              </div>
-            </button>
-          ))}
+          {predictions.map((suggestion, index) => {
+            const { mainText, secondaryText } = getSuggestionText(suggestion);
+            return (
+              <button
+                key={('placePrediction' in suggestion ? suggestion.placePrediction?.placeId : suggestion.place_id) || index}
+                onClick={() => handlePredictionSelect(suggestion)}
+                style={{
+                  ...predictionItemStyle,
+                  borderBottom: index === predictions.length - 1 ? 'none' : '1px solid #f3f4f6'
+                }}
+                type="button"
+              >
+                <span style={{ fontSize: '18px', marginTop: '2px' }}>📍</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#1f2937',
+                    margin: '0 0 2px 0',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>
+                    {mainText}
+                  </p>
+                  <p style={{
+                    fontSize: '13px',
+                    color: '#6b7280',
+                    margin: 0,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>
+                    {secondaryText}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
 

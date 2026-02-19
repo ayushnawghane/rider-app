@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
+import { IonContent, IonPage } from '@ionic/react';
 import { useAuth } from '../../context/AuthContext';
 import { 
   MapPin, 
@@ -35,11 +36,11 @@ const PublishRidePage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Set default time to current time + 1 hour
-  useState(() => {
+  useEffect(() => {
     const now = new Date();
     now.setHours(now.getHours() + 1);
     setDepartureTime(now.toISOString().slice(0, 16));
-  });
+  }, []);
 
   const handlePublish = async () => {
     if (!startLocation || !endLocation || !departureTime || !vehicleNumber) {
@@ -67,14 +68,20 @@ const PublishRidePage = () => {
 
   if (!isClerkLoaded) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
-      </div>
+      <IonPage>
+        <IonContent className="bg-gray-50">
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
+          </div>
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <IonPage>
+      <IonContent className="bg-gray-50">
+        <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
       {/* Header */}
       <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 pt-12 pb-6 px-4">
         <div className="flex items-center gap-4 mb-4">
@@ -270,7 +277,9 @@ const PublishRidePage = () => {
           </button>
         </div>
       </div>
-    </div>
+        </div>
+      </IonContent>
+    </IonPage>
   );
 };
 

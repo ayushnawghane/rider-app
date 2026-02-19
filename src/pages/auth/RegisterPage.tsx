@@ -82,12 +82,12 @@ const RegisterPage = () => {
   const logoStyle: React.CSSProperties = {
     width: '80px',
     height: '80px',
-    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+    background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
     borderRadius: '24px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 10px 25px rgba(99, 102, 241, 0.3)'
+    boxShadow: '0 10px 25px rgba(249, 115, 22, 0.3)'
   };
 
   const logoTextStyle: React.CSSProperties = {
@@ -128,9 +128,9 @@ const RegisterPage = () => {
 
   const primaryButtonStyle: React.CSSProperties = {
     ...buttonBaseStyle,
-    background: '#6366f1',
+    background: '#ea580c',
     color: 'white',
-    boxShadow: '0 4px 6px rgba(99, 102, 241, 0.2)'
+    boxShadow: '0 4px 6px rgba(234, 88, 12, 0.2)'
   };
 
   const secondaryButtonStyle: React.CSSProperties = {
@@ -196,7 +196,7 @@ const RegisterPage = () => {
   };
 
   const footerLinkStyle: React.CSSProperties = {
-    color: '#6366f1',
+    color: '#ea580c',
     fontWeight: '600',
     textDecoration: 'none',
     background: 'none',
@@ -281,19 +281,19 @@ const RegisterPage = () => {
                 </div>
               </div>
 
-              <div style={featureCardStyle('#eff6ff', '#bfdbfe')}>
+              <div style={featureCardStyle('#fff7ed', '#fed7aa')}>
                 <span style={featureIconStyle('20px')}>⏱️</span>
                 <div>
-                  <p style={{ ...featureTitleStyle, color: '#1e40af' }}>Quick Verification</p>
-                  <p style={{ ...featureTextStyle, color: '#3b82f6' }}>Get verified in minutes with email or phone</p>
+                  <p style={{ ...featureTitleStyle, color: '#9a3412' }}>Quick Verification</p>
+                  <p style={{ ...featureTextStyle, color: '#c2410c' }}>Get verified in minutes with email or phone</p>
                 </div>
               </div>
 
-              <div style={featureCardStyle('#eff6ff', '#bfdbfe')}>
+              <div style={featureCardStyle('#fff7ed', '#fed7aa')}>
                 <span style={featureIconStyle('20px')}>🌍</span>
                 <div>
-                  <p style={{ ...featureTitleStyle, color: '#1e40af' }}>Global Access</p>
-                  <p style={{ ...featureTextStyle, color: '#3b82f6' }}>Access your rides from anywhere in the world</p>
+                  <p style={{ ...featureTitleStyle, color: '#9a3412' }}>Global Access</p>
+                  <p style={{ ...featureTextStyle, color: '#c2410c' }}>Access your rides from anywhere in the world</p>
                 </div>
               </div>
             </div>
@@ -341,14 +341,14 @@ const RegisterPage = () => {
                     headerTitle: { fontSize: '24px', fontWeight: '700', color: '#1f2937' },
                     headerSubtitle: { color: '#6b7280', marginTop: '8px' },
                     formButtonPrimary: { 
-                      background: '#6366f1',
+                      background: '#ea580c',
                       borderRadius: '12px',
                       padding: '16px',
                       fontSize: '16px',
                       fontWeight: '600'
                     },
                     formFieldLabel: { color: '#374151', fontWeight: '500' },
-                    footerActionLink: { color: '#6366f1' },
+                    footerActionLink: { color: '#ea580c' },
                     socialButtonsBlockButton: { borderRadius: '12px' },
                     dividerText: { color: '#9ca3af' },
                     formFieldInput: { 
@@ -368,3 +368,4 @@ const RegisterPage = () => {
 };
 
 export default RegisterPage;
+

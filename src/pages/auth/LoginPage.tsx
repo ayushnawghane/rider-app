@@ -82,12 +82,12 @@ const LoginPage = () => {
   const logoStyle: React.CSSProperties = {
     width: '80px',
     height: '80px',
-    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+    background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
     borderRadius: '24px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 10px 25px rgba(99, 102, 241, 0.3)'
+    boxShadow: '0 10px 25px rgba(249, 115, 22, 0.3)'
   };
 
   const logoTextStyle: React.CSSProperties = {
@@ -128,9 +128,9 @@ const LoginPage = () => {
 
   const primaryButtonStyle: React.CSSProperties = {
     ...buttonBaseStyle,
-    background: '#6366f1',
+    background: '#ea580c',
     color: 'white',
-    boxShadow: '0 4px 6px rgba(99, 102, 241, 0.2)'
+    boxShadow: '0 4px 6px rgba(234, 88, 12, 0.2)'
   };
 
   const secondaryButtonStyle: React.CSSProperties = {
@@ -169,7 +169,7 @@ const LoginPage = () => {
   };
 
   const footerLinkStyle: React.CSSProperties = {
-    color: '#6366f1',
+    color: '#ea580c',
     fontWeight: '600',
     textDecoration: 'none',
     background: 'none',
@@ -179,8 +179,8 @@ const LoginPage = () => {
   };
 
   const securityBadgeStyle: React.CSSProperties = {
-    background: '#dbeafe',
-    border: '1px solid #bfdbfe',
+    background: '#fff7ed',
+    border: '1px solid #fed7aa',
     borderRadius: '12px',
     padding: '16px',
     display: 'flex',
@@ -196,13 +196,13 @@ const LoginPage = () => {
   const securityTitleStyle: React.CSSProperties = {
     fontSize: '14px',
     fontWeight: '600',
-    color: '#1e40af',
+    color: '#9a3412',
     margin: '0 0 4px 0'
   };
 
   const securityTextStyle: React.CSSProperties = {
     fontSize: '14px',
-    color: '#3b82f6',
+    color: '#c2410c',
     margin: 0
   };
 
@@ -324,14 +324,14 @@ const LoginPage = () => {
                     headerTitle: { fontSize: '24px', fontWeight: '700', color: '#1f2937' },
                     headerSubtitle: { color: '#6b7280', marginTop: '8px' },
                     formButtonPrimary: { 
-                      background: '#6366f1',
+                      background: '#ea580c',
                       borderRadius: '12px',
                       padding: '16px',
                       fontSize: '16px',
                       fontWeight: '600'
                     },
                     formFieldLabel: { color: '#374151', fontWeight: '500' },
-                    footerActionLink: { color: '#6366f1' },
+                    footerActionLink: { color: '#ea580c' },
                     socialButtonsBlockButton: { borderRadius: '12px' },
                     dividerText: { color: '#9ca3af' },
                     formFieldInput: { 
@@ -351,3 +351,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+

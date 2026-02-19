@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
+import { IonContent, IonPage } from '@ionic/react';
 import { useAuth } from '../../context/AuthContext';
 import { UserButton } from '@clerk/clerk-react';
 import { 
@@ -72,14 +73,20 @@ const HomePage = () => {
 
   if (!isClerkLoaded || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent" />
-      </div>
+      <IonPage>
+        <IonContent className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700">
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent" />
+          </div>
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <IonPage>
+      <IonContent className="bg-gray-50">
+        <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
       {/* Orange Header Section */}
       <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 pt-12 pb-6 px-4">
         {/* Top Row: Notifications & Profile */}
@@ -385,7 +392,9 @@ const HomePage = () => {
           </button>
         </div>
       </div>
-    </div>
+        </div>
+      </IonContent>
+    </IonPage>
   );
 };
 

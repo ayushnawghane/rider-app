@@ -1,3 +1,4 @@
+import { IonContent, IonPage } from '@ionic/react';
 import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
@@ -247,47 +248,57 @@ const ProfilePage = () => {
 
   if (!isClerkLoaded) {
     return (
-      <div style={containerStyle}>
-        <div style={contentStyle}>
-          <div style={{ paddingTop: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ ...skeletonStyle, width: '80px', height: '80px', borderRadius: '50%' }} />
-              <div>
-                <div style={{ ...skeletonStyle, height: '24px', width: '120px', marginBottom: '8px' }} />
-                <div style={{ ...skeletonStyle, height: '16px', width: '180px' }} />
+      <IonPage>
+        <IonContent className="bg-gray-50">
+          <div style={containerStyle}>
+            <div style={contentStyle}>
+              <div style={{ paddingTop: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ ...skeletonStyle, width: '80px', height: '80px', borderRadius: '50%' }} />
+                  <div>
+                    <div style={{ ...skeletonStyle, height: '24px', width: '120px', marginBottom: '8px' }} />
+                    <div style={{ ...skeletonStyle, height: '16px', width: '180px' }} />
+                  </div>
+                </div>
               </div>
             </div>
+            <style>{`
+              @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: .5; }
+              }
+            `}</style>
           </div>
-        </div>
-        <style>{`
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: .5; }
-          }
-        `}</style>
-      </div>
+        </IonContent>
+      </IonPage>
     );
   }
 
   if (!user) {
     return (
-      <div style={{
-        height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#f9fafb'
-      }}>
-        <p>Loading...</p>
-      </div>
+      <IonPage>
+        <IonContent className="bg-gray-50">
+          <div style={{
+            height: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#f9fafb'
+          }}>
+            <p>Loading...</p>
+          </div>
+        </IonContent>
+      </IonPage>
     );
   }
 
   const kycStatus = getKycStatus(user.kycStatus);
 
   return (
-    <div style={containerStyle}>
-      <div style={contentStyle}>
+    <IonPage>
+      <IonContent className="bg-gray-50">
+        <div style={containerStyle}>
+          <div style={contentStyle}>
         <div style={headerStyle}>
           <h1 style={titleStyle}>Profile</h1>
           <button
@@ -450,8 +461,10 @@ const ProfilePage = () => {
           <span>🚪</span>
           Sign Out
         </button>
-      </div>
-    </div>
+          </div>
+        </div>
+      </IonContent>
+    </IonPage>
   );
 };
 

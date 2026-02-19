@@ -1,6 +1,7 @@
 /**
  * Google Maps Service
  * Handles all map-related operations including geocoding, directions, and autocomplete
+ * Updated to use new Places API (AutocompleteSuggestion) as of March 2025
  */
 
 import { Location, RouteData, RideEstimate } from '../types/maps';
@@ -8,37 +9,39 @@ import { Location, RouteData, RideEstimate } from '../types/maps';
 class GoogleMapsService {
   private geocoder: google.maps.Geocoder | null = null;
   private directionsService: google.maps.DirectionsService | null = null;
+  private placesLibrary: typeof google.maps.places | null = null;
+  private sessionToken: google.maps.places.AutocompleteSessionToken | null = null;
   private autocompleteService: google.maps.places.AutocompleteService | null = null;
   private placesService: google.maps.places.PlacesService | null = null;
-  private sessionToken: google.maps.places.AutocompleteSessionToken | null = null;
-  private placesServiceDiv: HTMLDivElement | null = null;
 
   /**
    * Initialize Google Maps services
    * Should be called after Google Maps API is loaded
    */
-  initialize(): boolean {
+  async initialize(): Promise<boolean> {
     if (typeof window === 'undefined' || !window.google || !window.google.maps) {
       console.warn('Google Maps API not available');
       return false;
     }
 
     try {
+      // Load the places library (new API). Fallback to legacy if needed.
+      try {
+        this.placesLibrary = await google.maps.importLibrary('places') as typeof google.maps.places;
+      } catch (error) {
+        console.warn('Failed to import Places library, falling back to legacy:', error);
+        this.placesLibrary = google.maps.places || null;
+      }
+      
       // Initialize services
       this.geocoder = new google.maps.Geocoder();
       this.directionsService = new google.maps.DirectionsService();
+      this.autocompleteService = new google.maps.places.AutocompleteService();
+      this.placesService = new google.maps.places.PlacesService(document.createElement('div'));
       
-      if (window.google.maps.places) {
-        this.autocompleteService = new google.maps.places.AutocompleteService();
-        this.sessionToken = new google.maps.places.AutocompleteSessionToken();
-        
-        // Create a hidden div for PlacesService
-        if (!this.placesServiceDiv) {
-          this.placesServiceDiv = document.createElement('div');
-          this.placesServiceDiv.style.display = 'none';
-          document.body.appendChild(this.placesServiceDiv);
-        }
-        this.placesService = new google.maps.places.PlacesService(this.placesServiceDiv);
+      // Create session token for billing optimization
+      if (this.placesLibrary) {
+        this.sessionToken = new this.placesLibrary.AutocompleteSessionToken();
       }
 
       console.log('Google Maps services initialized successfully');
@@ -58,21 +61,21 @@ class GoogleMapsService {
       window.google &&
       window.google.maps &&
       this.geocoder &&
-      this.autocompleteService
+      this.placesLibrary
     );
   }
 
   /**
    * Ensure services are initialized
    */
-  private ensureInitialized(): boolean {
+  private async ensureInitialized(): Promise<boolean> {
     if (this.isInitialized()) return true;
-    return this.initialize();
+    return await this.initialize();
   }
 
   // Geocode address to coordinates
   async geocodeAddress(address: string): Promise<Location | null> {
-    if (!this.ensureInitialized()) return null;
+    if (!await this.ensureInitialized()) return null;
 
     return new Promise((resolve) => {
       this.geocoder?.geocode({ address }, (results, status) => {
@@ -96,7 +99,7 @@ class GoogleMapsService {
 
   // Reverse geocode coordinates to address
   async reverseGeocode(lat: number, lng: number): Promise<Location | null> {
-    if (!this.ensureInitialized()) return null;
+    if (!await this.ensureInitialized()) return null;
 
     return new Promise((resolve) => {
       this.geocoder?.geocode({ location: { lat, lng } }, (results, status) => {
@@ -117,11 +120,36 @@ class GoogleMapsService {
     });
   }
 
-  // Get autocomplete predictions
-  async getPlacePredictions(input: string): Promise<google.maps.places.AutocompletePrediction[]> {
-    if (!this.ensureInitialized()) {
+  // Get autocomplete predictions using new AutocompleteSuggestion API
+  async getPlacePredictions(
+    input: string
+  ): Promise<Array<google.maps.places.AutocompleteSuggestion | google.maps.places.AutocompletePrediction>> {
+    if (!await this.ensureInitialized()) {
       console.warn('Google Maps services not initialized');
       return [];
+    }
+
+    if (!this.placesLibrary) {
+      console.warn('Places library not available');
+      return [];
+    }
+
+    const hasNewApi = !!this.placesLibrary?.AutocompleteSuggestion?.fetchAutocompleteSuggestions;
+
+    if (hasNewApi) {
+      try {
+        const request: google.maps.places.AutocompleteRequest = {
+          input,
+          sessionToken: this.sessionToken || undefined,
+          includedPrimaryTypes: ['geocode', 'establishment'],
+        };
+
+        const { suggestions } = await this.placesLibrary!.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
+        return suggestions;
+      } catch (error) {
+        console.error('Error fetching autocomplete suggestions (new API):', error);
+        return [];
+      }
     }
 
     if (!this.autocompleteService) {
@@ -130,20 +158,13 @@ class GoogleMapsService {
     }
 
     return new Promise((resolve) => {
-      this.autocompleteService?.getPlacePredictions(
-        {
-          input,
-          sessionToken: this.sessionToken || undefined,
-          types: ['geocode', 'establishment'],
-          componentRestrictions: undefined, // Add country restriction if needed
-        },
+      this.autocompleteService!.getPlacePredictions(
+        { input, sessionToken: this.sessionToken || undefined },
         (predictions, status) => {
           if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
             resolve(predictions);
           } else {
-            if (status !== google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-              console.warn('Autocomplete failed:', status);
-            }
+            console.warn('Autocomplete predictions failed:', status);
             resolve([]);
           }
         }
@@ -151,42 +172,110 @@ class GoogleMapsService {
     });
   }
 
-  // Get place details
+  // Get place details using new Place API
   async getPlaceDetails(placeId: string): Promise<Location | null> {
-    if (!this.ensureInitialized()) return null;
+    if (!await this.ensureInitialized()) return null;
 
-    if (!this.placesService) {
-      console.warn('Places service not available');
+    if (!this.placesLibrary) {
+      console.warn('Places library not available');
       return null;
     }
 
-    return new Promise((resolve) => {
-      this.placesService?.getDetails(
-        {
-          placeId,
-          fields: ['name', 'formatted_address', 'geometry', 'place_id'],
-          sessionToken: this.sessionToken || undefined,
-        },
-        (place, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && place && place.geometry && place.geometry.location) {
-            // Reset session token after place details (for billing optimization)
-            this.resetSessionToken();
-            
-            resolve({
-              id: place.place_id || placeId,
-              name: place.name || place.formatted_address?.split(',')[0] || '',
-              address: place.formatted_address || '',
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng(),
-              placeId: place.place_id,
-            });
-          } else {
-            console.warn('Place details failed:', status);
-            resolve(null);
-          }
+    try {
+      if (this.placesLibrary.Place) {
+        const place = new this.placesLibrary.Place({ id: placeId });
+        
+        await place.fetchFields({
+          fields: ['displayName', 'formattedAddress', 'location', 'id'],
+        });
+
+        // Reset session token after place details (for billing optimization)
+        this.resetSessionToken();
+
+        if (place.location) {
+          return {
+            id: place.id || placeId,
+            name: place.displayName || place.formattedAddress?.split(',')[0] || '',
+            address: place.formattedAddress || '',
+            lat: place.location.lat(),
+            lng: place.location.lng(),
+            placeId: place.id,
+          };
         }
-      );
-    });
+
+        return null;
+      }
+
+      if (!this.placesService) {
+        console.warn('Places service not available');
+        return null;
+      }
+
+      return new Promise((resolve) => {
+        this.placesService!.getDetails(
+          {
+            placeId,
+            fields: ['name', 'formatted_address', 'geometry', 'place_id'],
+          },
+          (place, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
+              this.resetSessionToken();
+              resolve({
+                id: place.place_id || placeId,
+                name: place.name || place.formatted_address?.split(',')[0] || '',
+                address: place.formatted_address || '',
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng(),
+                placeId: place.place_id,
+              });
+            } else {
+              console.warn('Place details failed:', status);
+              resolve(null);
+            }
+          }
+        );
+      });
+    } catch (error) {
+      console.error('Error fetching place details:', error);
+      return null;
+    }
+  }
+
+  // Get place details from suggestion using new API
+  async getPlaceDetailsFromSuggestion(suggestion: google.maps.places.AutocompleteSuggestion): Promise<Location | null> {
+    if (!await this.ensureInitialized()) return null;
+
+    if (!this.placesLibrary || !suggestion.placePrediction) {
+      console.warn('Places library or place prediction not available');
+      return null;
+    }
+
+    try {
+      const place = suggestion.placePrediction.toPlace();
+      
+      await place.fetchFields({
+        fields: ['displayName', 'formattedAddress', 'location', 'id'],
+      });
+
+      // Reset session token after place details (for billing optimization)
+      this.resetSessionToken();
+
+      if (place.location) {
+        return {
+          id: place.id || '',
+          name: place.displayName || place.formattedAddress?.split(',')[0] || '',
+          address: place.formattedAddress || '',
+          lat: place.location.lat(),
+          lng: place.location.lng(),
+          placeId: place.id,
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching place details from suggestion:', error);
+      return null;
+    }
   }
 
   // Calculate route between two points
@@ -194,7 +283,7 @@ class GoogleMapsService {
     origin: { lat: number; lng: number } | string,
     destination: { lat: number; lng: number } | string
   ): Promise<RouteData | null> {
-    if (!this.ensureInitialized()) return null;
+    if (!await this.ensureInitialized()) return null;
 
     return new Promise((resolve) => {
       this.directionsService?.route(
@@ -324,22 +413,19 @@ class GoogleMapsService {
 
   // Reset session token for billing optimization
   resetSessionToken() {
-    if (typeof window !== 'undefined' && window.google?.maps?.places) {
-      this.sessionToken = new google.maps.places.AutocompleteSessionToken();
+    if (this.placesLibrary) {
+      this.sessionToken = new this.placesLibrary.AutocompleteSessionToken();
     }
   }
 
   // Cleanup
   cleanup() {
-    if (this.placesServiceDiv && document.body.contains(this.placesServiceDiv)) {
-      document.body.removeChild(this.placesServiceDiv);
-    }
-    this.placesServiceDiv = null;
-    this.placesService = null;
-    this.autocompleteService = null;
+    this.placesLibrary = null;
     this.geocoder = null;
     this.directionsService = null;
     this.sessionToken = null;
+    this.autocompleteService = null;
+    this.placesService = null;
   }
 }
 

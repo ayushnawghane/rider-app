@@ -26,6 +26,7 @@ import ProfilePage from './pages/profile/ProfilePage';
 import NotificationsPage from './pages/profile/NotificationsPage';
 import RewardsPage from './pages/rewards/RewardsPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import SelectLocationPage from './pages/location/SelectLocationPage';
 
 import '@ionic/react/css/core.css';
 import './theme/variables.css';
@@ -145,6 +146,7 @@ const AppContent: React.FC = () => {
           <PrivateRoute component={KycUploadPage} path="/profile/kyc" exact />
           <PrivateRoute component={NotificationsPage} path="/notifications" exact />
           <PrivateRoute component={AdminDashboardPage} path="/admin" exact />
+          <PrivateRoute component={SelectLocationPage} path="/select-location" />
           <Redirect from="/" to="/login" exact />
         </IonRouterOutlet>
       </IonReactRouter>
