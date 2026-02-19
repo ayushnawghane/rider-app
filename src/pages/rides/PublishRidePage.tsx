@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useHistory } from 'react-router';
+import { useEffect, useState } from 'react';
+import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { 
   MapPin, 
@@ -23,9 +23,10 @@ interface Location {
 const PublishRidePage = () => {
   const { isClerkLoaded } = useAuth();
   const history = useHistory();
+  const location = useLocation<{ start?: Location; end?: Location }>();
   
-  const [startLocation] = useState<Location | null>(null);
-  const [endLocation] = useState<Location | null>(null);
+  const [startLocation, setStartLocation] = useState<Location | null>(null);
+  const [endLocation, setEndLocation] = useState<Location | null>(null);
   const [departureTime, setDepartureTime] = useState<string>('');
   const [availableSeats, setAvailableSeats] = useState<number>(3);
   const [pricePerSeat, setPricePerSeat] = useState<number>(150);
@@ -34,12 +35,18 @@ const PublishRidePage = () => {
   const [notes, setNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Set default time to current time + 1 hour
-  useState(() => {
+  useEffect(() => {
     const now = new Date();
     now.setHours(now.getHours() + 1);
     setDepartureTime(now.toISOString().slice(0, 16));
-  });
+  }, []);
+
+  useEffect(() => {
+    const state = location.state;
+    if (!state) return;
+    if (state.start) setStartLocation(state.start);
+    if (state.end) setEndLocation(state.end);
+  }, [location.state]);
 
   const handlePublish = async () => {
     if (!startLocation || !endLocation || !departureTime || !vehicleNumber) {

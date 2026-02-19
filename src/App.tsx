@@ -26,6 +26,7 @@ import ProfilePage from './pages/profile/ProfilePage';
 import NotificationsPage from './pages/profile/NotificationsPage';
 import RewardsPage from './pages/rewards/RewardsPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import SelectLocationPage from './pages/common/SelectLocationPage';
 
 import '@ionic/react/css/core.css';
 import './theme/variables.css';
@@ -132,6 +133,7 @@ const AppContent: React.FC = () => {
           <PrivateRoute component={UploadRidePage} path="/upload-ride" />
           <PrivateRoute component={PublishRidePage} path="/publish-ride" exact />
           <PrivateRoute component={FindRidePage} path="/find-ride" exact />
+          <PrivateRoute component={SelectLocationPage} path="/select-location" exact />
           <PrivateRoute component={RideHistoryPage} path="/rides/history" exact />
           <PrivateRoute component={RideDetailPage} path="/rides/:id" exact />
           <PrivateRoute component={ActiveRidePage} path="/rides/active/:id" />

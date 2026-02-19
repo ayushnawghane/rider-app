@@ -3,6 +3,12 @@ import { useClerk, useUser } from '@clerk/clerk-react';
 import { supabase } from '../lib/supabase';
 import type { User } from '../types';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const isUuid = (value: string | null | undefined): value is string => {
+  return typeof value === 'string' && UUID_REGEX.test(value);
+};
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -49,12 +55,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       const mappedUser = mapClerkUserToUser(clerkUser);
+      const profileQuery = supabase.from('profiles').select('*');
+      const profileFilter = isUuid(clerkUser.id)
+        ? profileQuery.eq('id', clerkUser.id)
+        : mappedUser.email
+          ? profileQuery.eq('email', mappedUser.email)
+          : null;
 
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', clerkUser.id)
-        .single();
+      const { data: profile, error: profileError } = profileFilter
+        ? await profileFilter.single()
+        : { data: null, error: null };
 
       if (profileError && profileError.code !== 'PGRST116') {
         console.error('Error fetching profile:', profileError);
@@ -63,6 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (profile) {
         setUser({
           ...mappedUser,
+          id: profile.id,
           kycStatus: profile.kyc_status || mappedUser.kycStatus,
           kycDocumentUrl: profile.kyc_document_url || mappedUser.kycDocumentUrl,
           language: profile.language || mappedUser.language,

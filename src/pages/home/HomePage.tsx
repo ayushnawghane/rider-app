@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useHistory } from 'react-router';
+import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { UserButton } from '@clerk/clerk-react';
 import { 
@@ -30,6 +30,7 @@ interface Location {
 const HomePage = () => {
   const { user, isClerkLoaded } = useAuth();
   const history = useHistory();
+  const location = useLocation<{ pickup?: Location; dropoff?: Location }>();
   
   const [pickup, setPickup] = useState<Location | null>(null);
   const [dropoff, setDropoff] = useState<Location | null>(null);
@@ -53,6 +54,13 @@ const HomePage = () => {
     
     setTimeout(() => setLoading(false), 1000);
   }, []);
+
+  useEffect(() => {
+    const state = location.state;
+    if (!state) return;
+    if (state.pickup) setPickup(state.pickup);
+    if (state.dropoff) setDropoff(state.dropoff);
+  }, [location.state]);
 
   const handleSwapLocations = () => {
     const temp = pickup;
