@@ -17,6 +17,9 @@ interface ServiceResponse<T> {
   stats?: T;
 }
 
+const getErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : 'Unknown error';
+
 export const carpoolService = {
   // ==========================================
   // PUBLISHED RIDES
@@ -33,8 +36,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true, ride: data };
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      return { success: false, error: message };
+      return { success: false, error: getErrorMessage(error) };
     }
   },
 
@@ -78,7 +80,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true, rides: data || [] };
     } catch (error: unknown) {
-      return { success: false, error: error.message, rides: [] };
+      return { success: false, error: getErrorMessage(error), rides: [] };
     }
   },
 
@@ -103,7 +105,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true, ride: data };
     } catch (error: unknown) {
-      return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+      return { success: false, error: getErrorMessage(error) };
     }
   },
 
@@ -119,7 +121,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true, ride: data };
     } catch (error: unknown) {
-      return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+      return { success: false, error: getErrorMessage(error) };
     }
   },
 
@@ -138,7 +140,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true, booking: data };
     } catch (error: unknown) {
-      return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+      return { success: false, error: getErrorMessage(error) };
     }
   },
 
@@ -170,7 +172,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true, bookings: data || [] };
     } catch (error: unknown) {
-      return { success: false, error: error.message, bookings: [] };
+      return { success: false, error: getErrorMessage(error), bookings: [] };
     }
   },
 
@@ -199,7 +201,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true, booking: data };
     } catch (error: unknown) {
-      return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+      return { success: false, error: getErrorMessage(error) };
     }
   },
 
@@ -219,7 +221,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true, booking: data };
     } catch (error: unknown) {
-      return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+      return { success: false, error: getErrorMessage(error) };
     }
   },
 
@@ -238,7 +240,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true, stats: data };
     } catch (error: unknown) {
-      return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+      return { success: false, error: getErrorMessage(error) };
     }
   },
 
@@ -254,7 +256,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true, rewards: data || [] };
     } catch (error: unknown) {
-      return { success: false, error: error.message, rewards: [] };
+      return { success: false, error: getErrorMessage(error), rewards: [] };
     }
   },
 
@@ -272,7 +274,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true, achievements: data || [] };
     } catch (error: unknown) {
-      return { success: false, error: error.message, achievements: [] };
+      return { success: false, error: getErrorMessage(error), achievements: [] };
     }
   },
 
@@ -287,7 +289,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true, badges: data || [] };
     } catch (error: unknown) {
-      return { success: false, error: error.message, badges: [] };
+      return { success: false, error: getErrorMessage(error), badges: [] };
     }
   },
 
@@ -314,7 +316,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true, message: data };
     } catch (error: unknown) {
-      return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+      return { success: false, error: getErrorMessage(error) };
     }
   },
 
@@ -332,7 +334,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true, messages: data || [] };
     } catch (error: unknown) {
-      return { success: false, error: error.message, messages: [] };
+      return { success: false, error: getErrorMessage(error), messages: [] };
     }
   },
 
@@ -351,7 +353,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true };
     } catch (error: unknown) {
-      return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+      return { success: false, error: getErrorMessage(error) };
     }
   },
 
@@ -431,7 +433,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true };
     } catch (error: unknown) {
-      return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+      return { success: false, error: getErrorMessage(error) };
     }
   },
 
@@ -449,7 +451,7 @@ export const carpoolService = {
       if (error) throw error;
       return { success: true, locations: data || [] };
     } catch (error: unknown) {
-      return { success: false, error: error.message, locations: [] };
+      return { success: false, error: getErrorMessage(error), locations: [] };
     }
   },
 
