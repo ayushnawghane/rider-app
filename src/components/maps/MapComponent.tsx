@@ -24,6 +24,7 @@ const mapOptions: google.maps.MapOptions = {
 interface MapComponentProps {
   center?: { lat: number; lng: number };
   zoom?: number;
+  className?: string;
   markers?: Array<{
     position: { lat: number; lng: number };
     title?: string;
@@ -38,6 +39,7 @@ interface MapComponentProps {
 const MapComponent: React.FC<MapComponentProps> = ({
   center = defaultCenter,
   zoom = 14,
+  className,
   markers = [],
   routePath,
   onMapClick,
@@ -78,7 +80,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
   };
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div className={className} style={{ width: '100%', height: '100%' }}>
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         center={center}
