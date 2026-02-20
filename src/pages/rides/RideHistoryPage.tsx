@@ -182,7 +182,7 @@ const RideHistoryPage = () => {
             <p style={subtitleStyle}>{rides.length} ride{rides.length !== 1 ? 's' : ''} found</p>
           </div>
           <button
-            onClick={() => history.push('/upload-ride')}
+            onClick={() => history.push('/publish-ride')}
             style={addButtonStyle}
           >
             +
@@ -193,12 +193,12 @@ const RideHistoryPage = () => {
           <div style={{ ...cardStyle, textAlign: 'center', padding: '40px 24px' }}>
             <span style={{ fontSize: '64px' }}>🚗</span>
             <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#1f2937', margin: '16px 0 8px' }}>No Rides Yet</h2>
-            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 24px' }}>Upload your first ride to get started</p>
+            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 24px' }}>Publish your first ride to get started</p>
             <button
-              onClick={() => history.push('/upload-ride')}
+              onClick={() => history.push('/publish-ride')}
               style={primaryButtonStyle}
             >
-              Upload Ride
+              Publish Ride
             </button>
           </div>
         ) : (
@@ -208,7 +208,7 @@ const RideHistoryPage = () => {
               return (
                 <button
                   key={ride.id}
-                  onClick={() => history.push(`/rides/${ride.id}`)}
+                  onClick={() => history.push(`/rides/detail/${ride.id}`)}
                   style={rideItemStyle}
                 >
                   <div style={{ display: 'flex', gap: '16px' }}>

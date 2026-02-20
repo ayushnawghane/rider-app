@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { IonApp, IonRouterOutlet } from '@ionic/react';
+import { IonApp, IonPage, IonRouterOutlet } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { Redirect, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -10,9 +10,10 @@ import LoadingOverlay from './components/LoadingOverlay';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import KycUploadPage from './pages/auth/KycUploadPage';
-import SSOCallback from './pages/auth/SSOCallback';
 import HomePage from './pages/home/HomePage';
 import UploadRidePage from './pages/rides/UploadRidePage';
+import PublishRidePage from './pages/rides/PublishRidePage';
+import FindRidePage from './pages/rides/FindRidePage';
 import RideHistoryPage from './pages/rides/RideHistoryPage';
 import RideDetailPage from './pages/rides/RideDetailPage';
 import ActiveRidePage from './pages/rides/ActiveRidePage';
@@ -22,42 +23,106 @@ import DisputeChatPage from './pages/support/DisputeChatPage';
 import SafetyPage from './pages/safety/SafetyPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import NotificationsPage from './pages/profile/NotificationsPage';
+import RewardsPage from './pages/rewards/RewardsPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import SelectLocationPage from './pages/common/SelectLocationPage';
 
 import '@ionic/react/css/core.css';
 import './theme/variables.css';
 
-const PrivateRoute: React.FC<{ component: React.ComponentType<Record<string, unknown>>; path: string; exact?: boolean }> = ({ component: Component, ...rest }) => {
-  const { user, loading, isClerkLoaded } = useAuth();
+const LOCATION_PERMISSION_TIMEOUT_MS = 12000;
 
-  if (!isClerkLoaded || loading) {
-    return <LoadingOverlay isOpen message="Loading..." />;
+const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string) => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
-
-  return (
-    <Route
-      {...rest}
-      render={(props) =>
-        user ? <Component {...props} /> : <Redirect to="/login" />
-      }
-    />
-  );
 };
 
-const PublicRoute: React.FC<{ component: React.ComponentType<Record<string, unknown>>; path: string; exact?: boolean }> = ({ component: Component, ...rest }) => {
-  const { user, loading, isClerkLoaded } = useAuth();
+type RoutedComponent = React.ComponentType<Record<string, unknown>>;
 
-  if (!isClerkLoaded || loading) {
-    return <LoadingOverlay isOpen message="Loading..." />;
-  }
+const withIonPage = (Component: RoutedComponent): RoutedComponent => {
+  const WrappedPage: RoutedComponent = (props) => (
+    <IonPage>
+      <Component {...props} />
+    </IonPage>
+  );
+  WrappedPage.displayName = `WithIonPage(${Component.displayName || Component.name || 'Page'})`;
+  return WrappedPage;
+};
+
+const LoginScreen = withIonPage(LoginPage);
+const RegisterScreen = withIonPage(RegisterPage);
+const HomeScreen = withIonPage(HomePage);
+const UploadRideScreen = withIonPage(UploadRidePage);
+const PublishRideScreen = withIonPage(PublishRidePage);
+const FindRideScreen = withIonPage(FindRidePage);
+const RideHistoryScreen = withIonPage(RideHistoryPage);
+const SelectLocationScreen = withIonPage(SelectLocationPage);
+const RewardsScreen = withIonPage(RewardsPage);
+const SafetyScreen = withIonPage(SafetyPage);
+const ProfileScreen = withIonPage(ProfilePage);
+
+const AppRoutes: React.FC = () => {
+  const { user, isAuthLoaded } = useAuth();
+
+  const renderPublic = (Component: RoutedComponent) => (props: unknown) => {
+    const routeProps = props as Record<string, unknown>;
+    if (!isAuthLoaded) {
+      return <LoadingOverlay isOpen message="Loading..." />;
+    }
+    return !user ? <Component {...routeProps} /> : <Redirect to="/home" />;
+  };
+
+  const renderPrivate = (Component: RoutedComponent) => (props: unknown) => {
+    const routeProps = props as Record<string, unknown>;
+    if (!isAuthLoaded) {
+      return <LoadingOverlay isOpen message="Loading..." />;
+    }
+    return user ? <Component {...routeProps} /> : <Redirect to="/login" />;
+  };
 
   return (
-    <Route
-      {...rest}
-      render={(props) =>
-        !user ? <Component {...props} /> : <Redirect to="/home" />
-      }
-    />
+    <IonReactRouter>
+      <IonRouterOutlet>
+        <Route exact path="/login" render={renderPublic(LoginScreen)} />
+        <Route exact path="/register" render={renderPublic(RegisterScreen)} />
+        <Route exact path="/home" render={renderPrivate(HomeScreen)} />
+        <Route exact path="/" render={renderPrivate(HomeScreen)} />
+        <Route exact path="/upload-ride" render={renderPrivate(UploadRideScreen)} />
+        <Route exact path="/publish-ride" render={renderPrivate(PublishRideScreen)} />
+        <Route exact path="/find-ride" render={renderPrivate(FindRideScreen)} />
+        <Route exact path="/select-location" render={renderPrivate(SelectLocationScreen)} />
+        <Route exact path="/rides/history" render={renderPrivate(RideHistoryScreen)} />
+        <Route exact path="/rides/detail/:id" render={renderPrivate(RideDetailPage)} />
+        <Route exact path="/rides/:id([0-9a-fA-F-]{36})" render={renderPrivate(RideDetailPage)} />
+        <Route exact path="/rides/active/:id" render={renderPrivate(ActiveRidePage)} />
+        <Route exact path="/rewards" render={renderPrivate(RewardsScreen)} />
+        <Route exact path="/support" render={renderPrivate(SupportPage)} />
+        <Route exact path="/support/dispute/new" render={renderPrivate(NewDisputePage)} />
+        <Route exact path="/support/dispute/:id" render={renderPrivate(DisputeChatPage)} />
+        <Route exact path="/safety" render={renderPrivate(SafetyScreen)} />
+        <Route exact path="/safety/sos" render={renderPrivate(SafetyScreen)} />
+        <Route exact path="/profile" render={renderPrivate(ProfileScreen)} />
+        <Route exact path="/profile/kyc" render={renderPrivate(KycUploadPage)} />
+        <Route exact path="/notifications" render={renderPrivate(NotificationsPage)} />
+        <Route exact path="/admin" render={renderPrivate(AdminDashboardPage)} />
+        <Route
+          render={() => {
+            if (!isAuthLoaded) {
+              return <LoadingOverlay isOpen message="Loading..." />;
+            }
+            return <Redirect to={user ? '/home' : '/login'} />;
+          }}
+        />
+      </IonRouterOutlet>
+    </IonReactRouter>
   );
 };
 
@@ -72,7 +137,11 @@ const AppContent: React.FC = () => {
   const checkLocationPermission = async () => {
     try {
       setCheckingLocation(true);
-      const hasPermission = await locationService.checkPermissions();
+      const hasPermission = await withTimeout(
+        locationService.checkPermissions(),
+        LOCATION_PERMISSION_TIMEOUT_MS,
+        'Location permission check timed out',
+      );
       setLocationGranted(hasPermission);
     } catch (error) {
       console.error('Error checking location permission:', error);
@@ -119,28 +188,7 @@ const AppContent: React.FC = () => {
 
   return (
     <AuthProvider>
-      <IonReactRouter>
-        <IonRouterOutlet>
-          <PublicRoute component={LoginPage} path="/login" exact />
-          <PublicRoute component={RegisterPage} path="/register" exact />
-          <Route path="/sso-callback" component={SSOCallback} exact />
-          <PrivateRoute component={HomePage} path="/home" exact />
-          <PrivateRoute component={UploadRidePage} path="/upload-ride" />
-          <PrivateRoute component={RideHistoryPage} path="/rides/history" exact />
-          <PrivateRoute component={RideDetailPage} path="/rides/:id" exact />
-          <PrivateRoute component={ActiveRidePage} path="/rides/active/:id" />
-          <PrivateRoute component={SupportPage} path="/support" exact />
-          <PrivateRoute component={NewDisputePage} path="/support/dispute/new" exact />
-          <PrivateRoute component={DisputeChatPage} path="/support/dispute/:id" />
-          <PrivateRoute component={SafetyPage} path="/safety" exact />
-          <PrivateRoute component={SafetyPage} path="/safety/sos" exact />
-          <PrivateRoute component={ProfilePage} path="/profile" exact />
-          <PrivateRoute component={KycUploadPage} path="/profile/kyc" exact />
-          <PrivateRoute component={NotificationsPage} path="/notifications" exact />
-          <PrivateRoute component={AdminDashboardPage} path="/admin" exact />
-          <Redirect from="/" to="/login" exact />
-        </IonRouterOutlet>
-      </IonReactRouter>
+      <AppRoutes />
     </AuthProvider>
   );
 };

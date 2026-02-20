@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>India OTP Setup Guide (MSG91 + DLT)</title>
+  <style>
+    @page { size: A4; margin: 24mm 18mm; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: #111827; line-height: 1.5; font-size: 12pt; }
+    h1 { font-size: 22pt; margin: 0 0 8px; color: #0f172a; }
+    h2 { font-size: 14pt; margin: 20px 0 8px; color: #0f172a; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+    p { margin: 6px 0 10px; }
+    ul, ol { margin: 4px 0 10px 20px; }
+    li { margin: 4px 0; }
+    .meta { color: #475569; margin-bottom: 16px; }
+    .box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; }
+    code { background: #f1f5f9; padding: 1px 4px; border-radius: 4px; }
+    a { color: #1d4ed8; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h1>India OTP Setup Guide (MSG91 + DLT)</h1>
+  <p class="meta">Prepared for platform owner / operations team</p>
+
+  <p>We need DLT approvals before OTP SMS can be delivered reliably in India.</p>
+
+  <h2>1) Register business on a DLT operator portal</h2>
+  <p>Register as <strong>Principal Entity (PE)</strong> on one approved DLT portal (Jio, Airtel, Vi, or BSNL). Submit company documents (PAN, GST, legal name, address, authorized contact).</p>
+
+  <h2>2) Create and approve Sender ID (Header)</h2>
+  <p>Create the sender/header you want messages to come from (example: <code>BLINKC</code>) and wait for approval.</p>
+
+  <h2>3) Create and approve OTP content template on DLT</h2>
+  <p>Create the OTP message template on the DLT portal.</p>
+  <ul>
+    <li>Include your brand name.</li>
+    <li>Use DLT variable placeholders as per portal rules.</li>
+    <li>Content must match the final SMS text exactly.</li>
+  </ul>
+
+  <h2>4) Collect approved IDs from DLT</h2>
+  <ul>
+    <li><strong>PE ID / Entity ID</strong></li>
+    <li><strong>Header (Sender ID)</strong></li>
+    <li><strong>DLT Template ID</strong> for the OTP template</li>
+  </ul>
+
+  <h2>5) Map DLT details in MSG91</h2>
+  <p>In MSG91 dashboard:</p>
+  <ul>
+    <li>Map <strong>PE ID</strong> to sender/header.</li>
+    <li>Create or update OTP template with placeholder <code>##OTP##</code>.</li>
+    <li>Map the approved <strong>DLT Template ID</strong> into that MSG91 OTP template.</li>
+  </ul>
+
+  <h2>6) Share required values with developer</h2>
+  <ul>
+    <li><code>MSG91_AUTH_KEY</code></li>
+    <li><code>MSG91_TEMPLATE_ID</code> (MSG91 OTP template ID, not raw DLT ID)</li>
+    <li>Confirmation that DLT mapping is completed (PE ID, Header, DLT Template ID)</li>
+  </ul>
+
+  <h2>7) Test and verify</h2>
+  <ol>
+    <li>Send OTP to a real number.</li>
+    <li>Check MSG91 OTP logs and status.</li>
+    <li>If status stays <code>Pending</code> or fails, raise MSG91 support ticket with <strong>Request ID</strong>.</li>
+  </ol>
+
+  <h2>Why this is required</h2>
+  <p>MSG91 is the SMS gateway, but India telecom delivery requires DLT compliance (entity + sender + approved template).</p>
+
+  <h2>Reference links</h2>
+  <ul>
+    <li><a href="https://msg91.com/help/dlt-registration-in-india/step-by-step-guide-to-implement-dlt-in-sms">Step-by-step DLT setup</a></li>
+    <li><a href="https://knowledgebase.msg91.com/how-to-add-sender-id-in-msg91">Sender ID setup</a></li>
+    <li><a href="https://kb.phone91.com/msg91/MSG91/map-your-dlt-entity-pe-id-with-dlt-approved-header-sender-id">Map PE ID and Header</a></li>
+    <li><a href="https://knowledgebase.msg91.com/where-to-find-sendotp-reports-">OTP logs and reports</a></li>
+  </ul>
+
+  <div class="box">
+    <strong>Important:</strong> For India, <code>DLT Template ID not found</code> means the DLT mapping in MSG91 is incomplete or incorrect.
+  </div>
+</body>
+</html>

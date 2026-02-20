@@ -1,450 +1,426 @@
 import { useEffect, useState } from 'react';
-import { useHistory } from 'react-router';
+import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { UserButton } from '@clerk/clerk-react';
-import { rideService } from '../../services';
-import { Skeleton, SkeletonCard } from '../../components/Skeleton';
-import LoadingOverlay from '../../components/LoadingOverlay';
-import type { Ride } from '../../types';
+import { 
+  Search, 
+  MapPin, 
+  Clock, 
+  Users, 
+  Plus, 
+  Car, 
+  Award, 
+  HelpCircle, 
+  ArrowRightLeft,
+  Phone,
+  MessageCircle,
+  Map,
+  Bell,
+  Star,
+  Navigation
+} from 'lucide-react';
+import type { PublishedRide, UserStats } from '../../types';
+
+interface Location {
+  address: string;
+  lat: number;
+  lng: number;
+}
 
 const HomePage = () => {
-  const { user, isClerkLoaded } = useAuth();
-  const [activeRide, setActiveRide] = useState<Ride | undefined>();
-  const [recentRides, setRecentRides] = useState<Ride[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user, isAuthLoaded, logout } = useAuth();
   const history = useHistory();
+  const location = useLocation<{ pickup?: Location; dropoff?: Location }>();
+  
+  const [pickup, setPickup] = useState<Location | null>(null);
+  const [dropoff, setDropoff] = useState<Location | null>(null);
+  const [departureTime, setDepartureTime] = useState<string>('');
+  const [passengerCount, setPassengerCount] = useState<number>(1);
+  const [activeRide] = useState<PublishedRide | null>(null);
+  const [userStats] = useState<UserStats>({
+    level: 12,
+    points: 2450,
+    ridesTaken: 15,
+    ridesPublished: 8,
+    rating: 4.9
+  });
 
   useEffect(() => {
-    const fetchRideData = async () => {
-      if (user && isClerkLoaded) {
-        setLoading(true);
-        const activeResult = await rideService.getActiveRide(user.id);
-        if (activeResult.success) {
-          setActiveRide(activeResult.ride);
-        }
+    // Set default time to current time + 30 minutes
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 30);
+    setDepartureTime(now.toISOString().slice(0, 16));
+  }, []);
 
-        const historyResult = await rideService.getRides(user.id, 3);
-        if (historyResult.success) {
-          setRecentRides(historyResult.rides || []);
-        }
-        setLoading(false);
-      }
-    };
+  useEffect(() => {
+    const state = location.state;
+    if (!state) return;
+    if (state.pickup) setPickup(state.pickup);
+    if (state.dropoff) setDropoff(state.dropoff);
+  }, [location.state]);
 
-    fetchRideData();
-  }, [user, isClerkLoaded]);
-
-  const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { color: string; bgColor: string; icon: string; label: string }> = {
-      active: { color: '#16a34a', bgColor: '#dcfce7', icon: '✓', label: 'Active' },
-      pending: { color: '#d97706', bgColor: '#fef3c7', icon: '⏳', label: 'Pending' },
-      completed: { color: '#2563eb', bgColor: '#dbeafe', icon: '✓', label: 'Completed' },
-      cancelled: { color: '#dc2626', bgColor: '#fee2e2', icon: '✕', label: 'Cancelled' },
-    };
-    return statusMap[status] || statusMap.pending;
+  const handleSwapLocations = () => {
+    const temp = pickup;
+    setPickup(dropoff);
+    setDropoff(temp);
   };
 
-  const containerStyle: React.CSSProperties = {
-    height: '100vh',
-    overflow: 'auto',
-    background: '#f9fafb',
-    WebkitOverflowScrolling: 'touch'
+  const handleFindDrivers = () => {
+    history.push('/find-ride', { pickup, dropoff, departureTime, passengerCount });
   };
 
-  const contentStyle: React.CSSProperties = {
-    maxWidth: '680px',
-    margin: '0 auto',
-    padding: '16px'
-  };
+  const popularRoutes = [
+    { city: 'Mumbai', image: 'https://images.unsplash.com/photo-1567157577867-05ccb1388e66?w=400&h=300&fit=crop', startingPrice: 150 },
+    { city: 'Pune', image: 'https://images.unsplash.com/photo-1595658658481-d53d3f999875?w=400&h=300&fit=crop', startingPrice: 120 },
+    { city: 'Delhi', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400&h=300&fit=crop', startingPrice: 200 },
+  ];
 
-  const headerStyle: React.CSSProperties = {
-    position: 'sticky',
-    top: 0,
-    background: '#f9fafb',
-    zIndex: 10,
-    paddingBottom: '16px'
-  };
-
-  const headerTopStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: '24px'
-  };
-
-  const greetingStyle: React.CSSProperties = {
-    fontSize: '24px',
-    fontWeight: '700',
-    color: '#1f2937',
-    margin: 0
-  };
-
-  const subGreetingStyle: React.CSSProperties = {
-    fontSize: '14px',
-    color: '#6b7280',
-    margin: '4px 0 0 0'
-  };
-
-  const iconButtonStyle: React.CSSProperties = {
-    width: '44px',
-    height: '44px',
-    borderRadius: '12px',
-    background: 'white',
-    border: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-    position: 'relative'
-  };
-
-  const notificationDotStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: '10px',
-    right: '10px',
-    width: '8px',
-    height: '8px',
-    background: '#ef4444',
-    borderRadius: '50%'
-  };
-
-  const primaryButtonStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '16px 24px',
-    background: '#6366f1',
-    color: 'white',
-    borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: '600',
-    border: 'none',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    boxShadow: '0 4px 6px rgba(99, 102, 241, 0.2)'
-  };
-
-  const cardStyle: React.CSSProperties = {
-    background: 'white',
-    borderRadius: '16px',
-    padding: '20px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-    marginBottom: '16px'
-  };
-
-  const sectionTitleStyle: React.CSSProperties = {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#1f2937',
-    margin: '0 0 16px 0'
-  };
-
-  const statusBadgeStyle = (status: string): React.CSSProperties => {
-    const statusInfo = getStatusBadge(status);
-    return {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '4px',
-      padding: '4px 10px',
-      borderRadius: '8px',
-      background: statusInfo.bgColor,
-      color: statusInfo.color,
-      fontSize: '12px',
-      fontWeight: '500'
-    };
-  };
-
-  const locationRowStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '12px',
-    marginBottom: '12px'
-  };
-
-  const locationIconStyle = (type: 'start' | 'end'): React.CSSProperties => ({
-    width: '32px',
-    height: '32px',
-    borderRadius: '8px',
-    background: type === 'start' ? '#e0e7ff' : '#dcfce7',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '16px'
-  });
-
-  const quickActionsGridStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '12px'
-  };
-
-  const quickActionStyle: React.CSSProperties = {
-    background: 'white',
-    borderRadius: '16px',
-    padding: '16px',
-    border: 'none',
-    cursor: 'pointer',
-    textAlign: 'left',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-  };
-
-  const quickActionIconStyle = (color: string): React.CSSProperties => ({
-    width: '48px',
-    height: '48px',
-    borderRadius: '12px',
-    background: color,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '24px',
-    marginBottom: '12px'
-  });
-
-  const rideListItemStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '16px',
-    background: 'white',
-    borderRadius: '12px',
-    marginBottom: '8px',
-    border: 'none',
-    width: '100%',
-    cursor: 'pointer',
-    textAlign: 'left'
-  };
-
-  const sosButtonStyle: React.CSSProperties = {
-    position: 'fixed',
-    bottom: '24px',
-    right: '24px',
-    width: '56px',
-    height: '56px',
-    borderRadius: '16px',
-    background: '#ef4444',
-    border: 'none',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '28px',
-    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)',
-    zIndex: 50
-  };
-
-  if (!isClerkLoaded || loading) {
+  if (!isAuthLoaded) {
     return (
-      <div style={containerStyle}>
-        <LoadingOverlay isOpen variant="fullscreen" message={!isClerkLoaded ? "Initializing..." : "Loading your rides..."} />
+      <div className="min-h-screen bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div style={containerStyle}>
-      <div style={contentStyle}>
-        <div style={headerStyle}>
-          <div style={headerTopStyle}>
-            <div>
-              <h1 style={greetingStyle}>Welcome, {user?.fullName || 'Rider'}!</h1>
-              <p style={subGreetingStyle}>Manage your rides and requests</p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button
-                onClick={() => history.push('/notifications')}
-                style={iconButtonStyle}
-              >
-                <span>🔔</span>
-                <span style={notificationDotStyle} />
-              </button>
-              <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden' }}>
-                <UserButton afterSignOutUrl="/login" />
-              </div>
-            </div>
-          </div>
-
+    <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+      {/* Orange Header Section */}
+      <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 pt-12 pb-6 px-4">
+        {/* Top Row: Notifications & Profile */}
+        <div className="flex justify-end items-center gap-3 mb-4">
+          <button className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center relative">
+            <Bell className="w-5 h-5 text-white" />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
+          </button>
           <button
-            onClick={() => history.push('/upload-ride')}
-            style={primaryButtonStyle}
+            onClick={logout}
+            className="min-w-[72px] h-10 px-3 rounded-xl border-2 border-white/30 text-white text-sm font-semibold bg-white/10"
+            type="button"
           >
-            <span>➕</span>
-            Upload New Ride
+            Logout
           </button>
         </div>
 
-        <div style={{ paddingBottom: '100px' }}>
-          {activeRide ? (
-            <div style={cardStyle}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={locationIconStyle('start')}>
-                    <span>🚗</span>
-                  </div>
-                  <div>
-                    <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', margin: 0 }}>Active Ride</h2>
-                    <span style={statusBadgeStyle(activeRide.status)}>
-                      {getStatusBadge(activeRide.status).icon} {getStatusBadge(activeRide.status).label}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => history.push(`/rides/active/${activeRide.id}`)}
-                  style={{ background: 'transparent', border: 'none', fontSize: '20px', cursor: 'pointer' }}
-                >
-                  ⋯
-                </button>
-              </div>
+        {/* Greeting & Location */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Hi, {user?.firstName || 'Rider'}
+          </h1>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
+              <MapPin className="w-4 h-4 text-white" />
+              <span className="text-white text-sm font-medium">Mumbai, IN</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-yellow-500/90 rounded-full px-3 py-1.5">
+              <Star className="w-4 h-4 text-white fill-white" />
+              <span className="text-white text-sm font-bold">Lvl {userStats.level}</span>
+            </div>
+          </div>
+        </div>
 
-              <div style={{ marginBottom: '16px' }}>
-                <div style={locationRowStyle}>
-                  <div style={locationIconStyle('start')}>
-                    <span>📍</span>
-                  </div>
-                  <div>
-                    <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>From</p>
-                    <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937', margin: '2px 0 0 0' }}>{activeRide.startLocation}</p>
-                  </div>
-                </div>
-                <div style={{ marginLeft: '16px', width: '2px', height: '16px', background: '#e5e7eb' }} />
-                <div style={locationRowStyle}>
-                  <div style={locationIconStyle('end')}>
-                    <span>🏁</span>
-                  </div>
-                  <div>
-                    <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>To</p>
-                    <p style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937', margin: '2px 0 0 0' }}>{activeRide.endLocation}</p>
-                  </div>
-                </div>
-              </div>
+        {/* Car Illustration */}
+        <div className="absolute top-16 right-4 opacity-20">
+          <Car className="w-32 h-32 text-white" />
+        </div>
+      </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
-                <div style={{ background: '#f3f4f6', padding: '10px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>📅</span>
-                  <span style={{ fontSize: '13px', color: '#4b5563' }}>
-                    {new Date(activeRide.date).toLocaleDateString()}
-                  </span>
-                </div>
-                <div style={{ background: '#f3f4f6', padding: '10px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>🚗</span>
-                  <span style={{ fontSize: '13px', color: '#4b5563' }}>
-                    {activeRide.vehicleType} • {activeRide.vehicleNumber}
-                  </span>
-                </div>
-              </div>
+      {/* Main Content */}
+      <div className="px-4 -mt-4">
+        {/* Search & Route Card */}
+        <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
+          {/* Search Bar */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search destinations..."
+              className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
 
-              <button
-                onClick={() => history.push(`/rides/active/${activeRide.id}`)}
-                style={{
-                  ...primaryButtonStyle,
-                  marginTop: 0
-                }}
+          {/* From/To Selection */}
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-3 mb-4 min-w-0">
+            <div className="min-w-0">
+              <label className="text-xs text-gray-500 mb-1 block">From</label>
+              <button 
+                onClick={() => history.push('/select-location', {
+                  type: 'pickup',
+                  returnTo: '/home',
+                  pickup: pickup || undefined,
+                  dropoff: dropoff || undefined,
+                })}
+                className="h-14 w-full min-w-0 border-2 border-primary-100 rounded-xl px-3 text-left hover:border-primary-300 transition-colors"
+                title={pickup?.address || 'Pick Up'}
               >
-                Track Ride
+                <span className="block w-full overflow-hidden text-ellipsis whitespace-nowrap text-primary-600 font-semibold">
+                  {pickup?.address || 'Pick Up'}
+                </span>
               </button>
             </div>
-          ) : (
-            <div style={{ ...cardStyle, textAlign: 'center', padding: '40px 20px' }}>
-              <span style={{ fontSize: '48px' }}>🚗</span>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', margin: '16px 0 8px' }}>No Active Ride</h3>
-              <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>You don't have any active ride at the moment</p>
-            </div>
-          )}
-
-          <div style={{ marginTop: '24px' }}>
-            <h2 style={sectionTitleStyle}>Quick Actions</h2>
-            <div style={quickActionsGridStyle}>
-              <button
-                onClick={() => history.push('/upload-ride')}
-                style={quickActionStyle}
+            
+            <button 
+              onClick={handleSwapLocations}
+              className="mt-5 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors shrink-0"
+            >
+              <ArrowRightLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            
+            <div className="min-w-0">
+              <label className="text-xs text-gray-500 mb-1 block">To</label>
+              <button 
+                onClick={() => history.push('/select-location', {
+                  type: 'dropoff',
+                  returnTo: '/home',
+                  pickup: pickup || undefined,
+                  dropoff: dropoff || undefined,
+                })}
+                className="h-14 w-full min-w-0 border-2 border-primary-100 rounded-xl px-3 text-left hover:border-primary-300 transition-colors"
+                title={dropoff?.address || 'Drop Off'}
               >
-                <div style={quickActionIconStyle('#e0e7ff')}>➕</div>
-                <p style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937', margin: '0 0 4px 0' }}>Upload Ride</p>
-                <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Add a new ride</p>
-              </button>
-
-              <button
-                onClick={() => history.push('/rides/history')}
-                style={quickActionStyle}
-              >
-                <div style={quickActionIconStyle('#dbeafe')}>🕐</div>
-                <p style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937', margin: '0 0 4px 0' }}>History</p>
-                <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>View past rides</p>
-              </button>
-
-              <button
-                onClick={() => history.push('/support')}
-                style={quickActionStyle}
-              >
-                <div style={quickActionIconStyle('#fef3c7')}>💬</div>
-                <p style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937', margin: '0 0 4px 0' }}>Support</p>
-                <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Get help</p>
-              </button>
-
-              <button
-                onClick={() => history.push('/safety')}
-                style={quickActionStyle}
-              >
-                <div style={quickActionIconStyle('#fee2e2')}>🛡️</div>
-                <p style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937', margin: '0 0 4px 0' }}>Safety</p>
-                <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>SOS & safety</p>
+                <span className="block w-full overflow-hidden text-ellipsis whitespace-nowrap text-primary-600 font-semibold">
+                  {dropoff?.address || 'Drop Off'}
+                </span>
               </button>
             </div>
           </div>
 
-          {recentRides.length > 0 && (
-            <div style={{ marginTop: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <h2 style={sectionTitleStyle}>Recent Rides</h2>
-                <button
-                  onClick={() => history.push('/rides/history')}
-                  style={{ background: 'transparent', border: 'none', color: '#6366f1', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
+          {/* Time & Passengers */}
+          <div className="space-y-3 mb-4">
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+              <Clock className="w-5 h-5 text-primary-500" />
+              <input
+                type="datetime-local"
+                value={departureTime}
+                onChange={(e) => setDepartureTime(e.target.value)}
+                className="flex-1 bg-transparent text-gray-700 focus:outline-none"
+              />
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+              <Users className="w-5 h-5 text-primary-500" />
+              <div className="flex items-center gap-4 flex-1">
+                <button 
+                  onClick={() => setPassengerCount(Math.max(1, passengerCount - 1))}
+                  className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-100"
                 >
-                  View all →
+                  -
+                </button>
+                <span className="text-gray-700 font-medium w-6 text-center">{passengerCount.toString().padStart(2, '0')}</span>
+                <button 
+                  onClick={() => setPassengerCount(Math.min(6, passengerCount + 1))}
+                  className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-100"
+                >
+                  +
                 </button>
               </div>
-              <div>
-                {recentRides.map((ride) => {
-                  const status = getStatusBadge(ride.status);
-                  return (
-                    <button
-                      key={ride.id}
-                      onClick={() => history.push(`/rides/${ride.id}`)}
-                      style={rideListItemStyle}
-                    >
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '14px', color: '#9ca3af' }}>📍</span>
-                          <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{ride.startLocation}</span>
-                          <span style={{ fontSize: '14px', color: '#9ca3af' }}>→</span>
-                          <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937' }}>{ride.endLocation}</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <span style={statusBadgeStyle(ride.status)}>
-                            {status.icon} {status.label}
-                          </span>
-                          <span style={{ fontSize: '12px', color: '#6b7280' }}>
-                            {new Date(ride.date).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                      <span style={{ fontSize: '20px', color: '#9ca3af' }}>›</span>
-                    </button>
-                  );
-                })}
+            </div>
+          </div>
+
+          {/* Find Drivers Button */}
+          <button
+            onClick={handleFindDrivers}
+            className="w-full py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/30 transition-all active:scale-95"
+          >
+            Find Drivers
+          </button>
+          <button
+            onClick={() => history.push('/rides/history')}
+            className="mt-3 w-full py-3 border-2 border-primary-200 text-primary-700 font-semibold rounded-xl hover:border-primary-300 hover:bg-primary-50 transition-colors"
+          >
+            View My Published Rides
+          </button>
+        </div>
+
+        {/* Active Ride Card */}
+        {activeRide && (
+          <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden">
+                  <img 
+                    src={activeRide.driver?.avatar || 'https://via.placeholder.com/64'} 
+                    alt="Driver" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
+                  <Star className="w-3 h-3 text-white fill-white" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900">{activeRide.driver?.name || 'Rahul S'}</h3>
+                <div className="flex items-center gap-1 text-yellow-500">
+                  <Star className="w-4 h-4 fill-current" />
+                  <span className="text-sm font-medium">{activeRide.driver?.rating || '4.9'}</span>
+                </div>
+                <p className="text-primary-600 font-medium mt-1">
+                  Driver arriving in <span className="font-bold">3 mins</span>
+                </p>
+                <div className="w-full h-1.5 bg-gray-100 rounded-full mt-2">
+                  <div className="w-2/3 h-full bg-primary-500 rounded-full" />
+                </div>
               </div>
             </div>
-          )}
+            
+            <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+              <span>Pickup : {activeRide.startLocation}</span>
+              <span className="text-gray-400">|</span>
+              <span>Drop Off : {activeRide.endLocation}</span>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-2">
+              <button className="flex items-center justify-center gap-2 py-2.5 bg-primary-500 text-white rounded-xl font-medium">
+                <Phone className="w-4 h-4" />
+                Call
+              </button>
+              <button className="flex items-center justify-center gap-2 py-2.5 border-2 border-primary-500 text-primary-600 rounded-xl font-medium">
+                <MessageCircle className="w-4 h-4" />
+                Message
+              </button>
+              <button className="flex items-center justify-center gap-2 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium">
+                <Map className="w-4 h-4" />
+                View Map
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Actions Grid */}
+        <div className="grid grid-cols-4 gap-3 mb-6">
+          <button 
+            onClick={() => history.push('/publish-ride')}
+            className="flex flex-col items-center gap-2"
+          >
+            <div className="w-14 h-14 bg-primary-100 rounded-2xl flex items-center justify-center">
+              <div className="relative">
+                <Car className="w-7 h-7 text-primary-600" />
+                <Plus className="w-4 h-4 text-primary-600 absolute -top-1 -right-1" />
+              </div>
+            </div>
+            <span className="text-xs font-medium text-gray-700">Publish Ride</span>
+          </button>
+          
+          <button 
+            onClick={() => history.push('/find-ride')}
+            className="flex flex-col items-center gap-2"
+          >
+            <div className="w-14 h-14 bg-primary-100 rounded-2xl flex items-center justify-center">
+              <div className="relative">
+                <Car className="w-7 h-7 text-primary-600" />
+                <MapPin className="w-4 h-4 text-primary-600 absolute -top-1 -right-1" />
+              </div>
+            </div>
+            <span className="text-xs font-medium text-gray-700">Find Ride</span>
+          </button>
+          
+          <button 
+            onClick={() => history.push('/rewards')}
+            className="flex flex-col items-center gap-2"
+          >
+            <div className="w-14 h-14 bg-primary-100 rounded-2xl flex items-center justify-center">
+              <Award className="w-7 h-7 text-primary-600" />
+            </div>
+            <span className="text-xs font-medium text-gray-700">Reward Points</span>
+          </button>
+          
+          <button 
+            onClick={() => history.push('/rides/history')}
+            className="flex flex-col items-center gap-2"
+          >
+            <div className="w-14 h-14 bg-primary-100 rounded-2xl flex items-center justify-center">
+              <Clock className="w-7 h-7 text-primary-600" />
+            </div>
+            <span className="text-xs font-medium text-gray-700 text-center leading-tight">History</span>
+          </button>
+        </div>
+
+        {/* Main Routes Section */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-1">Main Routes</h2>
+          <p className="text-gray-500 text-sm mb-4">Select the best way to travel</p>
+          
+          <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+            {popularRoutes.map((route) => (
+              <button 
+                key={route.city}
+                className="flex-shrink-0 w-40"
+                onClick={() => setDropoff({ address: route.city, lat: 0, lng: 0 })}
+              >
+                <div className="w-full h-24 rounded-xl overflow-hidden mb-2">
+                  <img 
+                    src={route.image} 
+                    alt={route.city}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <h3 className="font-semibold text-gray-900">{route.city}</h3>
+                <p className="text-xs text-gray-500">Starting at ₹{route.startingPrice}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Promotional Banner */}
+        <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-5 text-white mb-6">
+          <h3 className="text-xl font-bold mb-2">Earn whilst you travel</h3>
+          <p className="text-primary-100 text-sm mb-4">
+            Get 2x points on your first 3 rides this month
+          </p>
+          <button 
+            onClick={() => history.push('/rewards')}
+            className="bg-white text-primary-600 px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-primary-50 transition-colors"
+          >
+            See Rewards
+          </button>
         </div>
       </div>
 
+      {/* Floating Help Button */}
       <button
-        onClick={() => history.push('/safety')}
-        style={sosButtonStyle}
+        onClick={() => history.push('/support')}
+        className="fixed bottom-24 right-4 z-30 flex items-center gap-2 rounded-full bg-primary-500 px-4 py-3 text-white shadow-lg shadow-primary-500/30 transition-all active:scale-95"
+        type="button"
       >
-        🚨
+        <HelpCircle className="h-5 w-5" />
+        <span className="text-sm font-semibold">Help</span>
       </button>
+
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 safe-area-bottom">
+        <div className="flex justify-around items-center max-w-lg mx-auto">
+          <button className="flex flex-col items-center gap-1 p-2 text-primary-600">
+            <Navigation className="w-6 h-6" />
+            <span className="text-xs font-medium">Home</span>
+          </button>
+          <button 
+            onClick={() => history.push('/publish-ride')}
+            className="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-primary-600"
+          >
+            <Plus className="w-6 h-6" />
+            <span className="text-xs font-medium">Publish</span>
+          </button>
+          <button 
+            onClick={() => history.push('/find-ride')}
+            className="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-primary-600"
+          >
+            <Search className="w-6 h-6" />
+            <span className="text-xs font-medium">Find</span>
+          </button>
+          <button 
+            onClick={() => history.push('/rewards')}
+            className="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-primary-600"
+          >
+            <Award className="w-6 h-6" />
+            <span className="text-xs font-medium">Rewards</span>
+          </button>
+          <button 
+            onClick={() => history.push('/profile')}
+            className="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-primary-600"
+          >
+            <Users className="w-6 h-6" />
+            <span className="text-xs font-medium">Profile</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

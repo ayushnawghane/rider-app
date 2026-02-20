@@ -1,6 +1,6 @@
 import { IonContent, IonPage } from '@ionic/react';
-import { useEffect, useState, useRef } from 'react';
-import { useParams } from 'react-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useHistory, useParams } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { messageService } from '../../services';
 import { ArrowLeft, Send, User, MessageCircle, Clock } from 'lucide-react';
@@ -8,55 +8,95 @@ import type { Message } from '../../types';
 
 const DisputeChatPage = () => {
   const { id } = useParams<{ id: string }>();
+  const history = useHistory();
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [newMessage, setNewMessage] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const fetchMessages = async () => {
-    const result = await messageService.getMessages(id);
-    if (result.success && result.messages) {
-      setMessages(result.messages);
+  const upsertAndSortMessages = useCallback((previous: Message[], incoming: Message[]) => {
+    const byId = new Map<string, Message>();
+    previous.forEach((message) => byId.set(message.id, message));
+    incoming.forEach((message) => byId.set(message.id, message));
+    return Array.from(byId.values()).sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+  }, []);
+
+  const fetchMessages = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await messageService.getMessages(id);
+      if (result.success) {
+        setMessages(result.messages || []);
+      } else {
+        setError(result.error || 'Failed to load messages');
+      }
+    } catch {
+      setError('Failed to load messages');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  }, [id]);
 
   useEffect(() => {
-    fetchMessages();
+    void fetchMessages();
+    let active = true;
 
     const unsubscribe = messageService.subscribeToMessages(id, (newMessages: Message[]) => {
-      setMessages((prev) => [...prev, ...newMessages]);
+      if (!active) return;
+      setMessages((prev) => upsertAndSortMessages(prev, newMessages));
     });
 
     return () => {
+      active = false;
       unsubscribe();
     };
-  }, [id]);
+  }, [fetchMessages, id, upsertAndSortMessages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const handleBack = () => {
+    if (history.length > 1) {
+      history.goBack();
+      return;
+    }
+    history.replace('/support');
+  };
+
   const handleSend = async () => {
-    if (!newMessage.trim() || !user) return;
+    const trimmedMessage = newMessage.trim();
+    if (!trimmedMessage || !user || sending) return;
 
     setSending(true);
+    setError(null);
 
-    const result = await messageService.sendMessage({
-      disputeId: id,
-      userId: user.id,
-      content: newMessage,
-      isFromUser: true,
-    });
+    try {
+      const result = await messageService.sendMessage({
+        disputeId: id,
+        userId: user.id,
+        content: trimmedMessage,
+        isFromUser: true,
+      });
 
-    if (result.success && result.message) {
-      setMessages((prev) => [...prev, result.message!]);
-      setNewMessage('');
+      const createdMessage = result.message;
+      if (result.success && createdMessage) {
+        setMessages((prev) => upsertAndSortMessages(prev, [createdMessage]));
+        setNewMessage('');
+      } else {
+        setError(result.error || 'Failed to send message');
+      }
+    } catch {
+      setError('Failed to send message');
+    } finally {
+      setSending(false);
     }
-
-    setSending(false);
   };
 
   const formatTime = (dateString: string) => {
@@ -88,11 +128,11 @@ const DisputeChatPage = () => {
 
   return (
     <IonPage>
-      <IonContent className="ion-padding bg-gray-50">
-        <div className="max-w-3xl mx-auto px-4 py-6 h-screen flex flex-col">
-          <header className="mb-6 flex-shrink-0">
+      <IonContent className="ion-padding bg-gray-50" fullscreen>
+        <div className="max-w-3xl mx-auto px-4 py-6 min-h-full flex flex-col">
+          <header className="mb-4 flex-shrink-0">
             <button
-              onClick={() => window.history.back()}
+              onClick={handleBack}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -100,7 +140,13 @@ const DisputeChatPage = () => {
             </button>
           </header>
 
-          <div className="flex-1 overflow-y-auto pb-24">
+          {error && (
+            <div className="mb-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          <div className="flex-1 overflow-y-auto pb-4">
             {messages.length === 0 ? (
               <div className="empty-state">
                 <MessageCircle className="empty-icon" />
@@ -144,15 +190,20 @@ const DisputeChatPage = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex-shrink-0 shadow-medium">
-            <div className="max-w-3xl mx-auto flex gap-3">
+          <div className="sticky bottom-0 mt-2 rounded-t-2xl border border-gray-200 bg-white p-3 shadow-medium">
+            <div className="flex gap-3">
               <input
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."
                 className="input flex-1"
-                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    void handleSend();
+                  }
+                }}
               />
               <button
                 onClick={handleSend}

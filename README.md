@@ -92,10 +92,26 @@ src/
 
 The `supabase/functions/` directory contains Edge Functions for:
 - `send-notification`: Push notification handling
+- `phone-otp-auth`: MSG91 OTP send/verify + Supabase session issuance
 
 Deploy Edge Functions:
 ```bash
 supabase functions deploy send-notification
+supabase functions deploy phone-otp-auth
+```
+
+Set secrets for `phone-otp-auth`:
+```bash
+supabase secrets set MSG91_AUTH_KEY=your_msg91_auth_key
+supabase secrets set MSG91_TEMPLATE_ID=your_msg91_template_id
+supabase secrets set OTP_PASSWORD_SECRET=your_long_random_secret
+supabase secrets set SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+Optional (local/dev):
+```bash
+supabase secrets set ALLOW_DUMMY_OTP=true
+supabase secrets set DUMMY_OTP_CODE=123456
 ```
 
 ## Environment Variables
@@ -109,3 +125,8 @@ supabase functions deploy send-notification
 ## License
 
 MIT
+
+## Developer Guides
+
+- Ionic navigation/loading patterns:
+  [docs/ionic-navigation-loading-guide.md](docs/ionic-navigation-loading-guide.md)

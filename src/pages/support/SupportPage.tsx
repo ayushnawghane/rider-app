@@ -1,9 +1,9 @@
-import { IonContent, IonPage, IonRefresher, IonRefresherContent } from '@ionic/react';
-import { useEffect, useState } from 'react';
+import { IonContent, IonPage } from '@ionic/react';
+import { useCallback, useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { disputeService } from '../../services';
-import { ArrowLeft, Plus, MessageSquare, HelpCircle, CheckCircle2, Clock2, XCircle, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Plus, MessageSquare, HelpCircle, CheckCircle2, Clock2, ChevronRight, AlertTriangle } from 'lucide-react';
 import { SkeletonList } from '../../components/Skeleton';
 import type { Dispute } from '../../types';
 
@@ -11,28 +11,34 @@ const SupportPage = () => {
   const { user } = useAuth();
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const history = useHistory();
 
-  const fetchDisputes = async () => {
-    if (!user) return;
-
-    const result = await disputeService.getDisputes(user.id);
-    if (result.success && result.disputes) {
-      setDisputes(result.disputes);
+  const fetchDisputes = useCallback(async () => {
+    if (!user) {
+      setDisputes([]);
+      setLoading(false);
+      return;
     }
-    setLoading(false);
-  };
 
-  useEffect(() => {
-    fetchDisputes();
+    try {
+      setError(null);
+      const result = await disputeService.getDisputes(user.id);
+      if (result.success && result.disputes) {
+        setDisputes(result.disputes);
+      } else {
+        setError(result.error || 'Failed to load disputes');
+      }
+    } catch {
+      setError('Failed to load disputes');
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchDisputes();
-    setRefreshing(false);
-  };
+  useEffect(() => {
+    void fetchDisputes();
+  }, [fetchDisputes]);
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -55,8 +61,8 @@ const SupportPage = () => {
   if (loading) {
     return (
       <IonPage>
-        <IonContent className="ion-padding bg-gray-50">
-          <div className="max-w-2xl mx-auto px-4 py-6">
+        <IonContent className="bg-gray-50" fullscreen forceOverscroll={false}>
+          <div className="mx-auto max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+16px)]">
             <header className="mb-6">
               <h1 className="text-2xl font-bold text-gray-900">Support & Disputes</h1>
             </header>
@@ -69,12 +75,8 @@ const SupportPage = () => {
 
   return (
     <IonPage>
-      <IonContent className="ion-padding bg-gray-50">
-        <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
-          <IonRefresherContent />
-        </IonRefresher>
-
-        <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
+      <IonContent className="bg-gray-50" fullscreen forceOverscroll={false}>
+        <div className="mx-auto max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+16px)]">
           <header className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Support & Disputes</h1>
@@ -88,36 +90,47 @@ const SupportPage = () => {
             </button>
           </header>
 
-          <div className="card p-6 mb-6 animate-fade-in">
-            <div className="text-center mb-4">
-              <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <HelpCircle className="w-8 h-8 text-primary-600" />
-              </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Need Help?</h2>
-              <p className="text-gray-500">Raise a dispute for a ride or contact our support team</p>
+          <button
+            onClick={() => void fetchDisputes()}
+            className="mb-4 text-sm font-medium text-primary-600 hover:text-primary-700"
+            type="button"
+          >
+            Refresh
+          </button>
+
+          {error && (
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {error}
             </div>
-            <button
-              onClick={() => history.push('/support/dispute/new')}
-              className="w-full btn btn-primary"
-            >
-              Raise New Dispute
-            </button>
-          </div>
+          )}
 
           {disputes.length === 0 ? (
             <div className="card p-8 text-center animate-fade-in">
-              <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">No Disputes</h2>
-              <p className="text-gray-500 mb-6">You haven't raised any disputes yet</p>
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-100">
+                <HelpCircle className="h-8 w-8 text-primary-600" />
+              </div>
+              <h2 className="mb-2 text-xl font-bold text-gray-900">Need Help?</h2>
+              <p className="mb-6 text-gray-500">You have no disputes yet. Start one and our support team will respond.</p>
               <button
                 onClick={() => history.push('/support/dispute/new')}
                 className="w-full btn btn-primary"
               >
-                Raise Your First Dispute
+                Raise New Dispute
               </button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <>
+              <div className="card p-6 mb-4 animate-fade-in">
+                <div className="text-center">
+                  <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-100">
+                    <HelpCircle className="h-7 w-7 text-primary-600" />
+                  </div>
+                  <h2 className="mb-1 text-lg font-bold text-gray-900">Need more help?</h2>
+                  <p className="text-sm text-gray-500">Raise another dispute anytime.</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
               {disputes.map((dispute) => {
                 const status = getStatusBadge(dispute.status);
                 return (
@@ -149,7 +162,8 @@ const SupportPage = () => {
                   </button>
                 );
               })}
-            </div>
+              </div>
+            </>
           )}
         </div>
       </IonContent>

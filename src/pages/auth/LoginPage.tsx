@@ -1,351 +1,212 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
 import { useHistory } from 'react-router';
-import { SignIn, useSignIn } from '@clerk/clerk-react';
 import { useAuth } from '../../context/AuthContext';
+import { phoneOtpAuthService } from '../../services/phoneOtpAuth';
+
+const normalizePhone = (input: string, countryCode: string) => {
+  const digits = input.replace(/\D/g, '');
+  if (!digits) return '';
+  if (input.trim().startsWith('+')) return `+${digits}`;
+  if (digits.startsWith(countryCode) && digits.length > 10) return `+${digits}`;
+  if (digits.length === 10) return `+${countryCode}${digits}`;
+  return `+${digits}`;
+};
 
 const LoginPage = () => {
-  const [showClerkSignIn, setShowClerkSignIn] = useState(false);
-  const { user, isClerkLoaded } = useAuth();
   const history = useHistory();
-  const { isLoaded: isSignInLoaded, signIn } = useSignIn();
+  const { user, isAuthLoaded } = useAuth();
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [normalizedPhone, setNormalizedPhone] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
-  const handleGoogleSignIn = async () => {
-    if (!isSignInLoaded || !signIn) return;
-    
-    try {
-      await signIn.authenticateWithRedirect({
-        strategy: 'oauth_google',
-        redirectUrl: '/sso-callback',
-        redirectUrlComplete: '/home'
-      });
-    } catch (err) {
-      console.error('Google sign in error:', err);
-    }
-  };
-
-  const handleAppleSignIn = async () => {
-    if (!isSignInLoaded || !signIn) return;
-    
-    try {
-      await signIn.authenticateWithRedirect({
-        strategy: 'oauth_apple',
-        redirectUrl: '/sso-callback',
-        redirectUrlComplete: '/home'
-      });
-    } catch (err) {
-      console.error('Apple sign in error:', err);
-    }
-  };
+  const countryCode = useMemo(
+    () => String(import.meta.env.VITE_PHONE_COUNTRY_CODE || '91').replace(/\D/g, '') || '91',
+    [],
+  );
 
   useEffect(() => {
-    if (isClerkLoaded && user) {
+    if (isAuthLoaded && user) {
       history.replace('/home');
     }
-  }, [isClerkLoaded, user, history]);
+  }, [isAuthLoaded, user, history]);
 
-  const containerStyle: React.CSSProperties = {
-    height: '100vh',
-    overflow: 'auto',
-    background: '#f9fafb',
-    WebkitOverflowScrolling: 'touch'
+  const handleSendOtp = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setInfo(null);
+    const phone = normalizePhone(phoneNumber, countryCode);
+    if (!/^\+\d{10,15}$/.test(phone)) {
+      setError('Enter a valid mobile number including country code.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const sendResult = await phoneOtpAuthService.sendOtp(phone);
+      setNormalizedPhone(phone);
+      setOtpSent(true);
+      const requestSuffix = sendResult.requestId ? ` (request: ${sendResult.requestId})` : '';
+      setInfo(`${sendResult.message || `OTP sent to ${phone}`}${requestSuffix}`);
+    } catch (sendError: unknown) {
+      const message =
+        sendError instanceof Error
+          ? sendError.message
+          : 'Failed to send OTP. Check Supabase SMS provider configuration.';
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const contentStyle: React.CSSProperties = {
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    padding: '24px 16px'
-  };
+  const handleVerifyOtp = async () => {
+    if (isSubmitting) {
+      return;
+    }
+    setError(null);
+    setInfo(null);
 
-  const backButtonStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: '16px',
-    left: '16px',
-    background: 'transparent',
-    border: 'none',
-    padding: '12px',
-    cursor: 'pointer',
-    borderRadius: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  };
+    if (isAuthLoaded && user) {
+      history.replace('/home');
+      return;
+    }
 
-  const logoContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: '32px'
-  };
+    const phone = normalizedPhone || normalizePhone(phoneNumber, countryCode);
+    if (!/^\+\d{10,15}$/.test(phone)) {
+      setError('Enter a valid mobile number.');
+      return;
+    }
+    if (!otpCode.trim()) {
+      setError('Enter the OTP code.');
+      return;
+    }
 
-  const logoStyle: React.CSSProperties = {
-    width: '80px',
-    height: '80px',
-    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-    borderRadius: '24px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 10px 25px rgba(99, 102, 241, 0.3)'
-  };
-
-  const logoTextStyle: React.CSSProperties = {
-    color: 'white',
-    fontSize: '32px',
-    fontWeight: '700'
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontSize: '28px',
-    fontWeight: '700',
-    color: '#1f2937',
-    textAlign: 'center',
-    margin: '0 0 8px 0'
-  };
-
-  const subtitleStyle: React.CSSProperties = {
-    fontSize: '16px',
-    color: '#6b7280',
-    textAlign: 'center',
-    margin: '0 0 32px 0'
-  };
-
-  const buttonBaseStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '16px 24px',
-    borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    border: 'none',
-    transition: 'all 0.2s',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '12px'
-  };
-
-  const primaryButtonStyle: React.CSSProperties = {
-    ...buttonBaseStyle,
-    background: '#6366f1',
-    color: 'white',
-    boxShadow: '0 4px 6px rgba(99, 102, 241, 0.2)'
-  };
-
-  const secondaryButtonStyle: React.CSSProperties = {
-    ...buttonBaseStyle,
-    background: 'white',
-    color: '#374151',
-    border: '1px solid #e5e7eb'
-  };
-
-  const dividerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    margin: '24px 0'
-  };
-
-  const dividerLineStyle: React.CSSProperties = {
-    flex: 1,
-    height: '1px',
-    background: '#e5e7eb'
-  };
-
-  const dividerTextStyle: React.CSSProperties = {
-    padding: '0 16px',
-    color: '#9ca3af',
-    fontSize: '14px'
-  };
-
-  const footerStyle: React.CSSProperties = {
-    textAlign: 'center',
-    marginTop: '32px'
-  };
-
-  const footerTextStyle: React.CSSProperties = {
-    fontSize: '14px',
-    color: '#6b7280'
-  };
-
-  const footerLinkStyle: React.CSSProperties = {
-    color: '#6366f1',
-    fontWeight: '600',
-    textDecoration: 'none',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    padding: 0
-  };
-
-  const securityBadgeStyle: React.CSSProperties = {
-    background: '#dbeafe',
-    border: '1px solid #bfdbfe',
-    borderRadius: '12px',
-    padding: '16px',
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '12px',
-    marginTop: '32px'
-  };
-
-  const securityIconStyle: React.CSSProperties = {
-    fontSize: '20px'
-  };
-
-  const securityTitleStyle: React.CSSProperties = {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#1e40af',
-    margin: '0 0 4px 0'
-  };
-
-  const securityTextStyle: React.CSSProperties = {
-    fontSize: '14px',
-    color: '#3b82f6',
-    margin: 0
-  };
-
-  const cardStyle: React.CSSProperties = {
-    background: 'white',
-    borderRadius: '16px',
-    padding: '24px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+    try {
+      setIsSubmitting(true);
+      await phoneOtpAuthService.verifyOtp(phone, otpCode.trim());
+      history.replace('/home');
+    } catch (verifyOtpError: unknown) {
+      const message =
+        verifyOtpError instanceof Error ? verifyOtpError.message : 'OTP verification failed';
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div style={containerStyle}>
-      {!showClerkSignIn ? (
-        <div style={contentStyle}>
-          <button 
-            onClick={() => history.goBack()}
-            style={backButtonStyle}
-          >
-            <span style={{ fontSize: '24px' }}>←</span>
-          </button>
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '24px 16px' }}>
+      <div style={{ maxWidth: 380, margin: '0 auto', paddingTop: 48 }}>
+        <h1 style={{ fontSize: 32, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
+          Sign in with Mobile
+        </h1>
+        <p style={{ color: '#64748b', marginBottom: 24 }}>
+          Enter your phone number to receive an OTP.
+        </p>
 
-          <div style={{ maxWidth: '360px', width: '100%', margin: '0 auto' }}>
-            <div style={logoContainerStyle}>
-              <div style={logoStyle}>
-                <span style={logoTextStyle}>B</span>
-              </div>
-            </div>
-
-            <h1 style={titleStyle}>Welcome Back</h1>
-            <p style={subtitleStyle}>Sign in to continue to Blink Car</p>
-
-            <button
-              onClick={() => setShowClerkSignIn(true)}
-              style={primaryButtonStyle}
-            >
-              <span>✉️</span>
-              Sign In with Email or Phone
-            </button>
-
-            <div style={dividerStyle}>
-              <div style={dividerLineStyle} />
-              <span style={dividerTextStyle}>or continue with</span>
-              <div style={dividerLineStyle} />
-            </div>
-
-            <button 
-              onClick={handleGoogleSignIn}
-              style={secondaryButtonStyle}
-              disabled={!isSignInLoaded}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
-              Sign in with Google
-            </button>
-
-            <button 
-              onClick={handleAppleSignIn}
-              style={{ ...secondaryButtonStyle, marginTop: '12px' }}
-              disabled={!isSignInLoaded}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.21-1.96 1.07-3.11-1.05.05-2.31.74-3.02 1.61-.69.84-1.22 2.04-1.07 3.11 1.17.09 2.36-.85 3.02-1.61z" />
-              </svg>
-              Sign in with Apple
-            </button>
-
-            <div style={footerStyle}>
-              <p style={footerTextStyle}>
-                Don't have an account?{' '}
-                <button 
-                  onClick={() => history.push('/register')}
-                  style={footerLinkStyle}
-                >
-                  Sign up
-                </button>
-              </p>
-            </div>
-
-            <div style={securityBadgeStyle}>
-              <span style={securityIconStyle}>✅</span>
-              <div>
-                <p style={securityTitleStyle}>Secure Authentication</p>
-                <p style={securityTextStyle}>Your data is protected with end-to-end encryption</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div style={contentStyle}>
-          <div style={{ maxWidth: '360px', width: '100%', margin: '0 auto' }}>
-            <button
-              onClick={() => setShowClerkSignIn(false)}
-              style={{
-                ...backButtonStyle,
-                position: 'static',
-                marginBottom: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                color: '#6b7280'
-              }}
-            >
-              <span style={{ fontSize: '20px' }}>←</span>
-              <span>Back</span>
-            </button>
-
-            <div style={cardStyle}>
-              <SignIn
-                afterSignInUrl="/home"
-                afterSignUpUrl="/home"
-                appearance={{
-                  elements: {
-                    rootBox: { width: '100%' },
-                    card: { boxShadow: 'none', border: 'none' },
-                    headerTitle: { fontSize: '24px', fontWeight: '700', color: '#1f2937' },
-                    headerSubtitle: { color: '#6b7280', marginTop: '8px' },
-                    formButtonPrimary: { 
-                      background: '#6366f1',
-                      borderRadius: '12px',
-                      padding: '16px',
-                      fontSize: '16px',
-                      fontWeight: '600'
-                    },
-                    formFieldLabel: { color: '#374151', fontWeight: '500' },
-                    footerActionLink: { color: '#6366f1' },
-                    socialButtonsBlockButton: { borderRadius: '12px' },
-                    dividerText: { color: '#9ca3af' },
-                    formFieldInput: { 
-                      borderRadius: '12px',
-                      border: '1px solid #e5e7eb',
-                      padding: '12px 16px'
-                    },
-                  },
+        <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+          <form onSubmit={handleSendOtp}>
+            <label style={{ fontSize: 14, color: '#334155', fontWeight: 600 }}>
+              Mobile number
+              <input
+                type="tel"
+                value={phoneNumber}
+                onChange={(event) => setPhoneNumber(event.target.value)}
+                placeholder="+91 9876543210"
+                disabled={isSubmitting}
+                style={{
+                  width: '100%',
+                  marginTop: 8,
+                  padding: '12px 14px',
+                  borderRadius: 10,
+                  border: '1px solid #cbd5e1',
+                  background: '#fff',
+                  color: '#0f172a',
                 }}
               />
-            </div>
-          </div>
+            </label>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              style={{
+                width: '100%',
+                marginTop: 16,
+                padding: '13px 14px',
+                border: 0,
+                borderRadius: 12,
+                background: '#f97316',
+                color: '#fff',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              {isSubmitting ? 'Sending OTP...' : otpSent ? 'Resend OTP' : 'Send OTP'}
+            </button>
+          </form>
+
+          {otpSent && (
+            <>
+              <label style={{ fontSize: 14, color: '#334155', fontWeight: 600, display: 'block', marginTop: 16 }}>
+                OTP code
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={otpCode}
+                  onChange={(event) => setOtpCode(event.target.value)}
+                  placeholder="Enter OTP"
+                  disabled={isSubmitting}
+                  style={{
+                    width: '100%',
+                    marginTop: 8,
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    border: '1px solid #cbd5e1',
+                    background: '#fff',
+                    color: '#0f172a',
+                  }}
+                />
+              </label>
+
+              <button
+                onClick={handleVerifyOtp}
+                disabled={isSubmitting}
+                type="button"
+                style={{
+                  width: '100%',
+                  marginTop: 12,
+                  padding: '13px 14px',
+                  border: 0,
+                  borderRadius: 12,
+                  background: '#0f172a',
+                  color: '#fff',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {isSubmitting ? 'Verifying...' : 'Verify OTP'}
+              </button>
+            </>
+          )}
+
+          {info && <p style={{ color: '#16a34a', fontSize: 13, marginTop: 12 }}>{info}</p>}
+          {error && <p style={{ color: '#dc2626', fontSize: 13, marginTop: 12 }}>{error}</p>}
         </div>
-      )}
+
+        <p style={{ textAlign: 'center', marginTop: 16, color: '#64748b' }}>
+          New here?{' '}
+          <button
+            onClick={() => history.push('/register')}
+            style={{ border: 0, background: 'none', color: '#f97316', fontWeight: 700, cursor: 'pointer' }}
+          >
+            Create account
+          </button>
+        </p>
+      </div>
     </div>
   );
 };
