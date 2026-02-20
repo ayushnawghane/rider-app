@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { GoogleMap, Marker, Polyline } from '@react-google-maps/api';
+import { GoogleMap, Marker, Polyline, useJsApiLoader } from '@react-google-maps/api';
 
 const defaultCenter = {
   lat: 28.6139,
   lng: 77.2090,
 };
+
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim() || '';
 
 const mapOptions: google.maps.MapOptions = {
   disableDefaultUI: false,
@@ -47,11 +49,16 @@ const MapComponent: React.FC<MapComponentProps> = ({
   fitBounds = false,
 }) => {
   const mapRef = useRef<google.maps.Map | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isMapMounted, setIsMapMounted] = useState(false);
+  const hasGoogleMapsApiKey = GOOGLE_MAPS_API_KEY.length > 0;
+  const { isLoaded: isScriptLoaded, loadError } = useJsApiLoader({
+    id: 'rider-app-map-component',
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+  });
 
   const onLoad = (map: google.maps.Map) => {
     mapRef.current = map;
-    setIsLoaded(true);
+    setIsMapMounted(true);
 
     if (fitBounds && markers.length > 0) {
       const bounds = new google.maps.LatLngBounds();
@@ -62,22 +69,94 @@ const MapComponent: React.FC<MapComponentProps> = ({
 
   const onUnmount = () => {
     mapRef.current = null;
+    setIsMapMounted(false);
   };
 
   // Update bounds when markers change
   useEffect(() => {
-    if (isLoaded && mapRef.current && fitBounds && markers.length > 0) {
+    if (isMapMounted && mapRef.current && fitBounds && markers.length > 0) {
       const bounds = new google.maps.LatLngBounds();
       markers.forEach((marker) => bounds.extend(marker.position));
       mapRef.current.fitBounds(bounds);
     }
-  }, [markers, fitBounds, isLoaded]);
+  }, [markers, fitBounds, isMapMounted]);
 
   const mapContainerStyle: React.CSSProperties = {
     width: '100%',
     height: '100%',
     borderRadius: '12px'
   };
+
+  if (!hasGoogleMapsApiKey) {
+    return (
+      <div className={className} style={{ width: '100%', height: '100%' }}>
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            borderRadius: '12px',
+            background: '#f3f4f6',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '12px',
+            textAlign: 'center',
+            color: '#6b7280',
+            fontSize: '13px',
+          }}
+        >
+          Maps unavailable. Missing VITE_GOOGLE_MAPS_API_KEY.
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className={className} style={{ width: '100%', height: '100%' }}>
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            borderRadius: '12px',
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '12px',
+            textAlign: 'center',
+            color: '#b91c1c',
+            fontSize: '13px',
+          }}
+        >
+          Failed to load Google Maps.
+        </div>
+      </div>
+    );
+  }
+
+  if (!isScriptLoaded || typeof window === 'undefined' || !window.google || !window.google.maps) {
+    return (
+      <div className={className} style={{ width: '100%', height: '100%' }}>
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            borderRadius: '12px',
+            background: '#f9fafb',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#6b7280',
+            fontSize: '13px',
+          }}
+        >
+          Loading map...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={className} style={{ width: '100%', height: '100%' }}>

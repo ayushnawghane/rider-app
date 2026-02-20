@@ -1,11 +1,30 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const FALLBACK_SUPABASE_URL = 'https://placeholder.supabase.co';
+const FALLBACK_SUPABASE_ANON_KEY = 'placeholder-anon-key';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase credentials not found in environment variables');
+const isPlaceholderValue = (value: string | undefined) =>
+  !value || value.includes('your_supabase');
+
+const envSupabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+const envSupabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
+export const isSupabaseConfigured =
+  !isPlaceholderValue(envSupabaseUrl) && !isPlaceholderValue(envSupabaseAnonKey);
+
+if (!isSupabaseConfigured) {
+  console.error(
+    [
+      '[Supabase] Missing configuration.',
+      'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in a local .env file.',
+      'Example:',
+      'VITE_SUPABASE_URL=https://your-project.supabase.co',
+      'VITE_SUPABASE_ANON_KEY=eyJ...',
+    ].join('\n'),
+  );
 }
+
+const supabaseUrl = envSupabaseUrl || FALLBACK_SUPABASE_URL;
+const supabaseAnonKey = envSupabaseAnonKey || FALLBACK_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
