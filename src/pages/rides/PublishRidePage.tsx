@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
+import { rideService } from '../../services';
 import { 
   MapPin, 
   Clock, 
@@ -20,13 +21,28 @@ interface Location {
   lng: number;
 }
 
+interface PublishRideLocationState {
+  start?: Location;
+  end?: Location;
+  departureTime?: string;
+}
+
+type PublishRideFieldErrors = {
+  startLocation?: string;
+  endLocation?: string;
+  departureTime?: string;
+  vehicleNumber?: string;
+};
+
 const lightFieldClass =
   'bg-white text-gray-900 placeholder-gray-400 [color-scheme:light]';
 
+const buildReferenceId = () => `RIDE-${Date.now().toString(36).toUpperCase()}`;
+
 const PublishRidePage = () => {
-  const { isAuthLoaded } = useAuth();
+  const { user, isAuthLoaded } = useAuth();
   const history = useHistory();
-  const location = useLocation<{ start?: Location; end?: Location }>();
+  const location = useLocation<PublishRideLocationState>();
   
   const [startLocation, setStartLocation] = useState<Location | null>(null);
   const [endLocation, setEndLocation] = useState<Location | null>(null);
@@ -37,6 +53,8 @@ const PublishRidePage = () => {
   const [vehicleNumber, setVehicleNumber] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<PublishRideFieldErrors>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleBackToHome = () => {
     if (history.length > 1) {
@@ -57,25 +75,90 @@ const PublishRidePage = () => {
     if (!state) return;
     if (state.start) setStartLocation(state.start);
     if (state.end) setEndLocation(state.end);
+    if (state.departureTime) setDepartureTime(state.departureTime.slice(0, 16));
   }, [location.state]);
 
+  useEffect(() => {
+    if (!startLocation) return;
+    setFieldErrors((prev) => {
+      if (!prev.startLocation) return prev;
+      const next = { ...prev };
+      delete next.startLocation;
+      return next;
+    });
+  }, [startLocation]);
+
+  useEffect(() => {
+    if (!endLocation) return;
+    setFieldErrors((prev) => {
+      if (!prev.endLocation) return prev;
+      const next = { ...prev };
+      delete next.endLocation;
+      return next;
+    });
+  }, [endLocation]);
+
   const handlePublish = async () => {
-    if (!startLocation || !endLocation || !departureTime || !vehicleNumber) {
-      alert('Please fill in all required fields');
+    const nextFieldErrors: PublishRideFieldErrors = {};
+    const trimmedVehicleNumber = vehicleNumber.trim();
+    const selectedStart = startLocation;
+    const selectedEnd = endLocation;
+
+    if (!selectedStart) {
+      nextFieldErrors.startLocation = 'Please select a starting point.';
+    }
+    if (!selectedEnd) {
+      nextFieldErrors.endLocation = 'Please select a destination.';
+    }
+    if (!departureTime) {
+      nextFieldErrors.departureTime = 'Please select a departure time.';
+    } else if (Number.isNaN(new Date(departureTime).getTime())) {
+      nextFieldErrors.departureTime = 'Please select a valid departure time.';
+    }
+    if (!trimmedVehicleNumber) {
+      nextFieldErrors.vehicleNumber = 'Please enter your vehicle number.';
+    }
+
+    setFieldErrors(nextFieldErrors);
+    setSubmitError(null);
+
+    if (Object.keys(nextFieldErrors).length > 0) {
       return;
     }
 
+    if (!selectedStart || !selectedEnd) {
+      return;
+    }
+
+    if (!user) {
+      setSubmitError('User not authenticated. Please log in again.');
+      return;
+    }
+
+    const parsedDate = new Date(departureTime);
     setIsSubmitting(true);
-    
-    // TODO: Call API to publish ride
+
     try {
-      // Simulated API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      alert('Ride published successfully!');
-      history.replace('/home');
+      const result = await rideService.createRide({
+        userId: user.id,
+        date: parsedDate.toISOString(),
+        startLocation: selectedStart.address,
+        endLocation: selectedEnd.address,
+        startLocationCoords: { lat: selectedStart.lat, lng: selectedStart.lng },
+        endLocationCoords: { lat: selectedEnd.lat, lng: selectedEnd.lng },
+        vehicleType,
+        vehicleNumber: vehicleNumber.trim().toUpperCase(),
+        referenceId: buildReferenceId(),
+      });
+
+      if (!result.success) {
+        setSubmitError(result.error || 'Failed to publish ride. Please try again.');
+        return;
+      }
+
+      history.replace('/rides/history');
     } catch {
-      alert('Failed to publish ride. Please try again.');
+      setSubmitError('Failed to publish ride. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -113,6 +196,17 @@ const PublishRidePage = () => {
       {/* Form */}
       <div className="px-4 -mt-4">
         <div className="bg-white rounded-2xl shadow-lg p-5">
+          {Object.keys(fieldErrors).length > 0 && (
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              Please complete all required fields highlighted below.
+            </div>
+          )}
+          {submitError && (
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {submitError}
+            </div>
+          )}
+
           {/* Route Selection */}
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Route Details</h2>
@@ -124,8 +218,13 @@ const PublishRidePage = () => {
                 returnTo: '/publish-ride',
                 start: startLocation || undefined,
                 end: endLocation || undefined,
+                departureTime: departureTime || undefined,
               })}
-              className="w-full p-4 border-2 border-primary-100 rounded-xl mb-3 text-left hover:border-primary-300 transition-colors"
+              className={`w-full p-4 border-2 rounded-xl mb-3 text-left transition-colors ${
+                fieldErrors.startLocation
+                  ? 'border-red-300 bg-red-50'
+                  : 'border-primary-100 hover:border-primary-300'
+              }`}
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
@@ -139,6 +238,9 @@ const PublishRidePage = () => {
                 </div>
               </div>
             </button>
+            {fieldErrors.startLocation && (
+              <p className="-mt-1 mb-3 text-xs text-red-600">{fieldErrors.startLocation}</p>
+            )}
 
             {/* To */}
             <button 
@@ -147,8 +249,13 @@ const PublishRidePage = () => {
                 returnTo: '/publish-ride',
                 start: startLocation || undefined,
                 end: endLocation || undefined,
+                departureTime: departureTime || undefined,
               })}
-              className="w-full p-4 border-2 border-primary-100 rounded-xl text-left hover:border-primary-300 transition-colors"
+              className={`w-full p-4 border-2 rounded-xl text-left transition-colors ${
+                fieldErrors.endLocation
+                  ? 'border-red-300 bg-red-50'
+                  : 'border-primary-100 hover:border-primary-300'
+              }`}
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -162,20 +269,39 @@ const PublishRidePage = () => {
                 </div>
               </div>
             </button>
+            {fieldErrors.endLocation && (
+              <p className="mt-2 text-xs text-red-600">{fieldErrors.endLocation}</p>
+            )}
           </div>
 
           {/* Departure Time */}
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Departure Time</h2>
-            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+            <div
+              className={`flex items-center gap-3 p-4 rounded-xl border-2 ${
+                fieldErrors.departureTime ? 'border-red-300 bg-red-50' : 'border-transparent bg-gray-50'
+              }`}
+            >
               <Clock className="w-5 h-5 text-primary-500" />
               <input
                 type="datetime-local"
                 value={departureTime}
-                onChange={(e) => setDepartureTime(e.target.value)}
+                onChange={(e) => {
+                  setDepartureTime(e.target.value);
+                  setSubmitError(null);
+                  setFieldErrors((prev) => {
+                    if (!prev.departureTime) return prev;
+                    const next = { ...prev };
+                    delete next.departureTime;
+                    return next;
+                  });
+                }}
                 className={`flex-1 bg-transparent text-gray-700 focus:outline-none ${lightFieldClass}`}
               />
             </div>
+            {fieldErrors.departureTime && (
+              <p className="mt-2 text-xs text-red-600">{fieldErrors.departureTime}</p>
+            )}
           </div>
 
           {/* Available Seats */}
@@ -245,11 +371,25 @@ const PublishRidePage = () => {
               <input
                 type="text"
                 value={vehicleNumber}
-                onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
+                onChange={(e) => {
+                  setVehicleNumber(e.target.value.toUpperCase());
+                  setSubmitError(null);
+                  setFieldErrors((prev) => {
+                    if (!prev.vehicleNumber) return prev;
+                    const next = { ...prev };
+                    delete next.vehicleNumber;
+                    return next;
+                  });
+                }}
                 placeholder="Vehicle Number (e.g., MH01AB1234)"
-                className={`w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 ${lightFieldClass}`}
+                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary-500 ${
+                  fieldErrors.vehicleNumber ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                } ${lightFieldClass}`}
               />
             </div>
+            {fieldErrors.vehicleNumber && (
+              <p className="mt-2 text-xs text-red-600">{fieldErrors.vehicleNumber}</p>
+            )}
           </div>
 
           {/* Additional Notes */}

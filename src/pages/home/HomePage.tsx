@@ -222,6 +222,12 @@ const HomePage = () => {
           >
             Find Drivers
           </button>
+          <button
+            onClick={() => history.push('/rides/history')}
+            className="mt-3 w-full py-3 border-2 border-primary-200 text-primary-700 font-semibold rounded-xl hover:border-primary-300 hover:bg-primary-50 transition-colors"
+          >
+            View My Published Rides
+          </button>
         </div>
 
         {/* Active Ride Card */}
@@ -317,13 +323,13 @@ const HomePage = () => {
           </button>
           
           <button 
-            onClick={() => history.push('/support')}
+            onClick={() => history.push('/rides/history')}
             className="flex flex-col items-center gap-2"
           >
             <div className="w-14 h-14 bg-primary-100 rounded-2xl flex items-center justify-center">
-              <HelpCircle className="w-7 h-7 text-primary-600" />
+              <Clock className="w-7 h-7 text-primary-600" />
             </div>
-            <span className="text-xs font-medium text-gray-700">Help</span>
+            <span className="text-xs font-medium text-gray-700 text-center leading-tight">History</span>
           </button>
         </div>
 
@@ -367,6 +373,16 @@ const HomePage = () => {
           </button>
         </div>
       </div>
+
+      {/* Floating Help Button */}
+      <button
+        onClick={() => history.push('/support')}
+        className="fixed bottom-24 right-4 z-30 flex items-center gap-2 rounded-full bg-primary-500 px-4 py-3 text-white shadow-lg shadow-primary-500/30 transition-all active:scale-95"
+        type="button"
+      >
+        <HelpCircle className="h-5 w-5" />
+        <span className="text-sm font-semibold">Help</span>
+      </button>
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 safe-area-bottom">

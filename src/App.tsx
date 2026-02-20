@@ -100,7 +100,8 @@ const AppRoutes: React.FC = () => {
         <Route exact path="/find-ride" render={renderPrivate(FindRideScreen)} />
         <Route exact path="/select-location" render={renderPrivate(SelectLocationScreen)} />
         <Route exact path="/rides/history" render={renderPrivate(RideHistoryScreen)} />
-        <Route exact path="/rides/:id" render={renderPrivate(RideDetailPage)} />
+        <Route exact path="/rides/detail/:id" render={renderPrivate(RideDetailPage)} />
+        <Route exact path="/rides/:id([0-9a-fA-F-]{36})" render={renderPrivate(RideDetailPage)} />
         <Route exact path="/rides/active/:id" render={renderPrivate(ActiveRidePage)} />
         <Route exact path="/rewards" render={renderPrivate(RewardsScreen)} />
         <Route exact path="/support" render={renderPrivate(SupportPage)} />
