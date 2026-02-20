@@ -125,3 +125,8 @@ supabase secrets set DUMMY_OTP_CODE=123456
 ## License
 
 MIT
+
+## Developer Guides
+
+- Ionic navigation/loading patterns:
+  [docs/ionic-navigation-loading-guide.md](docs/ionic-navigation-loading-guide.md)

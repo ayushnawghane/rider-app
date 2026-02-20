@@ -31,6 +31,14 @@ const RewardsPage = () => {
   const [pointsHistory, setPointsHistory] = useState<Reward[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
 
+  const handleBackToHome = () => {
+    if (history.length > 1) {
+      history.goBack();
+      return;
+    }
+    history.replace('/home');
+  };
+
   useEffect(() => {
     // Mock data for now
     setPointsHistory([
@@ -115,7 +123,7 @@ const RewardsPage = () => {
       <div className={`bg-gradient-to-br ${getTierColor(userStats.level)} pt-12 pb-8 px-4`}>
         <div className="flex items-center gap-4 mb-6">
           <button 
-            onClick={() => history.push('/')}
+            onClick={handleBackToHome}
             className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center"
           >
             <ArrowLeft className="w-5 h-5 text-white" />

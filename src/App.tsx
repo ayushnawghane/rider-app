@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { IonApp, IonRouterOutlet } from '@ionic/react';
+import { IonApp, IonPage, IonRouterOutlet } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { Redirect, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -45,37 +45,83 @@ const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number, timeoutMe
   }
 };
 
-const PrivateRoute: React.FC<{ component: React.ComponentType<Record<string, unknown>>; path: string; exact?: boolean }> = ({ component: Component, ...rest }) => {
-  const { user, isAuthLoaded } = useAuth();
+type RoutedComponent = React.ComponentType<Record<string, unknown>>;
 
-  if (!isAuthLoaded) {
-    return <LoadingOverlay isOpen message="Loading..." />;
-  }
-
-  return (
-    <Route
-      {...rest}
-      render={(props) =>
-        user ? <Component {...props} /> : <Redirect to="/login" />
-      }
-    />
+const withIonPage = (Component: RoutedComponent): RoutedComponent => {
+  const WrappedPage: RoutedComponent = (props) => (
+    <IonPage>
+      <Component {...props} />
+    </IonPage>
   );
+  WrappedPage.displayName = `WithIonPage(${Component.displayName || Component.name || 'Page'})`;
+  return WrappedPage;
 };
 
-const PublicRoute: React.FC<{ component: React.ComponentType<Record<string, unknown>>; path: string; exact?: boolean }> = ({ component: Component, ...rest }) => {
+const LoginScreen = withIonPage(LoginPage);
+const RegisterScreen = withIonPage(RegisterPage);
+const HomeScreen = withIonPage(HomePage);
+const UploadRideScreen = withIonPage(UploadRidePage);
+const PublishRideScreen = withIonPage(PublishRidePage);
+const FindRideScreen = withIonPage(FindRidePage);
+const RideHistoryScreen = withIonPage(RideHistoryPage);
+const SelectLocationScreen = withIonPage(SelectLocationPage);
+const RewardsScreen = withIonPage(RewardsPage);
+const SafetyScreen = withIonPage(SafetyPage);
+const ProfileScreen = withIonPage(ProfilePage);
+
+const AppRoutes: React.FC = () => {
   const { user, isAuthLoaded } = useAuth();
 
-  if (!isAuthLoaded) {
-    return <LoadingOverlay isOpen message="Loading..." />;
-  }
+  const renderPublic = (Component: RoutedComponent) => (props: unknown) => {
+    const routeProps = props as Record<string, unknown>;
+    if (!isAuthLoaded) {
+      return <LoadingOverlay isOpen message="Loading..." />;
+    }
+    return !user ? <Component {...routeProps} /> : <Redirect to="/home" />;
+  };
+
+  const renderPrivate = (Component: RoutedComponent) => (props: unknown) => {
+    const routeProps = props as Record<string, unknown>;
+    if (!isAuthLoaded) {
+      return <LoadingOverlay isOpen message="Loading..." />;
+    }
+    return user ? <Component {...routeProps} /> : <Redirect to="/login" />;
+  };
 
   return (
-    <Route
-      {...rest}
-      render={(props) =>
-        !user ? <Component {...props} /> : <Redirect to="/home" />
-      }
-    />
+    <IonReactRouter>
+      <IonRouterOutlet>
+        <Route exact path="/login" render={renderPublic(LoginScreen)} />
+        <Route exact path="/register" render={renderPublic(RegisterScreen)} />
+        <Route exact path="/home" render={renderPrivate(HomeScreen)} />
+        <Route exact path="/" render={renderPrivate(HomeScreen)} />
+        <Route exact path="/upload-ride" render={renderPrivate(UploadRideScreen)} />
+        <Route exact path="/publish-ride" render={renderPrivate(PublishRideScreen)} />
+        <Route exact path="/find-ride" render={renderPrivate(FindRideScreen)} />
+        <Route exact path="/select-location" render={renderPrivate(SelectLocationScreen)} />
+        <Route exact path="/rides/history" render={renderPrivate(RideHistoryScreen)} />
+        <Route exact path="/rides/:id" render={renderPrivate(RideDetailPage)} />
+        <Route exact path="/rides/active/:id" render={renderPrivate(ActiveRidePage)} />
+        <Route exact path="/rewards" render={renderPrivate(RewardsScreen)} />
+        <Route exact path="/support" render={renderPrivate(SupportPage)} />
+        <Route exact path="/support/dispute/new" render={renderPrivate(NewDisputePage)} />
+        <Route exact path="/support/dispute/:id" render={renderPrivate(DisputeChatPage)} />
+        <Route exact path="/safety" render={renderPrivate(SafetyScreen)} />
+        <Route exact path="/safety/sos" render={renderPrivate(SafetyScreen)} />
+        <Route exact path="/profile" render={renderPrivate(ProfileScreen)} />
+        <Route exact path="/profile/kyc" render={renderPrivate(KycUploadPage)} />
+        <Route exact path="/notifications" render={renderPrivate(NotificationsPage)} />
+        <Route exact path="/admin" render={renderPrivate(AdminDashboardPage)} />
+        <Route
+          render={() => {
+            if (!isAuthLoaded) {
+              return <LoadingOverlay isOpen message="Loading..." />;
+            }
+            return <Redirect to={user ? '/home' : '/login'} />;
+          }}
+        />
+      </IonRouterOutlet>
+    </IonReactRouter>
   );
 };
 
@@ -141,32 +187,7 @@ const AppContent: React.FC = () => {
 
   return (
     <AuthProvider>
-      <IonReactRouter>
-        <IonRouterOutlet>
-          <PublicRoute component={LoginPage} path="/login" exact />
-          <PublicRoute component={RegisterPage} path="/register" exact />
-          <PrivateRoute component={HomePage} path="/home" exact />
-          <PrivateRoute component={HomePage} path="/" exact />
-          <PrivateRoute component={UploadRidePage} path="/upload-ride" />
-          <PrivateRoute component={PublishRidePage} path="/publish-ride" exact />
-          <PrivateRoute component={FindRidePage} path="/find-ride" exact />
-          <PrivateRoute component={SelectLocationPage} path="/select-location" exact />
-          <PrivateRoute component={RideHistoryPage} path="/rides/history" exact />
-          <PrivateRoute component={RideDetailPage} path="/rides/:id" exact />
-          <PrivateRoute component={ActiveRidePage} path="/rides/active/:id" />
-          <PrivateRoute component={RewardsPage} path="/rewards" exact />
-          <PrivateRoute component={SupportPage} path="/support" exact />
-          <PrivateRoute component={NewDisputePage} path="/support/dispute/new" exact />
-          <PrivateRoute component={DisputeChatPage} path="/support/dispute/:id" />
-          <PrivateRoute component={SafetyPage} path="/safety" exact />
-          <PrivateRoute component={SafetyPage} path="/safety/sos" exact />
-          <PrivateRoute component={ProfilePage} path="/profile" exact />
-          <PrivateRoute component={KycUploadPage} path="/profile/kyc" exact />
-          <PrivateRoute component={NotificationsPage} path="/notifications" exact />
-          <PrivateRoute component={AdminDashboardPage} path="/admin" exact />
-          <Redirect from="/" to="/login" exact />
-        </IonRouterOutlet>
-      </IonReactRouter>
+      <AppRoutes />
     </AuthProvider>
   );
 };

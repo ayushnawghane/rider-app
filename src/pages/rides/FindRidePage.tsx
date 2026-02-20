@@ -29,6 +29,14 @@ const FindRidePage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<'price' | 'time' | 'rating'>('time');
 
+  const handleBackToHome = () => {
+    if (history.length > 1) {
+      history.goBack();
+      return;
+    }
+    history.replace('/home');
+  };
+
   // Get params from navigation state
   useEffect(() => {
     interface LocationState {
@@ -183,7 +191,7 @@ const FindRidePage = () => {
       <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 pt-12 pb-6 px-4">
         <div className="flex items-center gap-4 mb-4">
           <button 
-            onClick={() => history.push('/')}
+            onClick={handleBackToHome}
             className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center"
           >
             <ArrowLeft className="w-5 h-5 text-white" />

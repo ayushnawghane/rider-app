@@ -38,6 +38,14 @@ const PublishRidePage = () => {
   const [notes, setNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleBackToHome = () => {
+    if (history.length > 1) {
+      history.goBack();
+      return;
+    }
+    history.replace('/home');
+  };
+
   useEffect(() => {
     const now = new Date();
     now.setHours(now.getHours() + 1);
@@ -65,7 +73,7 @@ const PublishRidePage = () => {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       alert('Ride published successfully!');
-      history.push('/');
+      history.replace('/home');
     } catch {
       alert('Failed to publish ride. Please try again.');
     } finally {
@@ -92,7 +100,7 @@ const PublishRidePage = () => {
       <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 pt-12 pb-6 px-4">
         <div className="flex items-center gap-4 mb-4">
           <button 
-            onClick={() => history.push('/')}
+            onClick={handleBackToHome}
             className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center"
           >
             <ArrowLeft className="w-5 h-5 text-white" />

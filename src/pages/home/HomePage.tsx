@@ -43,16 +43,12 @@ const HomePage = () => {
     ridesPublished: 8,
     rating: 4.9
   });
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Set default time to current time + 30 minutes
     const now = new Date();
     now.setMinutes(now.getMinutes() + 30);
     setDepartureTime(now.toISOString().slice(0, 16));
-    
-    const timeoutId = setTimeout(() => setLoading(false), 1000);
-    return () => clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
@@ -78,7 +74,7 @@ const HomePage = () => {
     { city: 'Delhi', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400&h=300&fit=crop', startingPrice: 200 },
   ];
 
-  if (!isAuthLoaded || loading) {
+  if (!isAuthLoaded) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent" />
@@ -143,8 +139,8 @@ const HomePage = () => {
           </div>
 
           {/* From/To Selection */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex-1">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-3 mb-4 min-w-0">
+            <div className="min-w-0">
               <label className="text-xs text-gray-500 mb-1 block">From</label>
               <button 
                 onClick={() => history.push('/select-location', {
@@ -153,9 +149,10 @@ const HomePage = () => {
                   pickup: pickup || undefined,
                   dropoff: dropoff || undefined,
                 })}
-                className="w-full p-3 border-2 border-primary-100 rounded-xl text-left hover:border-primary-300 transition-colors"
+                className="h-14 w-full min-w-0 border-2 border-primary-100 rounded-xl px-3 text-left hover:border-primary-300 transition-colors"
+                title={pickup?.address || 'Pick Up'}
               >
-                <span className="text-primary-600 font-semibold">
+                <span className="block w-full overflow-hidden text-ellipsis whitespace-nowrap text-primary-600 font-semibold">
                   {pickup?.address || 'Pick Up'}
                 </span>
               </button>
@@ -163,13 +160,13 @@ const HomePage = () => {
             
             <button 
               onClick={handleSwapLocations}
-              className="mt-5 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+              className="mt-5 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors shrink-0"
             >
               <ArrowRightLeft className="w-5 h-5 text-gray-600" />
             </button>
             
-            <div className="flex-1">
-              <label className="text-xs text-gray-500 mb-1 block text-right">To</label>
+            <div className="min-w-0">
+              <label className="text-xs text-gray-500 mb-1 block">To</label>
               <button 
                 onClick={() => history.push('/select-location', {
                   type: 'dropoff',
@@ -177,9 +174,10 @@ const HomePage = () => {
                   pickup: pickup || undefined,
                   dropoff: dropoff || undefined,
                 })}
-                className="w-full p-3 border-2 border-primary-100 rounded-xl text-right hover:border-primary-300 transition-colors"
+                className="h-14 w-full min-w-0 border-2 border-primary-100 rounded-xl px-3 text-left hover:border-primary-300 transition-colors"
+                title={dropoff?.address || 'Drop Off'}
               >
-                <span className="text-primary-600 font-semibold">
+                <span className="block w-full overflow-hidden text-ellipsis whitespace-nowrap text-primary-600 font-semibold">
                   {dropoff?.address || 'Drop Off'}
                 </span>
               </button>
