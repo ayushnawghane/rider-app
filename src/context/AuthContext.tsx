@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User } from '../types';
 
@@ -28,21 +28,55 @@ interface ProfileRow {
   updated_at?: string;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const toFallbackEmail = (id: string) => `phone-${id}@riderapp.local`;
-const toFallbackPhone = (id: string) => `phone-${id.slice(0, 12)}`;
-const isAuthSessionMissing = (error: unknown) =>
-  error instanceof Error && /auth session missing/i.test(error.message);
-
-const toUserFromAuth = (authUser: {
+type AuthUserLite = {
   id: string;
   email?: string | null;
   phone?: string | null;
   user_metadata?: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
-}): User => {
+};
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const toFallbackEmail = (id: string) => `phone-${id}@riderapp.local`;
+const toFallbackPhone = (id: string) => `phone-${id.slice(0, 12)}`;
+const isAuthSessionMissing = (error: unknown) =>
+  error instanceof Error && /auth session missing/i.test(error.message);
+const isTimeoutError = (error: unknown) =>
+  error instanceof Error && /timed out/i.test(error.message);
+const isAbortError = (error: unknown) =>
+  (error instanceof DOMException && error.name === 'AbortError') ||
+  (error instanceof Error && error.name === 'AbortError') ||
+  (error instanceof Error && /signal is aborted|aborted/i.test(error.message));
+const AUTH_REFRESH_TIMEOUT_MS = 12000;
+
+const withTimeout = async <T,>(operation: () => Promise<T>, timeoutMs: number, timeoutMessage: string) => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  let timedOut = false;
+  const operationPromise = operation();
+  const guardedOperationPromise = operationPromise.catch((operationError) => {
+    if (timedOut) {
+      // Prevent unhandled promise rejections from late failures after timeout wins.
+      return new Promise<T>(() => undefined);
+    }
+    throw operationError;
+  });
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      timedOut = true;
+      reject(new Error(timeoutMessage));
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([guardedOperationPromise, timeoutPromise]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
+const toUserFromAuth = (authUser: AuthUserLite): User => {
   const meta = authUser.user_metadata || {};
   const fullName =
     (typeof meta.full_name === 'string' && meta.full_name.trim()) ||
@@ -103,126 +137,238 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const refreshPromiseRef = useRef<Promise<void> | null>(null);
+  const isMountedRef = useRef(true);
+  const currentUserRef = useRef<User | null>(null);
 
-  const refreshUser = useCallback(async () => {
-    try {
-      setError(null);
-      const {
-        data: { user: authUser },
-        error: getUserError,
-      } = await supabase.auth.getUser();
+  useEffect(() => {
+    currentUserRef.current = user;
+  }, [user]);
 
-      if (getUserError) {
-        if (isAuthSessionMissing(getUserError)) {
+  const runRefreshUser = useCallback(async (showLoader: boolean, authUserHint?: AuthUserLite | null) => {
+    if (refreshPromiseRef.current) {
+      return refreshPromiseRef.current;
+    }
+
+    const task = (async () => {
+      if (showLoader && isMountedRef.current) {
+        setLoading(true);
+      }
+
+      try {
+        setError(null);
+        let authUser: AuthUserLite | null = authUserHint || null;
+
+        if (!authUser) {
+          try {
+            const {
+              data: { user },
+              error: getUserError,
+            } = await withTimeout(
+              () => supabase.auth.getUser(),
+              AUTH_REFRESH_TIMEOUT_MS,
+              'Auth refresh timed out while loading user session',
+            );
+
+            if (getUserError) {
+              if (isAuthSessionMissing(getUserError)) {
+                setUser(null);
+                return;
+              }
+              throw getUserError;
+            }
+
+            authUser = user;
+          } catch (authLookupError) {
+            if (!isTimeoutError(authLookupError)) {
+              throw authLookupError;
+            }
+
+            const {
+              data: { session },
+              error: sessionError,
+            } = await supabase.auth.getSession();
+
+            if (sessionError) {
+              throw sessionError;
+            }
+
+            authUser = session?.user || null;
+          }
+        }
+
+        if (!authUser) {
           setUser(null);
           return;
         }
-        throw getUserError;
-      }
 
-      if (!authUser) {
+        const mappedUser = toUserFromAuth(authUser);
+        const { data: profile, error: profileError } = await withTimeout(
+          async () =>
+            supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', authUser.id)
+              .maybeSingle(),
+          AUTH_REFRESH_TIMEOUT_MS,
+          'Auth refresh timed out while loading profile',
+        );
+
+        if (profileError && profileError.code !== 'PGRST116' && profileError.code !== 'PGRST505') {
+          console.error('Error fetching profile:', profileError);
+        }
+
+        if (profile) {
+          setUser(mergeProfile(mappedUser, profile as ProfileRow));
+          return;
+        }
+
+        // Best effort profile upsert for phone users. If schema differs, continue with auth user only.
+        const profilePayload: ProfileRow = {
+          id: authUser.id,
+          email: mappedUser.email,
+          full_name: mappedUser.fullName,
+          phone: mappedUser.phone,
+          kyc_status: 'pending',
+          language: 'en',
+          notification_preferences: true,
+          is_blocked: false,
+          role: 'rider',
+        };
+
+        const { data: createdProfile, error: createProfileError } = await withTimeout(
+          async () =>
+            supabase
+              .from('profiles')
+              .upsert(profilePayload, { onConflict: 'id' })
+              .select('*')
+              .maybeSingle(),
+          AUTH_REFRESH_TIMEOUT_MS,
+          'Auth refresh timed out while creating profile',
+        );
+
+        if (createProfileError) {
+          console.warn('Profile upsert failed, using auth user only:', createProfileError.message);
+          setUser(mappedUser);
+          return;
+        }
+
+        if (createdProfile) {
+          setUser(mergeProfile(mappedUser, createdProfile as ProfileRow));
+        } else {
+          setUser(mappedUser);
+        }
+      } catch (refreshError: unknown) {
+        if (isAuthSessionMissing(refreshError)) {
+          setUser(null);
+          setError(null);
+          return;
+        }
+        if (isAbortError(refreshError)) {
+          setError(null);
+          return;
+        }
+        if (isTimeoutError(refreshError) && currentUserRef.current) {
+          console.warn('Auth refresh timed out; retaining existing user state');
+          setError(null);
+          return;
+        }
+        console.error('Error refreshing user:', refreshError);
+        setError(refreshError instanceof Error ? refreshError.message : 'Failed to load user');
         setUser(null);
-        return;
+      } finally {
+        if (isMountedRef.current) {
+          setLoading(false);
+          setIsAuthReady(true);
+        }
       }
+    })();
 
-      const mappedUser = toUserFromAuth(authUser);
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authUser.id)
-        .maybeSingle();
+    refreshPromiseRef.current = task.finally(() => {
+      refreshPromiseRef.current = null;
+    });
 
-      if (profileError && profileError.code !== 'PGRST116' && profileError.code !== 'PGRST505') {
-        console.error('Error fetching profile:', profileError);
-      }
+    return refreshPromiseRef.current;
+  }, []);
 
-      if (profile) {
-        setUser(mergeProfile(mappedUser, profile as ProfileRow));
-        return;
-      }
+  const refreshUser = useCallback(async () => {
+    await runRefreshUser(true);
+  }, [runRefreshUser]);
 
-      // Best effort profile upsert for phone users. If schema differs, continue with auth user only.
-      const profilePayload: ProfileRow = {
-        id: authUser.id,
-        email: mappedUser.email,
-        full_name: mappedUser.fullName,
-        phone: mappedUser.phone,
-        kyc_status: 'pending',
-        language: 'en',
-        notification_preferences: true,
-        is_blocked: false,
-        role: 'rider',
-      };
-
-      const { data: createdProfile, error: createProfileError } = await supabase
-        .from('profiles')
-        .upsert(profilePayload, { onConflict: 'id' })
-        .select('*')
-        .maybeSingle();
-
-      if (createProfileError) {
-        console.warn('Profile upsert failed, using auth user only:', createProfileError.message);
-        setUser(mappedUser);
-        return;
-      }
-
-      if (createdProfile) {
-        setUser(mergeProfile(mappedUser, createdProfile as ProfileRow));
-      } else {
-        setUser(mappedUser);
-      }
-    } catch (refreshError: unknown) {
-      if (isAuthSessionMissing(refreshError)) {
-        setUser(null);
-        setError(null);
-        return;
-      }
-      console.error('Error refreshing user:', refreshError);
-      setError(refreshError instanceof Error ? refreshError.message : 'Failed to load user');
-      setUser(null);
-    } finally {
-      setLoading(false);
-      setIsAuthReady(true);
-    }
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {
     let mounted = true;
 
     const bootstrap = async () => {
-      await refreshUser();
+      await runRefreshUser(true);
       if (!mounted) return;
     };
 
-    bootstrap();
+    void bootstrap().catch((bootstrapError) => {
+      if (isAbortError(bootstrapError)) {
+        return;
+      }
+      console.error('Error bootstrapping auth:', bootstrapError);
+    });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async () => {
-      if (!mounted) return;
-      setLoading(true);
-      await refreshUser();
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted || !isMountedRef.current) return;
+
+      // Token refresh happens in background frequently; do not block app UI for it.
+      if (event === 'TOKEN_REFRESHED') {
+        return;
+      }
+
+      const hintUser = session?.user
+        ? ({
+            id: session.user.id,
+            email: session.user.email,
+            phone: session.user.phone,
+            user_metadata: session.user.user_metadata,
+            created_at: session.user.created_at,
+            updated_at: session.user.updated_at,
+          } as AuthUserLite)
+        : null;
+
+      void runRefreshUser(false, hintUser).catch((refreshError) => {
+        if (isAbortError(refreshError)) {
+          return;
+        }
+        console.error('Error handling auth state change:', refreshError);
+      });
     });
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [refreshUser]);
+  }, [runRefreshUser]);
 
   const login = async () => Promise.resolve();
   const register = async () => Promise.resolve();
 
   const logout = async () => {
     try {
-      setLoading(true);
+      if (isMountedRef.current) {
+        setLoading(true);
+      }
       setError(null);
       await supabase.auth.signOut();
       setUser(null);
     } catch (logoutError: unknown) {
       setError(logoutError instanceof Error ? logoutError.message : 'Logout failed');
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 

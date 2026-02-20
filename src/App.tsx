@@ -30,10 +30,25 @@ import SelectLocationPage from './pages/common/SelectLocationPage';
 import '@ionic/react/css/core.css';
 import './theme/variables.css';
 
-const PrivateRoute: React.FC<{ component: React.ComponentType<Record<string, unknown>>; path: string; exact?: boolean }> = ({ component: Component, ...rest }) => {
-  const { user, loading, isAuthLoaded } = useAuth();
+const LOCATION_PERMISSION_TIMEOUT_MS = 12000;
 
-  if (!isAuthLoaded || loading) {
+const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string) => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
+const PrivateRoute: React.FC<{ component: React.ComponentType<Record<string, unknown>>; path: string; exact?: boolean }> = ({ component: Component, ...rest }) => {
+  const { user, isAuthLoaded } = useAuth();
+
+  if (!isAuthLoaded) {
     return <LoadingOverlay isOpen message="Loading..." />;
   }
 
@@ -48,9 +63,9 @@ const PrivateRoute: React.FC<{ component: React.ComponentType<Record<string, unk
 };
 
 const PublicRoute: React.FC<{ component: React.ComponentType<Record<string, unknown>>; path: string; exact?: boolean }> = ({ component: Component, ...rest }) => {
-  const { user, loading, isAuthLoaded } = useAuth();
+  const { user, isAuthLoaded } = useAuth();
 
-  if (!isAuthLoaded || loading) {
+  if (!isAuthLoaded) {
     return <LoadingOverlay isOpen message="Loading..." />;
   }
 
@@ -75,7 +90,11 @@ const AppContent: React.FC = () => {
   const checkLocationPermission = async () => {
     try {
       setCheckingLocation(true);
-      const hasPermission = await locationService.checkPermissions();
+      const hasPermission = await withTimeout(
+        locationService.checkPermissions(),
+        LOCATION_PERMISSION_TIMEOUT_MS,
+        'Location permission check timed out',
+      );
       setLocationGranted(hasPermission);
     } catch (error) {
       console.error('Error checking location permission:', error);

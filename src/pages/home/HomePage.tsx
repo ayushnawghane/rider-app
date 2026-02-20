@@ -51,7 +51,8 @@ const HomePage = () => {
     now.setMinutes(now.getMinutes() + 30);
     setDepartureTime(now.toISOString().slice(0, 16));
     
-    setTimeout(() => setLoading(false), 1000);
+    const timeoutId = setTimeout(() => setLoading(false), 1000);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {

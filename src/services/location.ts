@@ -18,6 +18,22 @@ export interface LocationCoordinates {
 
 class LocationService {
   private watchId: string | null = null;
+  private readonly permissionTimeoutMs = 12000;
+  private readonly positionTimeoutMs = 10000;
+
+  private async withTimeout<T>(operation: () => Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+    });
+    const operationPromise = operation();
+
+    try {
+      return await Promise.race([operationPromise, timeoutPromise]);
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  }
 
   /**
    * Check if running on native mobile (Android/iOS)
@@ -35,12 +51,20 @@ class LocationService {
     try {
       if (this.isNative()) {
         // Native mobile: Use Capacitor plugin
-        const permission = await Geolocation.checkPermissions();
+        const permission = await this.withTimeout(
+          () => Geolocation.checkPermissions(),
+          this.permissionTimeoutMs,
+          'Native location permission check timed out',
+        );
         if (permission.location === 'granted') {
           return true;
         }
 
-        const request = await Geolocation.requestPermissions();
+        const request = await this.withTimeout(
+          () => Geolocation.requestPermissions(),
+          this.permissionTimeoutMs,
+          'Native location permission request timed out',
+        );
         return request.location === 'granted';
       } else {
         // Web: Use browser's native geolocation to trigger permission popup
@@ -51,16 +75,30 @@ class LocationService {
             return;
           }
 
+          let settled = false;
+          const finish = (value: boolean) => {
+            if (settled) return;
+            settled = true;
+            resolve(value);
+          };
+
+          const hardTimeout = setTimeout(() => {
+            console.error('Geolocation permission check timed out');
+            finish(false);
+          }, this.permissionTimeoutMs);
+
           // This will trigger the browser's permission popup
           navigator.geolocation.getCurrentPosition(
             () => {
-              resolve(true);
+              clearTimeout(hardTimeout);
+              finish(true);
             },
             (error) => {
               console.error('Geolocation permission error:', error);
-              resolve(false);
+              clearTimeout(hardTimeout);
+              finish(false);
             },
-            { timeout: 10000, enableHighAccuracy: true }
+            { timeout: this.positionTimeoutMs, enableHighAccuracy: true }
           );
         });
       }
@@ -85,7 +123,7 @@ class LocationService {
         // Native mobile: Use Capacitor plugin
         const position = await Geolocation.getCurrentPosition({
           enableHighAccuracy: true,
-          timeout: 10000,
+          timeout: this.positionTimeoutMs,
         });
         return this.convertPosition(position);
       } else {
@@ -99,7 +137,7 @@ class LocationService {
               console.error('Error getting current position:', error);
               reject(error);
             },
-            { enableHighAccuracy: true, timeout: 10000 }
+            { enableHighAccuracy: true, timeout: this.positionTimeoutMs }
           );
         });
       }
@@ -133,7 +171,7 @@ class LocationService {
         this.watchId = await Geolocation.watchPosition(
           {
             enableHighAccuracy: true,
-            timeout: 10000,
+            timeout: this.positionTimeoutMs,
             maximumAge: 0,
           },
           (position, err) => {
@@ -158,7 +196,7 @@ class LocationService {
             console.error('Watch position error:', error);
             errorCallback?.(error);
           },
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          { enableHighAccuracy: true, timeout: this.positionTimeoutMs, maximumAge: 0 }
         );
         // Store as string for consistency
         this.watchId = watchId.toString();

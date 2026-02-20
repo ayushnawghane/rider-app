@@ -40,21 +40,24 @@ const NewDisputePage = () => {
 
     setLoading(true);
     setError('');
+    try {
+      const result = await disputeService.createDispute({
+        userId: user.id,
+        rideId: rideId || undefined,
+        disputeType,
+        description,
+      });
 
-    const result = await disputeService.createDispute({
-      userId: user.id,
-      rideId: rideId || undefined,
-      disputeType,
-      description,
-    });
-
-    if (result.success) {
-      setSuccess(true);
-    } else {
-      setError(result.error || 'Failed to create dispute');
+      if (result.success) {
+        setSuccess(true);
+      } else {
+        setError(result.error || 'Failed to create dispute');
+      }
+    } catch {
+      setError('Failed to create dispute');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (

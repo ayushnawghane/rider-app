@@ -181,26 +181,29 @@ const UploadRidePage = () => {
 
     setLoading(true);
     setError('');
+    try {
+      const result = await rideService.createRide({
+        userId: user.id,
+        date: `${date}${startTime ? 'T' + startTime : ''}`,
+        startLocation: pickup.address,
+        endLocation: drop.address,
+        startLocationCoords: { lat: pickup.lat, lng: pickup.lng },
+        endLocationCoords: { lat: drop.lat, lng: drop.lng },
+        vehicleType: selectedEstimate.type,
+        vehicleNumber: vehicleNumber || 'UNKNOWN',
+        referenceId: referenceId || 'N/A',
+      });
 
-    const result = await rideService.createRide({
-      userId: user.id,
-      date: `${date}${startTime ? 'T' + startTime : ''}`,
-      startLocation: pickup.address,
-      endLocation: drop.address,
-      startLocationCoords: { lat: pickup.lat, lng: pickup.lng },
-      endLocationCoords: { lat: drop.lat, lng: drop.lng },
-      vehicleType: selectedEstimate.type,
-      vehicleNumber: vehicleNumber || 'UNKNOWN',
-      referenceId: referenceId || 'N/A',
-    });
-
-    if (result.success) {
-      setStep('success');
-    } else {
-      setError(result.error || 'Failed to upload ride');
+      if (result.success) {
+        setStep('success');
+      } else {
+        setError(result.error || 'Failed to upload ride');
+      }
+    } catch {
+      setError('Failed to upload ride');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const renderLocationsStep = () => (

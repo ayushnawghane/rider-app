@@ -64,8 +64,17 @@ const LoginPage = () => {
   };
 
   const handleVerifyOtp = async () => {
+    if (isSubmitting) {
+      return;
+    }
     setError(null);
     setInfo(null);
+
+    if (isAuthLoaded && user) {
+      history.replace('/home');
+      return;
+    }
+
     const phone = normalizedPhone || normalizePhone(phoneNumber, countryCode);
     if (!/^\+\d{10,15}$/.test(phone)) {
       setError('Enter a valid mobile number.');
