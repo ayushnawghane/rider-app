@@ -10,7 +10,6 @@ import LoadingOverlay from './components/LoadingOverlay';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import KycUploadPage from './pages/auth/KycUploadPage';
-import SSOCallback from './pages/auth/SSOCallback';
 import HomePage from './pages/home/HomePage';
 import UploadRidePage from './pages/rides/UploadRidePage';
 import PublishRidePage from './pages/rides/PublishRidePage';
@@ -32,9 +31,9 @@ import '@ionic/react/css/core.css';
 import './theme/variables.css';
 
 const PrivateRoute: React.FC<{ component: React.ComponentType<Record<string, unknown>>; path: string; exact?: boolean }> = ({ component: Component, ...rest }) => {
-  const { user, loading, isClerkLoaded } = useAuth();
+  const { user, loading, isAuthLoaded } = useAuth();
 
-  if (!isClerkLoaded || loading) {
+  if (!isAuthLoaded || loading) {
     return <LoadingOverlay isOpen message="Loading..." />;
   }
 
@@ -49,9 +48,9 @@ const PrivateRoute: React.FC<{ component: React.ComponentType<Record<string, unk
 };
 
 const PublicRoute: React.FC<{ component: React.ComponentType<Record<string, unknown>>; path: string; exact?: boolean }> = ({ component: Component, ...rest }) => {
-  const { user, loading, isClerkLoaded } = useAuth();
+  const { user, loading, isAuthLoaded } = useAuth();
 
-  if (!isClerkLoaded || loading) {
+  if (!isAuthLoaded || loading) {
     return <LoadingOverlay isOpen message="Loading..." />;
   }
 
@@ -127,7 +126,6 @@ const AppContent: React.FC = () => {
         <IonRouterOutlet>
           <PublicRoute component={LoginPage} path="/login" exact />
           <PublicRoute component={RegisterPage} path="/register" exact />
-          <Route path="/sso-callback" component={SSOCallback} exact />
           <PrivateRoute component={HomePage} path="/home" exact />
           <PrivateRoute component={HomePage} path="/" exact />
           <PrivateRoute component={UploadRidePage} path="/upload-ride" />

@@ -22,7 +22,7 @@ const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const libraries: ('places')[] = ['places'];
 
 const SelectLocationPage = () => {
-  const { isClerkLoaded } = useAuth();
+  const { isAuthLoaded } = useAuth();
   const history = useHistory();
   const location = useLocation<SelectLocationState>();
   const [selectedLocation, setSelectedLocation] = useState<MapLocation | null>(null);
@@ -44,6 +44,18 @@ const SelectLocationPage = () => {
       mapsService.initialize();
     }
   }, [isLoaded]);
+
+  useEffect(() => {
+    const existing = navState[type];
+    if (existing) {
+      setSelectedLocation(existing);
+      setManualAddress(existing.address);
+    } else {
+      setSelectedLocation(null);
+      setManualAddress('');
+    }
+    setError(null);
+  }, [type, location.state]);
 
   const title = useMemo(() => {
     if (type === 'dropoff' || type === 'end') return 'Select Drop Location';
@@ -113,7 +125,7 @@ const SelectLocationPage = () => {
     }
   };
 
-  if (!isClerkLoaded) {
+  if (!isAuthLoaded) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />

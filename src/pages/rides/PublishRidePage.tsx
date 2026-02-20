@@ -20,8 +20,11 @@ interface Location {
   lng: number;
 }
 
+const lightFieldClass =
+  'bg-white text-gray-900 placeholder-gray-400 [color-scheme:light]';
+
 const PublishRidePage = () => {
-  const { isClerkLoaded } = useAuth();
+  const { isAuthLoaded } = useAuth();
   const history = useHistory();
   const location = useLocation<{ start?: Location; end?: Location }>();
   
@@ -72,7 +75,7 @@ const PublishRidePage = () => {
 
   const vehicleTypes = ['Sedan', 'SUV', 'Hatchback', 'Luxury'];
 
-  if (!isClerkLoaded) {
+  if (!isAuthLoaded) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
@@ -81,7 +84,10 @@ const PublishRidePage = () => {
   }
 
   return (
-    <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div
+      className="h-screen overflow-y-auto bg-gray-50 pb-24 publish-ride-light"
+      style={{ WebkitOverflowScrolling: 'touch', colorScheme: 'light' }}
+    >
       {/* Header */}
       <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 pt-12 pb-6 px-4">
         <div className="flex items-center gap-4 mb-4">
@@ -105,7 +111,12 @@ const PublishRidePage = () => {
             
             {/* From */}
             <button 
-              onClick={() => history.push('/select-location', { type: 'start', returnTo: '/publish-ride' })}
+              onClick={() => history.push('/select-location', {
+                type: 'start',
+                returnTo: '/publish-ride',
+                start: startLocation || undefined,
+                end: endLocation || undefined,
+              })}
               className="w-full p-4 border-2 border-primary-100 rounded-xl mb-3 text-left hover:border-primary-300 transition-colors"
             >
               <div className="flex items-center gap-3">
@@ -123,7 +134,12 @@ const PublishRidePage = () => {
 
             {/* To */}
             <button 
-              onClick={() => history.push('/select-location', { type: 'end', returnTo: '/publish-ride' })}
+              onClick={() => history.push('/select-location', {
+                type: 'end',
+                returnTo: '/publish-ride',
+                start: startLocation || undefined,
+                end: endLocation || undefined,
+              })}
               className="w-full p-4 border-2 border-primary-100 rounded-xl text-left hover:border-primary-300 transition-colors"
             >
               <div className="flex items-center gap-3">
@@ -149,7 +165,7 @@ const PublishRidePage = () => {
                 type="datetime-local"
                 value={departureTime}
                 onChange={(e) => setDepartureTime(e.target.value)}
-                className="flex-1 bg-transparent text-gray-700 focus:outline-none"
+                className={`flex-1 bg-transparent text-gray-700 focus:outline-none ${lightFieldClass}`}
               />
             </div>
           </div>
@@ -186,7 +202,7 @@ const PublishRidePage = () => {
                 type="number"
                 value={pricePerSeat}
                 onChange={(e) => setPricePerSeat(Number(e.target.value))}
-                className="flex-1 bg-transparent text-2xl font-bold text-gray-900 focus:outline-none"
+                className={`flex-1 bg-transparent text-2xl font-bold text-gray-900 focus:outline-none ${lightFieldClass}`}
                 placeholder="0"
               />
             </div>
@@ -223,7 +239,7 @@ const PublishRidePage = () => {
                 value={vehicleNumber}
                 onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
                 placeholder="Vehicle Number (e.g., MH01AB1234)"
-                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-primary-500"
+                className={`w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 ${lightFieldClass}`}
               />
             </div>
           </div>
@@ -238,7 +254,7 @@ const PublishRidePage = () => {
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Any preferences? (No smoking, AC on, etc.)"
                 rows={3}
-                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-primary-500 resize-none"
+                className={`w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 resize-none ${lightFieldClass}`}
               />
             </div>
           </div>

@@ -17,7 +17,7 @@ import {
 import type { Reward, Achievement, UserStats } from '../../types';
 
 const RewardsPage = () => {
-  const { isClerkLoaded } = useAuth();
+  const { isAuthLoaded } = useAuth();
   const history = useHistory();
   
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'history'>('overview');
@@ -101,7 +101,7 @@ const RewardsPage = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  if (!isClerkLoaded) {
+  if (!isAuthLoaded) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />

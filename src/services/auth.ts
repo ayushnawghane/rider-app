@@ -1,20 +1,24 @@
 import { supabase } from '../lib/supabase';
 import type {
   User,
-  Ride,
-  Dispute,
-  Message,
-  Notification,
-  SosAlert,
-  Notice,
-  Faq,
   KycUploadParams,
-  RideCreateParams,
-  DisputeCreateParams,
-  MessageCreateParams,
-  SosCreateParams,
   ProfileUpdateParams,
 } from '../types';
+
+interface ProfileRow {
+  id: string;
+  email: string;
+  full_name: string;
+  phone: string;
+  kyc_status: 'pending' | 'approved' | 'rejected';
+  kyc_document_url?: string | null;
+  language: string;
+  notification_preferences: boolean;
+  is_blocked: boolean;
+  role: 'rider' | 'driver' | 'admin';
+  created_at: string;
+  updated_at: string;
+}
 
 class AuthService {
   async logout(): Promise<void> {
@@ -33,7 +37,7 @@ class AuthService {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (!profile) {
         return null;
@@ -58,7 +62,7 @@ class AuthService {
       }
 
       return { success: true };
-    } catch (error) {
+    } catch {
       return { success: false, error: 'An unexpected error occurred' };
     }
   }
@@ -89,50 +93,19 @@ class AuthService {
       }
 
       return { success: true, documentUrl: publicUrl };
-    } catch (error) {
+    } catch {
       return { success: false, error: 'An unexpected error occurred' };
     }
   }
 
-  async syncClerkUserToSupabase(clerkUser: any): Promise<void> {
-    try {
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', clerkUser.id)
-        .single();
-
-      const profileData = {
-        id: clerkUser.id,
-        email: clerkUser.primaryEmailAddress?.emailAddress || '',
-        full_name: clerkUser.fullName || clerkUser.firstName || 'User',
-        phone: clerkUser.phoneNumbers?.[0]?.phoneNumber || '',
-        avatar_url: clerkUser.imageUrl || null,
-      };
-
-      if (existingProfile) {
-        await supabase
-          .from('profiles')
-          .update(profileData)
-          .eq('id', clerkUser.id);
-      } else {
-        await supabase
-          .from('profiles')
-          .insert(profileData);
-      }
-    } catch (error) {
-      console.error('Error syncing Clerk user to Supabase:', error);
-    }
-  }
-
-  private mapProfileToUser(profile: any): User {
+  private mapProfileToUser(profile: ProfileRow): User {
     return {
       id: profile.id,
       email: profile.email,
       fullName: profile.full_name,
       phone: profile.phone,
       kycStatus: profile.kyc_status,
-      kycDocumentUrl: profile.kyc_document_url,
+      kycDocumentUrl: profile.kyc_document_url || undefined,
       language: profile.language,
       notificationPreferences: profile.notification_preferences,
       isBlocked: profile.is_blocked,

@@ -157,23 +157,27 @@ http://ionicframework.com/docs/theming/ */
   }
 }
 
-/* Clerk customization */
-.clerk-root-box {
-  @apply w-full;
+/* Keep publish ride form controls readable on mobile browsers/PWA dark control modes */
+.publish-ride-light input,
+.publish-ride-light textarea {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827;
+  color-scheme: light;
 }
 
-.clerk-card-box {
-  @apply !rounded-2xl !shadow-medium;
+.publish-ride-light input::placeholder,
+.publish-ride-light textarea::placeholder {
+  color: #9ca3af !important;
 }
 
-.clerk-btn-primary {
-  @apply !bg-primary-500 hover:!bg-primary-600 text-white;
-}
-
-.clerk-form-label {
-  @apply !text-gray-900 !text-sm !font-medium;
-}
-
-.clerk-footer-link {
-  @apply !text-primary-500 !font-medium;
+.publish-ride-light input:-webkit-autofill,
+.publish-ride-light input:-webkit-autofill:hover,
+.publish-ride-light input:-webkit-autofill:focus,
+.publish-ride-light textarea:-webkit-autofill,
+.publish-ride-light textarea:-webkit-autofill:hover,
+.publish-ride-light textarea:-webkit-autofill:focus {
+  -webkit-text-fill-color: #111827;
+  transition: background-color 9999s ease-in-out 0s;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
 }

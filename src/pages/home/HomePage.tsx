@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { UserButton } from '@clerk/clerk-react';
 import { 
   Search, 
   MapPin, 
@@ -28,7 +27,7 @@ interface Location {
 }
 
 const HomePage = () => {
-  const { user, isClerkLoaded } = useAuth();
+  const { user, isAuthLoaded, logout } = useAuth();
   const history = useHistory();
   const location = useLocation<{ pickup?: Location; dropoff?: Location }>();
   
@@ -78,7 +77,7 @@ const HomePage = () => {
     { city: 'Delhi', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400&h=300&fit=crop', startingPrice: 200 },
   ];
 
-  if (!isClerkLoaded || loading) {
+  if (!isAuthLoaded || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent" />
@@ -96,9 +95,13 @@ const HomePage = () => {
             <Bell className="w-5 h-5 text-white" />
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
           </button>
-          <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white/30">
-            <UserButton afterSignOutUrl="/login" />
-          </div>
+          <button
+            onClick={logout}
+            className="min-w-[72px] h-10 px-3 rounded-xl border-2 border-white/30 text-white text-sm font-semibold bg-white/10"
+            type="button"
+          >
+            Logout
+          </button>
         </div>
 
         {/* Greeting & Location */}
@@ -143,7 +146,12 @@ const HomePage = () => {
             <div className="flex-1">
               <label className="text-xs text-gray-500 mb-1 block">From</label>
               <button 
-                onClick={() => history.push('/select-location', { type: 'pickup' })}
+                onClick={() => history.push('/select-location', {
+                  type: 'pickup',
+                  returnTo: '/home',
+                  pickup: pickup || undefined,
+                  dropoff: dropoff || undefined,
+                })}
                 className="w-full p-3 border-2 border-primary-100 rounded-xl text-left hover:border-primary-300 transition-colors"
               >
                 <span className="text-primary-600 font-semibold">
@@ -162,7 +170,12 @@ const HomePage = () => {
             <div className="flex-1">
               <label className="text-xs text-gray-500 mb-1 block text-right">To</label>
               <button 
-                onClick={() => history.push('/select-location', { type: 'dropoff' })}
+                onClick={() => history.push('/select-location', {
+                  type: 'dropoff',
+                  returnTo: '/home',
+                  pickup: pickup || undefined,
+                  dropoff: dropoff || undefined,
+                })}
                 className="w-full p-3 border-2 border-primary-100 rounded-xl text-right hover:border-primary-300 transition-colors"
               >
                 <span className="text-primary-600 font-semibold">

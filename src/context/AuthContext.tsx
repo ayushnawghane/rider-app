@@ -1,13 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useClerk, useUser } from '@clerk/clerk-react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User } from '../types';
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-const isUuid = (value: string | null | undefined): value is string => {
-  return typeof value === 'string' && UUID_REGEX.test(value);
-};
 
 interface AuthContextType {
   user: User | null;
@@ -17,123 +10,235 @@ interface AuthContextType {
   register: () => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
-  isClerkLoaded: boolean;
+  isAuthLoaded: boolean;
+}
+
+interface ProfileRow {
+  id: string;
+  email: string;
+  full_name: string;
+  phone: string;
+  kyc_status?: 'pending' | 'approved' | 'rejected';
+  kyc_document_url?: string;
+  language?: string;
+  notification_preferences?: boolean;
+  is_blocked?: boolean;
+  role?: 'rider' | 'driver' | 'admin';
+  created_at?: string;
+  updated_at?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const toFallbackEmail = (id: string) => `phone-${id}@riderapp.local`;
+const toFallbackPhone = (id: string) => `phone-${id.slice(0, 12)}`;
+const isAuthSessionMissing = (error: unknown) =>
+  error instanceof Error && /auth session missing/i.test(error.message);
+
+const toUserFromAuth = (authUser: {
+  id: string;
+  email?: string | null;
+  phone?: string | null;
+  user_metadata?: Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+}): User => {
+  const meta = authUser.user_metadata || {};
+  const fullName =
+    (typeof meta.full_name === 'string' && meta.full_name.trim()) ||
+    (typeof meta.name === 'string' && meta.name.trim()) ||
+    'Rider';
+  const firstName =
+    (typeof meta.first_name === 'string' && meta.first_name.trim()) ||
+    fullName.split(' ')[0] ||
+    'Rider';
+  const lastName =
+    (typeof meta.last_name === 'string' && meta.last_name.trim()) ||
+    fullName.split(' ').slice(1).join(' ') ||
+    '';
+
+  return {
+    id: authUser.id,
+    email: authUser.email || toFallbackEmail(authUser.id),
+    fullName,
+    firstName,
+    lastName,
+    phone: authUser.phone || toFallbackPhone(authUser.id),
+    kycStatus: 'pending',
+    language: 'en',
+    notificationPreferences: true,
+    isBlocked: false,
+    role: 'rider',
+    createdAt: authUser.created_at || new Date().toISOString(),
+    updatedAt: authUser.updated_at || new Date().toISOString(),
+  };
+};
+
+const mergeProfile = (baseUser: User, profile: ProfileRow): User => {
+  const fullName = profile.full_name || baseUser.fullName;
+  const firstName = fullName.split(' ')[0] || baseUser.firstName || 'Rider';
+  const lastName = fullName.split(' ').slice(1).join(' ') || baseUser.lastName || '';
+
+  return {
+    ...baseUser,
+    id: profile.id,
+    email: profile.email || baseUser.email,
+    fullName,
+    firstName,
+    lastName,
+    phone: profile.phone || baseUser.phone,
+    kycStatus: profile.kyc_status || baseUser.kycStatus,
+    kycDocumentUrl: profile.kyc_document_url || baseUser.kycDocumentUrl,
+    language: profile.language || baseUser.language,
+    notificationPreferences: profile.notification_preferences ?? baseUser.notificationPreferences,
+    isBlocked: profile.is_blocked ?? baseUser.isBlocked,
+    role: profile.role || baseUser.role,
+    createdAt: profile.created_at || baseUser.createdAt,
+    updatedAt: profile.updated_at || baseUser.updatedAt,
+  };
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { signOut: clerkSignOut, openSignIn, openSignUp } = useClerk();
-  const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const mapClerkUserToUser = useCallback((clerkUser: any): User => {
-    return {
-      id: clerkUser.id,
-      email: clerkUser.primaryEmailAddress?.emailAddress || '',
-      fullName: clerkUser.fullName || clerkUser.firstName || 'User',
-      phone: clerkUser.phoneNumbers?.[0]?.phoneNumber || '',
-      kycStatus: clerkUser.publicMetadata?.kyc_status || 'pending',
-      kycDocumentUrl: clerkUser.publicMetadata?.kyc_document_url,
-      language: clerkUser.publicMetadata?.language || 'en',
-      notificationPreferences: clerkUser.publicMetadata?.notification_preferences ?? true,
-      isBlocked: clerkUser.publicMetadata?.is_blocked ?? false,
-      role: (clerkUser.publicMetadata?.role as 'rider' | 'driver' | 'admin') || 'rider',
-      createdAt: clerkUser.createdAt || new Date().toISOString(),
-      updatedAt: clerkUser.updatedAt || new Date().toISOString(),
-    };
-  }, []);
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
   const refreshUser = useCallback(async () => {
-    if (!clerkUser) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
-
     try {
-      const mappedUser = mapClerkUserToUser(clerkUser);
-      const profileQuery = supabase.from('profiles').select('*');
-      const profileFilter = isUuid(clerkUser.id)
-        ? profileQuery.eq('id', clerkUser.id)
-        : mappedUser.email
-          ? profileQuery.eq('email', mappedUser.email)
-          : null;
+      setError(null);
+      const {
+        data: { user: authUser },
+        error: getUserError,
+      } = await supabase.auth.getUser();
 
-      const { data: profile, error: profileError } = profileFilter
-        ? await profileFilter.single()
-        : { data: null, error: null };
+      if (getUserError) {
+        if (isAuthSessionMissing(getUserError)) {
+          setUser(null);
+          return;
+        }
+        throw getUserError;
+      }
 
-      if (profileError && profileError.code !== 'PGRST116') {
+      if (!authUser) {
+        setUser(null);
+        return;
+      }
+
+      const mappedUser = toUserFromAuth(authUser);
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .maybeSingle();
+
+      if (profileError && profileError.code !== 'PGRST116' && profileError.code !== 'PGRST505') {
         console.error('Error fetching profile:', profileError);
       }
 
       if (profile) {
-        setUser({
-          ...mappedUser,
-          id: profile.id,
-          kycStatus: profile.kyc_status || mappedUser.kycStatus,
-          kycDocumentUrl: profile.kyc_document_url || mappedUser.kycDocumentUrl,
-          language: profile.language || mappedUser.language,
-          notificationPreferences: profile.notification_preferences ?? mappedUser.notificationPreferences,
-          isBlocked: profile.is_blocked ?? mappedUser.isBlocked,
-          role: profile.role || mappedUser.role,
-        });
+        setUser(mergeProfile(mappedUser, profile as ProfileRow));
+        return;
+      }
+
+      // Best effort profile upsert for phone users. If schema differs, continue with auth user only.
+      const profilePayload: ProfileRow = {
+        id: authUser.id,
+        email: mappedUser.email,
+        full_name: mappedUser.fullName,
+        phone: mappedUser.phone,
+        kyc_status: 'pending',
+        language: 'en',
+        notification_preferences: true,
+        is_blocked: false,
+        role: 'rider',
+      };
+
+      const { data: createdProfile, error: createProfileError } = await supabase
+        .from('profiles')
+        .upsert(profilePayload, { onConflict: 'id' })
+        .select('*')
+        .maybeSingle();
+
+      if (createProfileError) {
+        console.warn('Profile upsert failed, using auth user only:', createProfileError.message);
+        setUser(mappedUser);
+        return;
+      }
+
+      if (createdProfile) {
+        setUser(mergeProfile(mappedUser, createdProfile as ProfileRow));
       } else {
         setUser(mappedUser);
       }
-    } catch (err) {
-      console.error('Error refreshing user:', err);
-      setError('Failed to load user');
+    } catch (refreshError: unknown) {
+      if (isAuthSessionMissing(refreshError)) {
+        setUser(null);
+        setError(null);
+        return;
+      }
+      console.error('Error refreshing user:', refreshError);
+      setError(refreshError instanceof Error ? refreshError.message : 'Failed to load user');
+      setUser(null);
     } finally {
       setLoading(false);
+      setIsAuthReady(true);
     }
-  }, [clerkUser, mapClerkUserToUser]);
+  }, []);
 
   useEffect(() => {
-    if (isClerkLoaded) {
-      refreshUser();
-    }
-  }, [isClerkLoaded, clerkUser, refreshUser]);
+    let mounted = true;
 
-  const login = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      openSignIn();
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
-      setLoading(false);
-    }
-  };
+    const bootstrap = async () => {
+      await refreshUser();
+      if (!mounted) return;
+    };
 
-  const register = async () => {
-    try {
+    bootstrap();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async () => {
+      if (!mounted) return;
       setLoading(true);
-      setError(null);
-      openSignUp();
-    } catch (err: any) {
-      setError(err.message || 'Registration failed');
-      setLoading(false);
-    }
-  };
+      await refreshUser();
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [refreshUser]);
+
+  const login = async () => Promise.resolve();
+  const register = async () => Promise.resolve();
 
   const logout = async () => {
     try {
       setLoading(true);
-      await clerkSignOut();
+      setError(null);
+      await supabase.auth.signOut();
       setUser(null);
-    } catch (err: any) {
-      setError(err.message || 'Logout failed');
+    } catch (logoutError: unknown) {
+      setError(logoutError instanceof Error ? logoutError.message : 'Logout failed');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, register, logout, refreshUser, isClerkLoaded }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        error,
+        login,
+        register,
+        logout,
+        refreshUser,
+        isAuthLoaded: isAuthReady,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

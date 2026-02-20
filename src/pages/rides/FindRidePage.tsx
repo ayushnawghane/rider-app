@@ -16,7 +16,7 @@ import {
 import type { PublishedRide } from '../../types';
 
 const FindRidePage = () => {
-  const { isClerkLoaded } = useAuth();
+  const { isAuthLoaded } = useAuth();
   const history = useHistory();
   const location = useLocation();
   
@@ -169,7 +169,7 @@ const FindRidePage = () => {
     return `${hours}h ${mins}m`;
   };
 
-  if (!isClerkLoaded) {
+  if (!isAuthLoaded) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
@@ -219,7 +219,12 @@ const FindRidePage = () => {
         <div className="bg-white rounded-2xl shadow-lg p-4">
           {/* Pickup */}
           <button 
-            onClick={() => history.push('/select-location', { type: 'pickup', returnTo: '/find-ride' })}
+            onClick={() => history.push('/select-location', {
+              type: 'pickup',
+              returnTo: '/find-ride',
+              pickup: pickup ? { address: pickup, lat: 0, lng: 0 } : undefined,
+              dropoff: dropoff ? { address: dropoff, lat: 0, lng: 0 } : undefined,
+            })}
             className="w-full p-3 border-2 border-primary-100 rounded-xl mb-3 text-left hover:border-primary-300 transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -232,7 +237,12 @@ const FindRidePage = () => {
 
           {/* Dropoff */}
           <button 
-            onClick={() => history.push('/select-location', { type: 'dropoff', returnTo: '/find-ride' })}
+            onClick={() => history.push('/select-location', {
+              type: 'dropoff',
+              returnTo: '/find-ride',
+              pickup: pickup ? { address: pickup, lat: 0, lng: 0 } : undefined,
+              dropoff: dropoff ? { address: dropoff, lat: 0, lng: 0 } : undefined,
+            })}
             className="w-full p-3 border-2 border-primary-100 rounded-xl mb-3 text-left hover:border-primary-300 transition-colors"
           >
             <div className="flex items-center gap-3">

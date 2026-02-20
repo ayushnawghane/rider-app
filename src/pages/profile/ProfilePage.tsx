@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services';
 
 const ProfilePage = () => {
-  const { user, refreshUser, logout, isClerkLoaded } = useAuth();
+  const { user, refreshUser, logout, isAuthLoaded } = useAuth();
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState(user?.fullName || '');
@@ -245,7 +245,7 @@ const ProfilePage = () => {
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
   });
 
-  if (!isClerkLoaded) {
+  if (!isAuthLoaded) {
     return (
       <div style={containerStyle}>
         <div style={contentStyle}>
