@@ -1,371 +1,205 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
 import { useHistory } from 'react-router';
-import { SignUp, useSignUp } from '@clerk/clerk-react';
 import { useAuth } from '../../context/AuthContext';
+import { phoneOtpAuthService } from '../../services/phoneOtpAuth';
+
+const normalizePhone = (input: string, countryCode: string) => {
+  const digits = input.replace(/\D/g, '');
+  if (!digits) return '';
+  if (input.trim().startsWith('+')) return `+${digits}`;
+  if (digits.startsWith(countryCode) && digits.length > 10) return `+${digits}`;
+  if (digits.length === 10) return `+${countryCode}${digits}`;
+  return `+${digits}`;
+};
 
 const RegisterPage = () => {
-  const [showClerkSignUp, setShowClerkSignUp] = useState(false);
-  const { user, isClerkLoaded } = useAuth();
   const history = useHistory();
-  const { isLoaded: isSignUpLoaded, signUp } = useSignUp();
+  const { user, isAuthLoaded } = useAuth();
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [normalizedPhone, setNormalizedPhone] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
-  const handleGoogleSignUp = async () => {
-    if (!isSignUpLoaded || !signUp) return;
-    
-    try {
-      await signUp.authenticateWithRedirect({
-        strategy: 'oauth_google',
-        redirectUrl: '/sso-callback',
-        redirectUrlComplete: '/home'
-      });
-    } catch (err) {
-      console.error('Google sign up error:', err);
-    }
-  };
-
-  const handleAppleSignUp = async () => {
-    if (!isSignUpLoaded || !signUp) return;
-    
-    try {
-      await signUp.authenticateWithRedirect({
-        strategy: 'oauth_apple',
-        redirectUrl: '/sso-callback',
-        redirectUrlComplete: '/home'
-      });
-    } catch (err) {
-      console.error('Apple sign up error:', err);
-    }
-  };
+  const countryCode = useMemo(
+    () => String(import.meta.env.VITE_PHONE_COUNTRY_CODE || '91').replace(/\D/g, '') || '91',
+    [],
+  );
 
   useEffect(() => {
-    if (isClerkLoaded && user) {
+    if (isAuthLoaded && user) {
       history.replace('/home');
     }
-  }, [isClerkLoaded, user, history]);
+  }, [isAuthLoaded, user, history]);
 
-  const containerStyle: React.CSSProperties = {
-    height: '100vh',
-    overflow: 'auto',
-    background: '#f9fafb',
-    WebkitOverflowScrolling: 'touch'
+  const handleSendOtp = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setInfo(null);
+    const phone = normalizePhone(phoneNumber, countryCode);
+    if (!/^\+\d{10,15}$/.test(phone)) {
+      setError('Enter a valid mobile number including country code.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const sendResult = await phoneOtpAuthService.sendOtp(phone);
+      setNormalizedPhone(phone);
+      setOtpSent(true);
+      const requestSuffix = sendResult.requestId ? ` (request: ${sendResult.requestId})` : '';
+      setInfo(`${sendResult.message || `OTP sent to ${phone}`}${requestSuffix}`);
+    } catch (sendError: unknown) {
+      const message =
+        sendError instanceof Error
+          ? sendError.message
+          : 'Failed to send OTP. Check Supabase SMS provider configuration.';
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const contentStyle: React.CSSProperties = {
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    padding: '24px 16px'
-  };
+  const handleVerifyOtp = async () => {
+    setError(null);
+    setInfo(null);
+    const phone = normalizedPhone || normalizePhone(phoneNumber, countryCode);
+    if (!/^\+\d{10,15}$/.test(phone)) {
+      setError('Enter a valid mobile number.');
+      return;
+    }
+    if (!otpCode.trim()) {
+      setError('Enter the OTP code.');
+      return;
+    }
 
-  const backButtonStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: '16px',
-    left: '16px',
-    background: 'transparent',
-    border: 'none',
-    padding: '12px',
-    cursor: 'pointer',
-    borderRadius: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  };
-
-  const logoContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: '32px'
-  };
-
-  const logoStyle: React.CSSProperties = {
-    width: '80px',
-    height: '80px',
-    background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-    borderRadius: '24px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 10px 25px rgba(249, 115, 22, 0.3)'
-  };
-
-  const logoTextStyle: React.CSSProperties = {
-    color: 'white',
-    fontSize: '32px',
-    fontWeight: '700'
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontSize: '28px',
-    fontWeight: '700',
-    color: '#1f2937',
-    textAlign: 'center',
-    margin: '0 0 8px 0'
-  };
-
-  const subtitleStyle: React.CSSProperties = {
-    fontSize: '16px',
-    color: '#6b7280',
-    textAlign: 'center',
-    margin: '0 0 32px 0'
-  };
-
-  const buttonBaseStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '16px 24px',
-    borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    border: 'none',
-    transition: 'all 0.2s',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '12px'
-  };
-
-  const primaryButtonStyle: React.CSSProperties = {
-    ...buttonBaseStyle,
-    background: '#ea580c',
-    color: 'white',
-    boxShadow: '0 4px 6px rgba(234, 88, 12, 0.2)'
-  };
-
-  const secondaryButtonStyle: React.CSSProperties = {
-    ...buttonBaseStyle,
-    background: 'white',
-    color: '#374151',
-    border: '1px solid #e5e7eb'
-  };
-
-  const dividerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    margin: '24px 0'
-  };
-
-  const dividerLineStyle: React.CSSProperties = {
-    flex: 1,
-    height: '1px',
-    background: '#e5e7eb'
-  };
-
-  const dividerTextStyle: React.CSSProperties = {
-    padding: '0 16px',
-    color: '#9ca3af',
-    fontSize: '14px'
-  };
-
-  const featureCardStyle = (bgColor: string, borderColor: string): React.CSSProperties => ({
-    background: bgColor,
-    border: `1px solid ${borderColor}`,
-    borderRadius: '12px',
-    padding: '16px',
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '12px'
-  });
-
-  const featureIconStyle = (fontSize: string): React.CSSProperties => ({
-    fontSize,
-    flexShrink: 0,
-    marginTop: '2px'
-  });
-
-  const featureTitleStyle: React.CSSProperties = {
-    fontSize: '14px',
-    fontWeight: '600',
-    margin: '0 0 4px 0'
-  };
-
-  const featureTextStyle: React.CSSProperties = {
-    fontSize: '14px',
-    margin: 0
-  };
-
-  const footerStyle: React.CSSProperties = {
-    textAlign: 'center',
-    marginTop: '32px'
-  };
-
-  const footerTextStyle: React.CSSProperties = {
-    fontSize: '14px',
-    color: '#6b7280'
-  };
-
-  const footerLinkStyle: React.CSSProperties = {
-    color: '#ea580c',
-    fontWeight: '600',
-    textDecoration: 'none',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    padding: 0
-  };
-
-  const cardStyle: React.CSSProperties = {
-    background: 'white',
-    borderRadius: '16px',
-    padding: '24px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+    try {
+      setIsSubmitting(true);
+      await phoneOtpAuthService.verifyOtp(phone, otpCode.trim());
+      history.replace('/home');
+    } catch (verifyOtpError: unknown) {
+      const message =
+        verifyOtpError instanceof Error ? verifyOtpError.message : 'OTP verification failed';
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div style={containerStyle}>
-      {!showClerkSignUp ? (
-        <div style={contentStyle}>
-          <button 
-            onClick={() => history.goBack()}
-            style={backButtonStyle}
-          >
-            <span style={{ fontSize: '24px' }}>←</span>
-          </button>
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '24px 16px' }}>
+      <div style={{ maxWidth: 380, margin: '0 auto', paddingTop: 48 }}>
+        <h1 style={{ fontSize: 32, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
+          Create Account
+        </h1>
+        <p style={{ color: '#64748b', marginBottom: 24 }}>
+          Verify your phone number to get started.
+        </p>
 
-          <div style={{ maxWidth: '360px', width: '100%', margin: '0 auto' }}>
-            <div style={logoContainerStyle}>
-              <div style={logoStyle}>
-                <span style={logoTextStyle}>B</span>
-              </div>
-            </div>
-
-            <h1 style={titleStyle}>Create Account</h1>
-            <p style={subtitleStyle}>Join Blink Car today</p>
-
-            <button
-              onClick={() => setShowClerkSignUp(true)}
-              style={primaryButtonStyle}
-            >
-              <span>👤</span>
-              Sign Up with Email or Phone
-            </button>
-
-            <div style={dividerStyle}>
-              <div style={dividerLineStyle} />
-              <span style={dividerTextStyle}>or continue with</span>
-              <div style={dividerLineStyle} />
-            </div>
-
-            <button 
-              onClick={handleGoogleSignUp}
-              style={secondaryButtonStyle}
-              disabled={!isSignUpLoaded}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
-              Sign up with Google
-            </button>
-
-            <button 
-              onClick={handleAppleSignUp}
-              style={{ ...secondaryButtonStyle, marginTop: '12px' }}
-              disabled={!isSignUpLoaded}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.21-1.96 1.07-3.11-1.05.05-2.31.74-3.02 1.61-.69.84-1.22 2.04-1.07 3.11 1.17.09 2.36-.85 3.02-1.61z" />
-              </svg>
-              Sign up with Apple
-            </button>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '32px' }}>
-              <div style={featureCardStyle('#f0fdf4', '#bbf7d0')}>
-                <span style={featureIconStyle('20px')}>🛡️</span>
-                <div>
-                  <p style={{ ...featureTitleStyle, color: '#166534' }}>Secure & Private</p>
-                  <p style={{ ...featureTextStyle, color: '#16a34a' }}>Your information is encrypted and secure</p>
-                </div>
-              </div>
-
-              <div style={featureCardStyle('#fff7ed', '#fed7aa')}>
-                <span style={featureIconStyle('20px')}>⏱️</span>
-                <div>
-                  <p style={{ ...featureTitleStyle, color: '#9a3412' }}>Quick Verification</p>
-                  <p style={{ ...featureTextStyle, color: '#c2410c' }}>Get verified in minutes with email or phone</p>
-                </div>
-              </div>
-
-              <div style={featureCardStyle('#fff7ed', '#fed7aa')}>
-                <span style={featureIconStyle('20px')}>🌍</span>
-                <div>
-                  <p style={{ ...featureTitleStyle, color: '#9a3412' }}>Global Access</p>
-                  <p style={{ ...featureTextStyle, color: '#c2410c' }}>Access your rides from anywhere in the world</p>
-                </div>
-              </div>
-            </div>
-
-            <div style={footerStyle}>
-              <p style={footerTextStyle}>
-                Already have an account?{' '}
-                <button 
-                  onClick={() => history.push('/login')}
-                  style={footerLinkStyle}
-                >
-                  Sign in
-                </button>
-              </p>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div style={contentStyle}>
-          <div style={{ maxWidth: '360px', width: '100%', margin: '0 auto' }}>
-            <button
-              onClick={() => setShowClerkSignUp(false)}
-              style={{
-                ...backButtonStyle,
-                position: 'static',
-                marginBottom: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                color: '#6b7280'
-              }}
-            >
-              <span style={{ fontSize: '20px' }}>←</span>
-              <span>Back</span>
-            </button>
-
-            <div style={cardStyle}>
-              <SignUp
-                afterSignInUrl="/home"
-                afterSignUpUrl="/home"
-                appearance={{
-                  elements: {
-                    rootBox: { width: '100%' },
-                    card: { boxShadow: 'none', border: 'none' },
-                    headerTitle: { fontSize: '24px', fontWeight: '700', color: '#1f2937' },
-                    headerSubtitle: { color: '#6b7280', marginTop: '8px' },
-                    formButtonPrimary: { 
-                      background: '#ea580c',
-                      borderRadius: '12px',
-                      padding: '16px',
-                      fontSize: '16px',
-                      fontWeight: '600'
-                    },
-                    formFieldLabel: { color: '#374151', fontWeight: '500' },
-                    footerActionLink: { color: '#ea580c' },
-                    socialButtonsBlockButton: { borderRadius: '12px' },
-                    dividerText: { color: '#9ca3af' },
-                    formFieldInput: { 
-                      borderRadius: '12px',
-                      border: '1px solid #e5e7eb',
-                      padding: '12px 16px'
-                    },
-                  },
+        <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+          <form onSubmit={handleSendOtp}>
+            <label style={{ fontSize: 14, color: '#334155', fontWeight: 600 }}>
+              Mobile number
+              <input
+                type="tel"
+                value={phoneNumber}
+                onChange={(event) => setPhoneNumber(event.target.value)}
+                placeholder="+91 9876543210"
+                disabled={isSubmitting}
+                style={{
+                  width: '100%',
+                  marginTop: 8,
+                  padding: '12px 14px',
+                  borderRadius: 10,
+                  border: '1px solid #cbd5e1',
+                  background: '#fff',
+                  color: '#0f172a',
                 }}
               />
-            </div>
-          </div>
+            </label>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              style={{
+                width: '100%',
+                marginTop: 16,
+                padding: '13px 14px',
+                border: 0,
+                borderRadius: 12,
+                background: '#f97316',
+                color: '#fff',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              {isSubmitting ? 'Sending OTP...' : otpSent ? 'Resend OTP' : 'Send OTP'}
+            </button>
+          </form>
+
+          {otpSent && (
+            <>
+              <label style={{ fontSize: 14, color: '#334155', fontWeight: 600, display: 'block', marginTop: 16 }}>
+                OTP code
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={otpCode}
+                  onChange={(event) => setOtpCode(event.target.value)}
+                  placeholder="Enter OTP"
+                  disabled={isSubmitting}
+                  style={{
+                    width: '100%',
+                    marginTop: 8,
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    border: '1px solid #cbd5e1',
+                    background: '#fff',
+                    color: '#0f172a',
+                  }}
+                />
+              </label>
+
+              <button
+                onClick={handleVerifyOtp}
+                disabled={isSubmitting}
+                type="button"
+                style={{
+                  width: '100%',
+                  marginTop: 12,
+                  padding: '13px 14px',
+                  border: 0,
+                  borderRadius: 12,
+                  background: '#0f172a',
+                  color: '#fff',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {isSubmitting ? 'Verifying...' : 'Verify OTP & Continue'}
+              </button>
+            </>
+          )}
+
+          {info && <p style={{ color: '#16a34a', fontSize: 13, marginTop: 12 }}>{info}</p>}
+          {error && <p style={{ color: '#dc2626', fontSize: 13, marginTop: 12 }}>{error}</p>}
         </div>
-      )}
+
+        <p style={{ textAlign: 'center', marginTop: 16, color: '#64748b' }}>
+          Already have an account?{' '}
+          <button
+            onClick={() => history.push('/login')}
+            style={{ border: 0, background: 'none', color: '#f97316', fontWeight: 700, cursor: 'pointer' }}
+          >
+            Sign in
+          </button>
+        </p>
+      </div>
     </div>
   );
 };
 
 export default RegisterPage;
-

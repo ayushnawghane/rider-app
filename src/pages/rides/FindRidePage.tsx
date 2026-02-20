@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router';
-import { IonContent, IonPage } from '@ionic/react';
 import { useAuth } from '../../context/AuthContext';
+import { rideService } from '../../services';
 import { 
   MapPin, 
   Clock, 
@@ -16,13 +16,26 @@ import {
 } from 'lucide-react';
 import type { PublishedRide } from '../../types';
 
+interface SearchLocation {
+  address: string;
+  lat: number;
+  lng: number;
+}
+
+interface FindRideLocationState {
+  pickup?: SearchLocation;
+  dropoff?: SearchLocation;
+  departureTime?: string;
+  passengerCount?: number;
+}
+
 const FindRidePage = () => {
-  const { isClerkLoaded } = useAuth();
+  const { user, isAuthLoaded } = useAuth();
   const history = useHistory();
-  const location = useLocation();
+  const location = useLocation<FindRideLocationState>();
   
-  const [pickup, setPickup] = useState<string>('');
-  const [dropoff, setDropoff] = useState<string>('');
+  const [pickupLocation, setPickupLocation] = useState<SearchLocation | null>(null);
+  const [dropoffLocation, setDropoffLocation] = useState<SearchLocation | null>(null);
   const [departureTime, setDepartureTime] = useState<string>('');
   const [passengerCount, setPassengerCount] = useState<number>(1);
   const [availableRides, setAvailableRides] = useState<PublishedRide[]>([]);
@@ -30,18 +43,20 @@ const FindRidePage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<'price' | 'time' | 'rating'>('time');
 
+  const handleBackToHome = () => {
+    if (history.length > 1) {
+      history.goBack();
+      return;
+    }
+    history.replace('/home');
+  };
+
   // Get params from navigation state
   useEffect(() => {
-    interface LocationState {
-      pickup?: { address: string };
-      dropoff?: { address: string };
-      departureTime?: string;
-      passengerCount?: number;
-    }
-    const state = location.state as LocationState | undefined;
+    const state = location.state as FindRideLocationState | undefined;
     if (state) {
-      if (state.pickup) setPickup(state.pickup.address);
-      if (state.dropoff) setDropoff(state.dropoff.address);
+      if (state.pickup) setPickupLocation(state.pickup);
+      if (state.dropoff) setDropoffLocation(state.dropoff);
       if (state.departureTime) setDepartureTime(state.departureTime);
       if (state.passengerCount) setPassengerCount(state.passengerCount);
     }
@@ -57,106 +72,67 @@ const FindRidePage = () => {
 
   const handleSearch = async () => {
     setLoading(true);
-    
-    // TODO: Call API to search rides
-    // Simulated data for now
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const mockRides: PublishedRide[] = [
-      {
-        id: '1',
-        driverId: 'd1',
+    const startQuery = pickupLocation?.address?.split(',')[0]?.trim();
+    const endQuery = dropoffLocation?.address?.split(',')[0]?.trim();
+
+    try {
+      const result = await rideService.searchRides({
+        startLocation: startQuery,
+        endLocation: endQuery,
+        departureTime: departureTime || undefined,
+      });
+
+      if (!result.success || !result.rides) {
+        setAvailableRides([]);
+        return;
+      }
+
+      const rides = result.rides.map<PublishedRide>((ride) => ({
+        id: ride.id,
+        driverId: ride.userId,
         driver: {
-          id: 'd1',
-          name: 'Rahul Sharma',
-          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
-          rating: 4.9,
-          phone: '+91 98765 43210'
-        },
-        startLocation: pickup || 'Mumbai',
-        endLocation: dropoff || 'Pune',
-        startLat: 19.0760,
-        startLng: 72.8777,
-        endLat: 18.5204,
-        endLng: 73.8567,
-        distance: 150,
-        duration: 180,
-        departureTime: new Date(Date.now() + 3600000).toISOString(),
-        availableSeats: 3,
-        bookedSeats: 1,
-        pricePerSeat: 150,
-        vehicleType: 'Sedan',
-        vehicleNumber: 'MH01AB1234',
-        status: 'active',
-        notes: 'AC on, no smoking',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: '2',
-        driverId: 'd2',
-        driver: {
-          id: 'd2',
-          name: 'Priya Patel',
-          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-          rating: 4.7,
-          phone: '+91 98765 43211'
-        },
-        startLocation: pickup || 'Mumbai',
-        endLocation: dropoff || 'Pune',
-        startLat: 19.0760,
-        startLng: 72.8777,
-        endLat: 18.5204,
-        endLng: 73.8567,
-        distance: 150,
-        duration: 180,
-        departureTime: new Date(Date.now() + 7200000).toISOString(),
-        availableSeats: 2,
-        bookedSeats: 2,
-        pricePerSeat: 180,
-        vehicleType: 'SUV',
-        vehicleNumber: 'MH02CD5678',
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: '3',
-        driverId: 'd3',
-        driver: {
-          id: 'd3',
-          name: 'Amit Kumar',
-          avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
+          id: ride.userId,
+          name: ride.userId === user?.id ? 'You' : 'Rider',
+          avatar: 'https://via.placeholder.com/56',
           rating: 4.8,
-          phone: '+91 98765 43212'
+          phone: ride.driverContact || 'N/A',
         },
-        startLocation: pickup || 'Mumbai',
-        endLocation: dropoff || 'Pune',
-        startLat: 19.0760,
-        startLng: 72.8777,
-        endLat: 18.5204,
-        endLng: 73.8567,
-        distance: 150,
-        duration: 180,
-        departureTime: new Date(Date.now() + 10800000).toISOString(),
+        startLocation: ride.startLocation,
+        endLocation: ride.endLocation,
+        startLat: ride.startLocationCoords?.lat || 0,
+        startLng: ride.startLocationCoords?.lng || 0,
+        endLat: ride.endLocationCoords?.lat || 0,
+        endLng: ride.endLocationCoords?.lng || 0,
+        distance: ride.distance || 0,
+        duration: ride.duration || 0,
+        departureTime: ride.date,
         availableSeats: 4,
         bookedSeats: 0,
-        pricePerSeat: 130,
-        vehicleType: 'Hatchback',
-        vehicleNumber: 'MH03EF9012',
-        status: 'active',
-        notes: 'Pet friendly',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-    ];
-    
-    setAvailableRides(mockRides);
-    setLoading(false);
+        pricePerSeat: ride.fare || 150,
+        vehicleType: ride.vehicleType || 'Sedan',
+        vehicleNumber: ride.vehicleNumber || 'N/A',
+        status: ride.status === 'cancelled' ? 'cancelled' : ride.status === 'completed' ? 'completed' : 'active',
+        notes: ride.userId === user?.id ? 'Your published ride' : undefined,
+        createdAt: ride.createdAt,
+        updatedAt: ride.updatedAt,
+      }));
+
+      setAvailableRides(rides);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBookRide = (ride: PublishedRide) => {
-    history.push('/ride-detail', { ride, passengerCount });
+    history.push(`/rides/detail/${ride.id}`, { ride, passengerCount });
+  };
+
+  const handlePublishFromSearch = () => {
+    history.push('/publish-ride', {
+      start: pickupLocation || undefined,
+      end: dropoffLocation || undefined,
+      departureTime: departureTime || undefined,
+    });
   };
 
   const formatTime = (isoString: string) => {
@@ -170,27 +146,21 @@ const FindRidePage = () => {
     return `${hours}h ${mins}m`;
   };
 
-  if (!isClerkLoaded) {
+  if (!isAuthLoaded) {
     return (
-      <IonPage>
-        <IonContent className="bg-gray-50">
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
-          </div>
-        </IonContent>
-      </IonPage>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
+      </div>
     );
   }
 
   return (
-    <IonPage>
-      <IonContent className="bg-gray-50">
-        <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
       {/* Header */}
       <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 pt-12 pb-6 px-4">
         <div className="flex items-center gap-4 mb-4">
           <button 
-            onClick={() => history.push('/')}
+            onClick={handleBackToHome}
             className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center"
           >
             <ArrowLeft className="w-5 h-5 text-white" />
@@ -202,11 +172,11 @@ const FindRidePage = () => {
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
           <div className="flex items-center gap-2 text-white mb-2">
             <MapPin className="w-4 h-4" />
-            <span className="text-sm">{pickup || 'Select pickup'}</span>
+            <span className="text-sm">{pickupLocation?.address || 'Select pickup'}</span>
           </div>
           <div className="flex items-center gap-2 text-white/80">
             <Navigation className="w-4 h-4" />
-            <span className="text-sm">{dropoff || 'Select destination'}</span>
+            <span className="text-sm">{dropoffLocation?.address || 'Select destination'}</span>
           </div>
           <div className="flex items-center gap-4 mt-3 text-white/70 text-xs">
             <span className="flex items-center gap-1">
@@ -226,26 +196,36 @@ const FindRidePage = () => {
         <div className="bg-white rounded-2xl shadow-lg p-4">
           {/* Pickup */}
           <button 
-            onClick={() => history.push('/select-location', { type: 'pickup', returnTo: '/find-ride' })}
+            onClick={() => history.push('/select-location', {
+              type: 'pickup',
+              returnTo: '/find-ride',
+              pickup: pickupLocation || undefined,
+              dropoff: dropoffLocation || undefined,
+            })}
             className="w-full p-3 border-2 border-primary-100 rounded-xl mb-3 text-left hover:border-primary-300 transition-colors"
           >
             <div className="flex items-center gap-3">
               <MapPin className="w-5 h-5 text-primary-500" />
               <span className="text-gray-900 font-medium">
-                {pickup || 'Select pickup location'}
+                {pickupLocation?.address || 'Select pickup location'}
               </span>
             </div>
           </button>
 
           {/* Dropoff */}
           <button 
-            onClick={() => history.push('/select-location', { type: 'dropoff', returnTo: '/find-ride' })}
+            onClick={() => history.push('/select-location', {
+              type: 'dropoff',
+              returnTo: '/find-ride',
+              pickup: pickupLocation || undefined,
+              dropoff: dropoffLocation || undefined,
+            })}
             className="w-full p-3 border-2 border-primary-100 rounded-xl mb-3 text-left hover:border-primary-300 transition-colors"
           >
             <div className="flex items-center gap-3">
               <Navigation className="w-5 h-5 text-primary-500" />
               <span className="text-gray-900 font-medium">
-                {dropoff || 'Select destination'}
+                {dropoffLocation?.address || 'Select destination'}
               </span>
             </div>
           </button>
@@ -428,7 +408,7 @@ const FindRidePage = () => {
       )}
 
       {/* Empty State */}
-      {!loading && availableRides.length === 0 && (pickup || dropoff) && (
+      {!loading && availableRides.length === 0 && (pickupLocation || dropoffLocation) && (
         <div className="px-4 mt-8">
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
             <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -439,7 +419,7 @@ const FindRidePage = () => {
               We couldn't find any rides for your route. Try adjusting your search or publish your own ride!
             </p>
             <button
-              onClick={() => history.push('/publish-ride')}
+              onClick={handlePublishFromSearch}
               className="px-6 py-3 bg-primary-500 text-white font-semibold rounded-xl"
             >
               Publish a Ride
@@ -447,9 +427,7 @@ const FindRidePage = () => {
           </div>
         </div>
       )}
-        </div>
-      </IonContent>
-    </IonPage>
+    </div>
   );
 };
 

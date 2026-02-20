@@ -53,6 +53,46 @@ class RideService {
     }
   }
 
+  async searchRides(params: {
+    startLocation?: string;
+    endLocation?: string;
+    departureTime?: string;
+    limit?: number;
+  }): Promise<{ success: boolean; rides?: Ride[]; error?: string }> {
+    try {
+      const { startLocation, endLocation, departureTime, limit = 50 } = params;
+
+      let query = supabase
+        .from('rides')
+        .select('*')
+        .in('status', ['pending', 'active']);
+
+      if (startLocation) {
+        query = query.ilike('start_location', `%${startLocation}%`);
+      }
+
+      if (endLocation) {
+        query = query.ilike('end_location', `%${endLocation}%`);
+      }
+
+      if (departureTime) {
+        query = query.gte('date', new Date(departureTime).toISOString());
+      }
+
+      const { data, error } = await query
+        .order('date', { ascending: true })
+        .limit(limit);
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, rides: data.map((ride: any) => this.mapRideToRide(ride)) };
+    } catch (error) {
+      return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
   async getRideById(rideId: string): Promise<{ success: boolean; ride?: Ride; error?: string }> {
     try {
       const { data, error } = await supabase

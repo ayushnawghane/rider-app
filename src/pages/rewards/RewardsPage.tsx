@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router';
-import { IonPage, IonContent } from '@ionic/react';
 import { useAuth } from '../../context/AuthContext';
 import { 
   ArrowLeft,
@@ -18,7 +17,7 @@ import {
 import type { Reward, Achievement, UserStats } from '../../types';
 
 const RewardsPage = () => {
-  const { isClerkLoaded } = useAuth();
+  const { isAuthLoaded } = useAuth();
   const history = useHistory();
   
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'history'>('overview');
@@ -31,6 +30,14 @@ const RewardsPage = () => {
   });
   const [pointsHistory, setPointsHistory] = useState<Reward[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
+
+  const handleBackToHome = () => {
+    if (history.length > 1) {
+      history.goBack();
+      return;
+    }
+    history.replace('/home');
+  };
 
   useEffect(() => {
     // Mock data for now
@@ -102,35 +109,21 @@ const RewardsPage = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const handleBack = () => {
-    if (history.length > 1) {
-      history.goBack();
-      return;
-    }
-    history.replace('/home');
-  };
-
-  if (!isClerkLoaded) {
+  if (!isAuthLoaded) {
     return (
-      <IonPage>
-        <IonContent className="bg-gray-50">
-          <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
-          </div>
-        </IonContent>
-      </IonPage>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
+      </div>
     );
   }
 
   return (
-    <IonPage>
-      <IonContent className="bg-gray-50">
-        <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
       {/* Header */}
       <div className={`bg-gradient-to-br ${getTierColor(userStats.level)} pt-12 pb-8 px-4`}>
         <div className="flex items-center gap-4 mb-6">
           <button 
-            onClick={handleBack}
+            onClick={handleBackToHome}
             className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center"
           >
             <ArrowLeft className="w-5 h-5 text-white" />
@@ -370,8 +363,6 @@ const RewardsPage = () => {
         )}
       </div>
     </div>
-      </IonContent>
-    </IonPage>
   );
 };
 

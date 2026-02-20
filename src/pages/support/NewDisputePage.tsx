@@ -27,9 +27,23 @@ const NewDisputePage = () => {
     }
   }, [preselectedRideId]);
 
+  const handleBack = () => {
+    if (history.length > 1) {
+      history.goBack();
+      return;
+    }
+    history.replace('/support');
+  };
+
   const handleSubmit = async () => {
-    if (!description) {
+    const trimmedDescription = description.trim();
+    if (!trimmedDescription) {
       setError('Please provide a description');
+      return;
+    }
+
+    if (trimmedDescription.length < 10) {
+      setError('Please share a little more detail (at least 10 characters).');
       return;
     }
 
@@ -40,21 +54,24 @@ const NewDisputePage = () => {
 
     setLoading(true);
     setError('');
+    try {
+      const result = await disputeService.createDispute({
+        userId: user.id,
+        rideId: rideId || undefined,
+        disputeType,
+        description: trimmedDescription,
+      });
 
-    const result = await disputeService.createDispute({
-      userId: user.id,
-      rideId: rideId || undefined,
-      disputeType,
-      description,
-    });
-
-    if (result.success) {
-      setSuccess(true);
-    } else {
-      setError(result.error || 'Failed to create dispute');
+      if (result.success) {
+        setSuccess(true);
+      } else {
+        setError(result.error || 'Failed to create dispute');
+      }
+    } catch {
+      setError('Failed to create dispute');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -63,7 +80,7 @@ const NewDisputePage = () => {
         <div className="max-w-2xl mx-auto px-4 py-6">
           <header className="mb-6">
             <button
-              onClick={() => history.goBack()}
+              onClick={handleBack}
               className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -117,6 +134,19 @@ const NewDisputePage = () => {
                 </div>
               </div>
 
+              {disputeType === 'ride' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Ride ID (optional)</label>
+                  <input
+                    type="text"
+                    value={rideId}
+                    onChange={(e) => setRideId(e.target.value)}
+                    placeholder="Enter related ride ID"
+                    className="input"
+                  />
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
@@ -125,6 +155,7 @@ const NewDisputePage = () => {
                   placeholder="Please describe your issue in detail. Include any relevant information such as ride ID, date, and specific concerns..."
                   rows={6}
                   className="input resize-none"
+                  maxLength={500}
                 />
                 <p className="text-sm text-gray-500 mt-2">{description.length} / 500 characters</p>
               </div>

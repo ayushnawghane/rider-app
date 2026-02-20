@@ -10,6 +10,10 @@ interface LocationSearchProps {
   icon?: 'pickup' | 'drop' | 'default';
 }
 
+type PlaceSuggestion =
+  | google.maps.places.AutocompleteSuggestion
+  | google.maps.places.AutocompletePrediction;
+
 const LocationSearch: React.FC<LocationSearchProps> = ({
   placeholder = 'Search location...',
   value = '',
@@ -18,7 +22,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
   icon = 'default',
 }) => {
   const [inputValue, setInputValue] = useState(value);
-  const [predictions, setPredictions] = useState<Array<google.maps.places.AutocompleteSuggestion | google.maps.places.AutocompletePrediction>>([]);
+  const [predictions, setPredictions] = useState<PlaceSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showPredictions, setShowPredictions] = useState(false);
   const [mapsError, setMapsError] = useState(false);
@@ -46,14 +50,6 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
     // Check if Google Maps is loaded
     if (typeof window === 'undefined' || !window.google || !window.google.maps) {
       console.error('Google Maps not loaded');
-      setMapsError(true);
-      return;
-    }
-
-    // Initialize maps service if needed
-    const initialized = await mapsService.initialize();
-    if (!initialized) {
-      console.error('Failed to initialize Google Maps service');
       setMapsError(true);
       return;
     }
@@ -86,16 +82,14 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
     }, 300);
   };
 
-  const handlePredictionSelect = async (
-    suggestion: google.maps.places.AutocompleteSuggestion | google.maps.places.AutocompletePrediction
-  ) => {
+  const handlePredictionSelect = async (prediction: PlaceSuggestion) => {
     setIsLoading(true);
     setShowPredictions(false);
 
     try {
-      const location = 'placePrediction' in suggestion
-        ? await mapsService.getPlaceDetailsFromSuggestion(suggestion)
-        : await mapsService.getPlaceDetails(suggestion.place_id);
+      const location = 'placePrediction' in prediction
+        ? await mapsService.getPlaceDetailsFromSuggestion(prediction)
+        : await mapsService.getPlaceDetails(prediction.place_id);
       if (location) {
         setInputValue(location.address);
         onLocationSelect(location);
@@ -219,20 +213,23 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
     color: '#dc2626'
   };
 
-  // Helper to get display text from suggestion
-  const getSuggestionText = (
-    suggestion: google.maps.places.AutocompleteSuggestion | google.maps.places.AutocompletePrediction
-  ) => {
-    if ('placePrediction' in suggestion) {
-      const prediction = suggestion.placePrediction;
+  const getSuggestionKey = (prediction: PlaceSuggestion, index: number) => {
+    if ('placePrediction' in prediction) {
+      return prediction.placePrediction?.placeId || `suggestion-${index}`;
+    }
+    return prediction.place_id || `prediction-${index}`;
+  };
+
+  const getSuggestionText = (prediction: PlaceSuggestion) => {
+    if ('placePrediction' in prediction) {
       return {
-        mainText: prediction.mainText?.text || '',
-        secondaryText: prediction.secondaryText?.text || ''
+        mainText: prediction.placePrediction?.mainText?.text || '',
+        secondaryText: prediction.placePrediction?.secondaryText?.text || '',
       };
     }
     return {
-      mainText: suggestion.structured_formatting?.main_text || suggestion.description || '',
-      secondaryText: suggestion.structured_formatting?.secondary_text || ''
+      mainText: prediction.structured_formatting?.main_text || prediction.description || '',
+      secondaryText: prediction.structured_formatting?.secondary_text || '',
     };
   };
 
@@ -273,45 +270,47 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
       {/* Predictions Dropdown */}
       {showPredictions && predictions.length > 0 && (
         <div style={dropdownStyle}>
-          {predictions.map((suggestion, index) => {
-            const { mainText, secondaryText } = getSuggestionText(suggestion);
-            return (
-              <button
-                key={('placePrediction' in suggestion ? suggestion.placePrediction?.placeId : suggestion.place_id) || index}
-                onClick={() => handlePredictionSelect(suggestion)}
-                style={{
-                  ...predictionItemStyle,
-                  borderBottom: index === predictions.length - 1 ? 'none' : '1px solid #f3f4f6'
-                }}
-                type="button"
-              >
-                <span style={{ fontSize: '18px', marginTop: '2px' }}>📍</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#1f2937',
-                    margin: '0 0 2px 0',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}>
-                    {mainText}
-                  </p>
-                  <p style={{
-                    fontSize: '13px',
-                    color: '#6b7280',
-                    margin: 0,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}>
-                    {secondaryText}
-                  </p>
-                </div>
-              </button>
-            );
-          })}
+          {predictions.map((prediction, index) => (
+            (() => {
+              const suggestionText = getSuggestionText(prediction);
+              return (
+            <button
+              key={getSuggestionKey(prediction, index)}
+              onClick={() => handlePredictionSelect(prediction)}
+              style={{
+                ...predictionItemStyle,
+                borderBottom: index === predictions.length - 1 ? 'none' : '1px solid #f3f4f6'
+              }}
+              type="button"
+            >
+              <span style={{ fontSize: '18px', marginTop: '2px' }}>📍</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#1f2937',
+                  margin: '0 0 2px 0',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {suggestionText.mainText}
+                </p>
+                <p style={{
+                  fontSize: '13px',
+                  color: '#6b7280',
+                  margin: 0,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {suggestionText.secondaryText}
+                </p>
+              </div>
+            </button>
+              );
+            })()
+          ))}
         </div>
       )}
 

@@ -1,11 +1,24 @@
-import { IonContent, IonPage } from '@ionic/react';
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services';
+import {
+  ArrowLeft,
+  Bell,
+  Camera,
+  ChevronRight,
+  Clock3,
+  Globe2,
+  LogOut,
+  Pencil,
+  Phone,
+  Settings,
+  Shield,
+  FileText,
+} from 'lucide-react';
 
 const ProfilePage = () => {
-  const { user, refreshUser, logout, isClerkLoaded } = useAuth();
+  const { user, refreshUser, logout, isAuthLoaded } = useAuth();
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState(user?.fullName || '');
@@ -22,17 +35,23 @@ const ProfilePage = () => {
   }, [user]);
 
   const handleSave = async () => {
-    setLoading(true);
-    if (user) {
-      await authService.updateProfile({
-        fullName,
-        language,
-        notificationPreferences: notifications,
-      }, user.id);
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      await authService.updateProfile(
+        {
+          fullName,
+          language,
+          notificationPreferences: notifications,
+        },
+        user.id,
+      );
       await refreshUser();
+      setEditing(false);
+    } finally {
+      setLoading(false);
     }
-    setEditing(false);
-    setLoading(false);
   };
 
   const handleLogout = async () => {
@@ -40,431 +59,251 @@ const ProfilePage = () => {
     history.replace('/login');
   };
 
-  const getKycStatus = (status: string) => {
-    const statusMap: Record<string, { icon: string; color: string; bgColor: string; label: string }> = {
-      approved: { icon: '✓', color: '#16a34a', bgColor: '#f0fdf4', label: 'Verified' },
-      pending: { icon: '⏳', color: '#d97706', bgColor: '#fef3c7', label: 'Pending' },
-      rejected: { icon: '✕', color: '#dc2626', bgColor: '#fef2f2', label: 'Rejected' },
+  const handleBack = () => {
+    if (history.length > 1) {
+      history.goBack();
+      return;
+    }
+    history.push('/home');
+  };
+
+  const kycStatus = useMemo(() => {
+    const statusMap: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
+      approved: {
+        label: 'Verified',
+        icon: <span>✓</span>,
+        className: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+      },
+      pending: {
+        label: 'Pending',
+        icon: <Clock3 size={14} />, 
+        className: 'bg-amber-50 text-amber-700 border border-amber-100',
+      },
+      rejected: {
+        label: 'Rejected',
+        icon: <span>!</span>,
+        className: 'bg-rose-50 text-rose-700 border border-rose-100',
+      },
     };
-    return statusMap[status] || statusMap.pending;
-  };
 
-  const containerStyle: React.CSSProperties = {
-    height: '100vh',
-    overflow: 'auto',
-    background: '#f9fafb',
-    padding: '16px',
-    WebkitOverflowScrolling: 'touch'
-  };
+    return statusMap[user?.kycStatus || 'pending'] || statusMap.pending;
+  }, [user?.kycStatus]);
 
-  const contentStyle: React.CSSProperties = {
-    maxWidth: '680px',
-    margin: '0 auto'
-  };
-
-  const headerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: '24px',
-    paddingTop: '8px'
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontSize: '24px',
-    fontWeight: '700',
-    color: '#1f2937',
-    margin: 0
-  };
-
-  const editButtonStyle: React.CSSProperties = {
-    width: '44px',
-    height: '44px',
-    borderRadius: '12px',
-    background: 'white',
-    border: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-  };
-
-  const cardStyle: React.CSSProperties = {
-    background: 'white',
-    borderRadius: '16px',
-    padding: '24px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-    marginBottom: '16px'
-  };
-
-  const avatarStyle: React.CSSProperties = {
-    width: '80px',
-    height: '80px',
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'white',
-    fontSize: '32px',
-    fontWeight: '700',
-    position: 'relative'
-  };
-
-  const cameraButtonStyle: React.CSSProperties = {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: '32px',
-    height: '32px',
-    background: '#6366f1',
-    borderRadius: '8px',
-    border: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    fontSize: '16px'
-  };
-
-  const kycBadgeStyle = (status: string): React.CSSProperties => {
-    const statusInfo = getKycStatus(status);
-    return {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '6px',
-      padding: '6px 12px',
-      borderRadius: '20px',
-      background: statusInfo.bgColor,
-      color: statusInfo.color,
-      fontSize: '13px',
-      fontWeight: '600'
-    };
-  };
-
-  const infoRowStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '12px 0',
-    borderBottom: '1px solid #f3f4f6'
-  };
-
-  const listItemStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    padding: '16px',
-    width: '100%',
-    background: 'transparent',
-    border: 'none',
-    borderBottom: '1px solid #f3f4f6',
-    cursor: 'pointer',
-    textAlign: 'left'
-  };
-
-  const listItemIconStyle = (bgColor: string): React.CSSProperties => ({
-    width: '44px',
-    height: '44px',
-    borderRadius: '12px',
-    background: bgColor,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '20px',
-    flexShrink: 0
-  });
-
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '14px 16px',
-    background: '#f9fafb',
-    borderRadius: '12px',
-    border: '1px solid #e5e7eb',
-    fontSize: '16px',
-    outline: 'none',
-    marginTop: '8px'
-  };
-
-  const primaryButtonStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '16px 24px',
-    background: '#6366f1',
-    color: 'white',
-    borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: '600',
-    border: 'none',
-    cursor: 'pointer',
-    marginTop: '16px'
-  };
-
-  const secondaryButtonStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '16px 24px',
-    background: '#fef2f2',
-    color: '#dc2626',
-    borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: '600',
-    border: 'none',
-    cursor: 'pointer',
-    marginTop: '16px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px'
-  };
-
-  const skeletonStyle: React.CSSProperties = {
-    background: '#e5e7eb',
-    borderRadius: '8px',
-    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-  };
-
-  const toggleStyle = (enabled: boolean): React.CSSProperties => ({
-    width: '48px',
-    height: '24px',
-    borderRadius: '12px',
-    background: enabled ? '#6366f1' : '#d1d5db',
-    position: 'relative',
-    cursor: 'pointer',
-    border: 'none',
-    transition: 'all 0.2s'
-  });
-
-  const toggleKnobStyle = (enabled: boolean): React.CSSProperties => ({
-    width: '20px',
-    height: '20px',
-    borderRadius: '50%',
-    background: 'white',
-    position: 'absolute',
-    top: '2px',
-    left: enabled ? '26px' : '2px',
-    transition: 'all 0.2s',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-  });
-
-  if (!isClerkLoaded) {
+  if (!isAuthLoaded) {
     return (
-      <IonPage>
-        <IonContent className="bg-gray-50">
-          <div style={containerStyle}>
-            <div style={contentStyle}>
-              <div style={{ paddingTop: '24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div style={{ ...skeletonStyle, width: '80px', height: '80px', borderRadius: '50%' }} />
-                  <div>
-                    <div style={{ ...skeletonStyle, height: '24px', width: '120px', marginBottom: '8px' }} />
-                    <div style={{ ...skeletonStyle, height: '16px', width: '180px' }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <style>{`
-              @keyframes pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: .5; }
-              }
-            `}</style>
-          </div>
-        </IonContent>
-      </IonPage>
+      <div className="min-h-screen bg-slate-100 px-4 pt-12 pb-20">
+        <div className="mx-auto max-w-2xl animate-pulse space-y-4">
+          <div className="h-36 rounded-3xl bg-slate-200" />
+          <div className="h-48 rounded-3xl bg-slate-200" />
+          <div className="h-40 rounded-3xl bg-slate-200" />
+        </div>
+      </div>
     );
   }
 
   if (!user) {
     return (
-      <IonPage>
-        <IonContent className="bg-gray-50">
-          <div style={{
-            height: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#f9fafb'
-          }}>
-            <p>Loading...</p>
-          </div>
-        </IonContent>
-      </IonPage>
+      <div className="grid min-h-screen place-items-center bg-slate-100 text-slate-500">
+        Loading profile...
+      </div>
     );
   }
 
-  const kycStatus = getKycStatus(user.kycStatus);
+  const initials = user.fullName?.charAt(0)?.toUpperCase() || 'R';
+  const displayEmail = user.email?.includes('@otp.riderapp.local') ? 'Phone sign-in account' : user.email;
 
   return (
-    <IonPage>
-      <IonContent className="bg-gray-50">
-        <div style={containerStyle}>
-          <div style={contentStyle}>
-        <div style={headerStyle}>
-          <h1 style={titleStyle}>Profile</h1>
-          <button
-            onClick={() => setEditing(!editing)}
-            style={editButtonStyle}
-          >
-            <span>✏️</span>
-          </button>
-        </div>
+    <div className="min-h-screen bg-slate-100 pb-24">
+      <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 px-4 pb-20 pt-12">
+        <div className="mx-auto max-w-2xl">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleBack}
+                className="grid h-12 w-12 place-items-center rounded-2xl border border-white/35 bg-white/20 text-white backdrop-blur"
+                aria-label="Go back"
+              >
+                <ArrowLeft size={24} />
+              </button>
+              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
+                Profile
+              </h1>
+            </div>
 
-        <div style={cardStyle}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
-            <div style={avatarStyle}>
-              {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
+            <button
+              onClick={() => setEditing(!editing)}
+              className="grid h-12 w-12 place-items-center rounded-2xl border border-white/35 bg-white/20 text-white backdrop-blur"
+              aria-label={editing ? 'Cancel editing profile' : 'Edit profile'}
+            >
+              <Pencil size={20} />
+            </button>
+          </div>
+
+          <p className="text-base text-white/90 sm:text-lg">
+            Manage your account details and ride preferences
+          </p>
+        </div>
+      </div>
+
+      <div className="mx-auto -mt-12 max-w-2xl space-y-4 px-4">
+        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-start gap-4">
+            <div className="relative">
+              <div className="grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-4xl font-bold text-white">
+                {initials}
+              </div>
               {editing && (
-                <button style={cameraButtonStyle}>📷</button>
+                <button
+                  type="button"
+                  className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-xl bg-indigo-600 text-white shadow"
+                  aria-label="Change profile picture"
+                >
+                  <Camera size={14} />
+                </button>
               )}
             </div>
 
-            <div style={{ flex: 1 }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1f2937', margin: '0 0 4px 0' }}>
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate text-4xl font-bold text-slate-800 sm:text-5xl">
                 {user.fullName}
               </h2>
-              <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 12px 0' }}>{user.email}</p>
-              <span style={kycBadgeStyle(user.kycStatus)}>
-                {kycStatus.icon} KYC: {kycStatus.label}
+              <p className="mt-1 max-w-full break-words text-lg text-slate-500 sm:text-xl">{displayEmail}</p>
+              <span className={`mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${kycStatus.className}`}>
+                {kycStatus.icon}
+                KYC: {kycStatus.label}
               </span>
             </div>
           </div>
 
-          <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #f3f4f6' }}>
-            <div style={infoRowStyle}>
-              <span style={{ fontSize: '20px' }}>📱</span>
-              <span style={{ fontSize: '14px', color: '#4b5563' }}>{user.phone || 'Not provided'}</span>
+          <div className="mt-5 divide-y divide-slate-100 rounded-2xl border border-slate-100 bg-slate-50">
+            <div className="flex items-center gap-3 px-4 py-3">
+              <div className="grid h-9 w-9 place-items-center rounded-xl bg-slate-200 text-slate-700">
+                <Phone size={16} />
+              </div>
+              <span className="text-sm font-medium text-slate-700">{user.phone || 'Not provided'}</span>
             </div>
-            <div style={infoRowStyle}>
-              <span style={{ fontSize: '20px' }}>🌐</span>
-              <span style={{ fontSize: '14px', color: '#4b5563' }}>{language === 'en' ? 'English' : language}</span>
+            <div className="flex items-center gap-3 px-4 py-3">
+              <div className="grid h-9 w-9 place-items-center rounded-xl bg-slate-200 text-slate-700">
+                <Globe2 size={16} />
+              </div>
+              <span className="text-sm font-medium text-slate-700">{language === 'en' ? 'English' : language}</span>
             </div>
-            <div style={{ ...infoRowStyle, borderBottom: 'none' }}>
-              <span style={{ fontSize: '20px' }}>🔔</span>
-              <span style={{ fontSize: '14px', color: '#4b5563' }}>
-                {notifications ? 'Notifications Enabled' : 'Notifications Disabled'}
+            <div className="flex items-center gap-3 px-4 py-3">
+              <div className="grid h-9 w-9 place-items-center rounded-xl bg-slate-200 text-slate-700">
+                <Bell size={16} />
+              </div>
+              <span className="text-sm font-medium text-slate-700">
+                {notifications ? 'Notifications enabled' : 'Notifications disabled'}
               </span>
             </div>
           </div>
-        </div>
+        </section>
 
         {editing && (
-          <div style={cardStyle}>
-            <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', margin: '0 0 16px 0' }}>
-              Edit Profile
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151' }}>Full Name</label>
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h3 className="mb-4 text-base font-semibold text-slate-800">Edit profile</h3>
+            <div className="space-y-4">
+              <label className="block">
+                <span className="text-sm font-medium text-slate-600">Full name</span>
                 <input
                   type="text"
                   value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  style={inputStyle}
-                  placeholder="John Doe"
+                  onChange={(event) => setFullName(event.target.value)}
+                  placeholder="Rider name"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
                 />
-              </div>
+              </label>
 
-              <div>
-                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151' }}>Language</label>
+              <label className="block">
+                <span className="text-sm font-medium text-slate-600">Language</span>
                 <select
                   value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  style={inputStyle}
+                  onChange={(event) => setLanguage(event.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
                 >
                   <option value="en">English</option>
-                  <option value="es">Spanish</option>
-                  <option value="fr">French</option>
-                  <option value="de">German</option>
+                  <option value="hi">Hindi</option>
                 </select>
-              </div>
+              </label>
 
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '16px',
-                background: '#f9fafb',
-                borderRadius: '12px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ fontSize: '20px' }}>🔔</span>
-                  <span style={{ fontSize: '14px', fontWeight: '500', color: '#374151' }}>Push Notifications</span>
-                </div>
+              <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <span className="text-sm font-medium text-slate-700">Push notifications</span>
                 <button
-                  onClick={() => setNotifications(!notifications)}
-                  style={toggleStyle(notifications)}
+                  type="button"
+                  onClick={() => setNotifications((prev) => !prev)}
+                  className={`relative h-7 w-12 rounded-full transition ${notifications ? 'bg-orange-500' : 'bg-slate-300'}`}
+                  aria-label="Toggle notifications"
                 >
-                  <span style={toggleKnobStyle(notifications)} />
+                  <span
+                    className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${notifications ? 'left-[22px]' : 'left-0.5'}`}
+                  />
                 </button>
               </div>
 
               <button
                 onClick={handleSave}
                 disabled={loading}
-                style={{
-                  ...primaryButtonStyle,
-                  opacity: loading ? 0.7 : 1,
-                  cursor: loading ? 'not-allowed' : 'pointer'
-                }}
+                className="w-full rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {loading ? 'Saving...' : 'Save Changes'}
+                {loading ? 'Saving...' : 'Save changes'}
               </button>
             </div>
-          </div>
+          </section>
         )}
 
-        <div style={cardStyle}>
+        <section className="rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
           <button
             onClick={() => history.push('/profile/kyc')}
-            style={listItemStyle}
+            className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left hover:bg-slate-50"
           >
-            <div style={listItemIconStyle('#e0e7ff')}>📄</div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: '15px', fontWeight: '600', color: '#1f2937', margin: '0 0 2px 0' }}>
-                KYC Verification
-              </p>
-              <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>{kycStatus.label}</p>
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-indigo-100 text-indigo-700">
+              <FileText size={18} />
             </div>
-            <span style={{ fontSize: '20px', color: '#9ca3af' }}>›</span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-slate-800">KYC verification</p>
+              <p className="text-xs text-slate-500">{kycStatus.label}</p>
+            </div>
+            <ChevronRight size={20} className="text-slate-400" />
           </button>
 
           <button
             onClick={() => history.push('/safety')}
-            style={listItemStyle}
+            className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left hover:bg-slate-50"
           >
-            <div style={listItemIconStyle('#dcfce7')}>🛡️</div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: '15px', fontWeight: '600', color: '#1f2937', margin: '0 0 2px 0' }}>
-                Safety Center
-              </p>
-              <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>SOS & emergency features</p>
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-100 text-emerald-700">
+              <Shield size={18} />
             </div>
-            <span style={{ fontSize: '20px', color: '#9ca3af' }}>›</span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-slate-800">Safety center</p>
+              <p className="text-xs text-slate-500">SOS and emergency tools</p>
+            </div>
+            <ChevronRight size={20} className="text-slate-400" />
           </button>
 
-          <button style={{ ...listItemStyle, borderBottom: 'none' }}>
-            <div style={listItemIconStyle('#f3f4f6')}>⚙️</div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: '15px', fontWeight: '600', color: '#1f2937', margin: '0 0 2px 0' }}>
-                Settings
-              </p>
-              <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>App preferences</p>
+          <button
+            type="button"
+            className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left hover:bg-slate-50"
+          >
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-slate-200 text-slate-700">
+              <Settings size={18} />
             </div>
-            <span style={{ fontSize: '20px', color: '#9ca3af' }}>›</span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-slate-800">Settings</p>
+              <p className="text-xs text-slate-500">App preferences</p>
+            </div>
+            <ChevronRight size={20} className="text-slate-400" />
           </button>
-        </div>
+        </section>
 
         <button
           onClick={handleLogout}
-          style={secondaryButtonStyle}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600 transition hover:bg-rose-100"
         >
-          <span>🚪</span>
-          Sign Out
+          <LogOut size={18} />
+          Sign out
         </button>
-          </div>
-        </div>
-      </IonContent>
-    </IonPage>
+      </div>
+    </div>
   );
 };
 

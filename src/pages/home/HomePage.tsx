@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useHistory } from 'react-router';
-import { IonContent, IonPage } from '@ionic/react';
+import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { UserButton } from '@clerk/clerk-react';
 import { 
   Search, 
   MapPin, 
@@ -29,8 +27,9 @@ interface Location {
 }
 
 const HomePage = () => {
-  const { user, isClerkLoaded } = useAuth();
+  const { user, isAuthLoaded, logout } = useAuth();
   const history = useHistory();
+  const location = useLocation<{ pickup?: Location; dropoff?: Location }>();
   
   const [pickup, setPickup] = useState<Location | null>(null);
   const [dropoff, setDropoff] = useState<Location | null>(null);
@@ -44,16 +43,20 @@ const HomePage = () => {
     ridesPublished: 8,
     rating: 4.9
   });
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Set default time to current time + 30 minutes
     const now = new Date();
     now.setMinutes(now.getMinutes() + 30);
     setDepartureTime(now.toISOString().slice(0, 16));
-    
-    setTimeout(() => setLoading(false), 1000);
   }, []);
+
+  useEffect(() => {
+    const state = location.state;
+    if (!state) return;
+    if (state.pickup) setPickup(state.pickup);
+    if (state.dropoff) setDropoff(state.dropoff);
+  }, [location.state]);
 
   const handleSwapLocations = () => {
     const temp = pickup;
@@ -71,22 +74,16 @@ const HomePage = () => {
     { city: 'Delhi', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400&h=300&fit=crop', startingPrice: 200 },
   ];
 
-  if (!isClerkLoaded || loading) {
+  if (!isAuthLoaded) {
     return (
-      <IonPage>
-        <IonContent className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700">
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent" />
-          </div>
-        </IonContent>
-      </IonPage>
+      <div className="min-h-screen bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent" />
+      </div>
     );
   }
 
   return (
-    <IonPage>
-      <IonContent className="bg-gray-50">
-        <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
       {/* Orange Header Section */}
       <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 pt-12 pb-6 px-4">
         {/* Top Row: Notifications & Profile */}
@@ -95,9 +92,13 @@ const HomePage = () => {
             <Bell className="w-5 h-5 text-white" />
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
           </button>
-          <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white/30">
-            <UserButton afterSignOutUrl="/login" />
-          </div>
+          <button
+            onClick={logout}
+            className="min-w-[72px] h-10 px-3 rounded-xl border-2 border-white/30 text-white text-sm font-semibold bg-white/10"
+            type="button"
+          >
+            Logout
+          </button>
         </div>
 
         {/* Greeting & Location */}
@@ -138,14 +139,20 @@ const HomePage = () => {
           </div>
 
           {/* From/To Selection */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex-1">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-3 mb-4 min-w-0">
+            <div className="min-w-0">
               <label className="text-xs text-gray-500 mb-1 block">From</label>
               <button 
-                onClick={() => history.push('/select-location', { type: 'pickup' })}
-                className="w-full p-3 border-2 border-primary-100 rounded-xl text-left hover:border-primary-300 transition-colors"
+                onClick={() => history.push('/select-location', {
+                  type: 'pickup',
+                  returnTo: '/home',
+                  pickup: pickup || undefined,
+                  dropoff: dropoff || undefined,
+                })}
+                className="h-14 w-full min-w-0 border-2 border-primary-100 rounded-xl px-3 text-left hover:border-primary-300 transition-colors"
+                title={pickup?.address || 'Pick Up'}
               >
-                <span className="text-primary-600 font-semibold">
+                <span className="block w-full overflow-hidden text-ellipsis whitespace-nowrap text-primary-600 font-semibold">
                   {pickup?.address || 'Pick Up'}
                 </span>
               </button>
@@ -153,18 +160,24 @@ const HomePage = () => {
             
             <button 
               onClick={handleSwapLocations}
-              className="mt-5 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+              className="mt-5 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors shrink-0"
             >
               <ArrowRightLeft className="w-5 h-5 text-gray-600" />
             </button>
             
-            <div className="flex-1">
-              <label className="text-xs text-gray-500 mb-1 block text-right">To</label>
+            <div className="min-w-0">
+              <label className="text-xs text-gray-500 mb-1 block">To</label>
               <button 
-                onClick={() => history.push('/select-location', { type: 'dropoff' })}
-                className="w-full p-3 border-2 border-primary-100 rounded-xl text-right hover:border-primary-300 transition-colors"
+                onClick={() => history.push('/select-location', {
+                  type: 'dropoff',
+                  returnTo: '/home',
+                  pickup: pickup || undefined,
+                  dropoff: dropoff || undefined,
+                })}
+                className="h-14 w-full min-w-0 border-2 border-primary-100 rounded-xl px-3 text-left hover:border-primary-300 transition-colors"
+                title={dropoff?.address || 'Drop Off'}
               >
-                <span className="text-primary-600 font-semibold">
+                <span className="block w-full overflow-hidden text-ellipsis whitespace-nowrap text-primary-600 font-semibold">
                   {dropoff?.address || 'Drop Off'}
                 </span>
               </button>
@@ -208,6 +221,12 @@ const HomePage = () => {
             className="w-full py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/30 transition-all active:scale-95"
           >
             Find Drivers
+          </button>
+          <button
+            onClick={() => history.push('/rides/history')}
+            className="mt-3 w-full py-3 border-2 border-primary-200 text-primary-700 font-semibold rounded-xl hover:border-primary-300 hover:bg-primary-50 transition-colors"
+          >
+            View My Published Rides
           </button>
         </div>
 
@@ -304,13 +323,13 @@ const HomePage = () => {
           </button>
           
           <button 
-            onClick={() => history.push('/support')}
+            onClick={() => history.push('/rides/history')}
             className="flex flex-col items-center gap-2"
           >
             <div className="w-14 h-14 bg-primary-100 rounded-2xl flex items-center justify-center">
-              <HelpCircle className="w-7 h-7 text-primary-600" />
+              <Clock className="w-7 h-7 text-primary-600" />
             </div>
-            <span className="text-xs font-medium text-gray-700">Help</span>
+            <span className="text-xs font-medium text-gray-700 text-center leading-tight">History</span>
           </button>
         </div>
 
@@ -355,6 +374,16 @@ const HomePage = () => {
         </div>
       </div>
 
+      {/* Floating Help Button */}
+      <button
+        onClick={() => history.push('/support')}
+        className="fixed bottom-24 right-4 z-30 flex items-center gap-2 rounded-full bg-primary-500 px-4 py-3 text-white shadow-lg shadow-primary-500/30 transition-all active:scale-95"
+        type="button"
+      >
+        <HelpCircle className="h-5 w-5" />
+        <span className="text-sm font-semibold">Help</span>
+      </button>
+
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 safe-area-bottom">
         <div className="flex justify-around items-center max-w-lg mx-auto">
@@ -392,9 +421,7 @@ const HomePage = () => {
           </button>
         </div>
       </div>
-        </div>
-      </IonContent>
-    </IonPage>
+    </div>
   );
 };
 
