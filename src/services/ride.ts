@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase';
 import type {
   Ride,
   RideCreateParams,
+  RideParticipant,
 } from '../types';
 
 class RideService {
@@ -31,6 +32,85 @@ class RideService {
       return { success: true, ride: this.mapRideToRide(data) };
     } catch (error) {
       return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
+  async joinRide(params: {
+    rideId: string;
+    userId: string;
+    seatsBooked?: number;
+  }): Promise<{ success: boolean; participant?: RideParticipant; error?: string }> {
+    try {
+      const { data: rideRow, error: rideError } = await supabase
+        .from('rides')
+        .select('id, user_id, status')
+        .eq('id', params.rideId)
+        .single();
+
+      if (rideError) {
+        return { success: false, error: rideError.message };
+      }
+
+      if (!rideRow) {
+        return { success: false, error: 'Ride not found' };
+      }
+
+      if (rideRow.user_id === params.userId) {
+        return { success: false, error: 'You cannot join your own ride' };
+      }
+
+      if (!['pending', 'active'].includes(rideRow.status)) {
+        return { success: false, error: 'This ride is not available to join' };
+      }
+
+      const { data, error } = await supabase
+        .from('ride_participants')
+        .upsert(
+          {
+            ride_id: params.rideId,
+            user_id: params.userId,
+            seats_booked: Math.max(1, params.seatsBooked ?? 1),
+            status: 'joined',
+          },
+          { onConflict: 'ride_id,user_id' },
+        )
+        .select()
+        .single();
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, participant: this.mapRideParticipant(data) };
+    } catch (error) {
+      return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
+  async getRideParticipation(
+    rideId: string,
+    userId: string,
+  ): Promise<{ success: boolean; joined: boolean; participant?: RideParticipant; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .from('ride_participants')
+        .select('*')
+        .eq('ride_id', rideId)
+        .eq('user_id', userId)
+        .eq('status', 'joined')
+        .maybeSingle();
+
+      if (error) {
+        return { success: false, joined: false, error: error.message };
+      }
+
+      if (!data) {
+        return { success: true, joined: false };
+      }
+
+      return { success: true, joined: true, participant: this.mapRideParticipant(data) };
+    } catch (error) {
+      return { success: false, joined: false, error: 'An unexpected error occurred' };
     }
   }
 
@@ -187,6 +267,18 @@ class RideService {
       duration: data.duration,
       distance: data.distance,
       driverContact: data.driver_contact,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  private mapRideParticipant(data: any): RideParticipant {
+    return {
+      id: data.id,
+      rideId: data.ride_id,
+      userId: data.user_id,
+      seatsBooked: data.seats_booked,
+      status: data.status,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     };

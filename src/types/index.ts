@@ -74,10 +74,20 @@ export interface Reward {
   id: string;
   userId: string;
   points: number;
-  action: 'publish_ride' | 'complete_ride' | 'weekly_streak' | 'referral' | 'five_star_rating';
+  action: 'publish_ride' | 'join_ride' | 'complete_ride' | 'weekly_streak' | 'referral' | 'five_star_rating';
   description: string;
   rideId?: string;
   createdAt: string;
+}
+
+export interface RideParticipant {
+  id: string;
+  rideId: string;
+  userId: string;
+  seatsBooked: number;
+  status: 'joined' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Achievement {
