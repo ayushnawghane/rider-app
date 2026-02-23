@@ -418,7 +418,7 @@ const PublishRidePage = () => {
                 <Car className="w-6 h-6 text-primary-600" />
               </div>
             </div>
-            <p className="text-xs text-primary-600 mt-2">Points awarded after ride completion</p>
+            <p className="text-xs text-primary-600 mt-2">Points awarded when the ride is published</p>
           </div>
 
           {/* Publish Button */}

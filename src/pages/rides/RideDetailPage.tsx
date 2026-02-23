@@ -1,22 +1,35 @@
 import { IonContent, IonPage } from '@ionic/react';
 import { useEffect, useState } from 'react';
-import { useParams, useHistory } from 'react-router';
+import { useParams, useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { rideService, mapsService } from '../../services';
 import { MapComponent } from '../../components/maps';
 import { ArrowLeft, Phone, MessageSquare, ShieldAlert, MapPin, Navigation, Calendar, Car, DollarSign, Clock, CheckCircle2, AlertTriangle, Route } from 'lucide-react';
 import type { Ride } from '../../types';
 
+interface RideDetailLocationState {
+  passengerCount?: number;
+}
+
 const RideDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const [ride, setRide] = useState<Ride | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isJoining, setIsJoining] = useState(false);
+  const [isJoined, setIsJoined] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
+  const [joinSuccessMessage, setJoinSuccessMessage] = useState<string | null>(null);
   const [routePath, setRoutePath] = useState<Array<{ lat: number; lng: number }>>([]);
   const history = useHistory();
+  const location = useLocation<RideDetailLocationState>();
+  const passengerCount = Math.max(1, location.state?.passengerCount ?? 1);
 
   useEffect(() => {
     const fetchRide = async () => {
+      setLoading(true);
+      setJoinError(null);
+      setJoinSuccessMessage(null);
       const result = await rideService.getRideById(id);
       if (result.success && result.ride) {
         setRide(result.ride);
@@ -33,12 +46,21 @@ const RideDetailPage = () => {
             setRoutePath(decodedPath);
           }
         }
+
+        if (user && result.ride.userId !== user.id) {
+          const participation = await rideService.getRideParticipation(result.ride.id, user.id);
+          if (participation.success) {
+            setIsJoined(participation.joined);
+          }
+        } else {
+          setIsJoined(false);
+        }
       }
       setLoading(false);
     };
 
     fetchRide();
-  }, [id]);
+  }, [id, user]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -63,6 +85,35 @@ const RideDetailPage = () => {
 
   const handleSOS = () => {
     history.push(`/safety/sos?rideId=${ride?.id}`);
+  };
+
+  const handleJoinRide = async () => {
+    if (!ride || !user) {
+      setJoinError('Please log in to join this ride.');
+      return;
+    }
+
+    setJoinError(null);
+    setJoinSuccessMessage(null);
+    setIsJoining(true);
+
+    try {
+      const result = await rideService.joinRide({
+        rideId: ride.id,
+        userId: user.id,
+        seatsBooked: passengerCount,
+      });
+
+      if (!result.success) {
+        setJoinError(result.error || 'Unable to join ride right now.');
+        return;
+      }
+
+      setIsJoined(true);
+      setJoinSuccessMessage('Ride joined successfully. You earned +30 reward points.');
+    } finally {
+      setIsJoining(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -138,6 +189,7 @@ const RideDetailPage = () => {
 
   const status = getStatusBadge(ride.status);
   const hasMapData = markers.length > 0;
+  const canJoinRide = !!user && ride.userId !== user.id && ['pending', 'active'].includes(ride.status);
 
   return (
     <IonPage>
@@ -269,6 +321,29 @@ const RideDetailPage = () => {
                 )}
               </div>
             </div>
+
+            {canJoinRide && (
+              <div className="card p-4">
+                <button
+                  onClick={handleJoinRide}
+                  disabled={isJoining || isJoined}
+                  className={`w-full py-3 rounded-xl font-semibold transition-colors ${
+                    isJoined
+                      ? 'bg-green-100 text-green-700 cursor-default'
+                      : 'bg-primary-500 text-white hover:bg-primary-600'
+                  } disabled:opacity-80 disabled:cursor-not-allowed`}
+                >
+                  {isJoined
+                    ? 'Joined Ride'
+                    : isJoining
+                      ? 'Joining Ride...'
+                      : `Join Ride (${passengerCount} Seat${passengerCount > 1 ? 's' : ''})`}
+                </button>
+                <p className="text-xs text-gray-500 mt-2">Earn +30 points when you join this ride.</p>
+                {joinError && <p className="text-xs text-red-600 mt-1">{joinError}</p>}
+                {joinSuccessMessage && <p className="text-xs text-green-600 mt-1">{joinSuccessMessage}</p>}
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <button
