@@ -48,9 +48,33 @@ class AuthService {
 
   async updateProfile(params: ProfileUpdateParams, userId: string): Promise<{ success: boolean; error?: string }> {
     try {
+      const profileUpdatePayload: {
+        email?: string;
+        full_name?: string;
+        language?: string;
+        notification_preferences?: boolean;
+      } = {};
+
+      if (typeof params.email === 'string') {
+        profileUpdatePayload.email = params.email;
+      }
+      if (typeof params.fullName === 'string') {
+        profileUpdatePayload.full_name = params.fullName;
+      }
+      if (typeof params.language === 'string') {
+        profileUpdatePayload.language = params.language;
+      }
+      if (typeof params.notificationPreferences === 'boolean') {
+        profileUpdatePayload.notification_preferences = params.notificationPreferences;
+      }
+
+      if (Object.keys(profileUpdatePayload).length === 0) {
+        return { success: true };
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update(params)
+        .update(profileUpdatePayload)
         .eq('id', userId);
 
       if (error) {

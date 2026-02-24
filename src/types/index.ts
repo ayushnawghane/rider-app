@@ -251,6 +251,7 @@ export interface SosCreateParams {
 }
 
 export interface ProfileUpdateParams {
+  email?: string;
   fullName?: string;
   language?: string;
   notificationPreferences?: boolean;

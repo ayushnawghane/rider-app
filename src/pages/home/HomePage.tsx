@@ -26,6 +26,33 @@ interface Location {
   lng: number;
 }
 
+const GENERIC_PROFILE_NAMES = new Set(['rider', 'user']);
+const PLACEHOLDER_PROFILE_EMAIL_REGEX = /^phone-[^@]+@riderapp\.local$/i;
+
+const looksLikeEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+const isProfileNameIncomplete = (value?: string | null) => {
+  const fullName = value?.trim() || '';
+  if (!fullName) return true;
+
+  const normalizedName = fullName.toLowerCase();
+  if (GENERIC_PROFILE_NAMES.has(normalizedName)) return true;
+  if (normalizedName.startsWith('phone-')) return true;
+  if (looksLikeEmail(fullName)) return true;
+
+  return false;
+};
+
+const isProfileEmailIncomplete = (value?: string | null) => {
+  const email = value?.trim().toLowerCase() || '';
+  if (!email) return true;
+  if (email.endsWith('@otp.riderapp.local')) return true;
+  if (PLACEHOLDER_PROFILE_EMAIL_REGEX.test(email)) return true;
+  return false;
+};
+
+const profilePromptDismissKey = (userId: string) => `profile-prompt-dismissed:${userId}`;
+
 const HomePage = () => {
   const { user, isAuthLoaded, logout } = useAuth();
   const history = useHistory();
@@ -35,6 +62,8 @@ const HomePage = () => {
   const [dropoff, setDropoff] = useState<Location | null>(null);
   const [departureTime, setDepartureTime] = useState<string>('');
   const [passengerCount, setPassengerCount] = useState<number>(1);
+  const [dismissedProfilePrompt, setDismissedProfilePrompt] = useState(false);
+  const [showProfilePrompt, setShowProfilePrompt] = useState(false);
   const [activeRide] = useState<PublishedRide | null>(null);
   const [userStats] = useState<UserStats>({
     level: 12,
@@ -58,6 +87,32 @@ const HomePage = () => {
     if (state.dropoff) setDropoff(state.dropoff);
   }, [location.state]);
 
+  useEffect(() => {
+    if (!user?.id) {
+      setDismissedProfilePrompt(false);
+      return;
+    }
+
+    const hasDismissedPrompt = window.sessionStorage.getItem(profilePromptDismissKey(user.id)) === '1';
+    setDismissedProfilePrompt(hasDismissedPrompt);
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!isAuthLoaded || !user) {
+      setShowProfilePrompt(false);
+      return;
+    }
+
+    if (dismissedProfilePrompt) {
+      setShowProfilePrompt(false);
+      return;
+    }
+
+    setShowProfilePrompt(
+      isProfileNameIncomplete(user.fullName) || isProfileEmailIncomplete(user.email),
+    );
+  }, [dismissedProfilePrompt, isAuthLoaded, user]);
+
   const handleSwapLocations = () => {
     const temp = pickup;
     setPickup(dropoff);
@@ -66,6 +121,19 @@ const HomePage = () => {
 
   const handleFindDrivers = () => {
     history.push('/find-ride', { pickup, dropoff, departureTime, passengerCount });
+  };
+
+  const handleCompleteProfile = () => {
+    setShowProfilePrompt(false);
+    history.push('/profile', { openEditor: true, fromProfilePrompt: true });
+  };
+
+  const handleDismissProfilePrompt = () => {
+    setShowProfilePrompt(false);
+    setDismissedProfilePrompt(true);
+    if (user?.id) {
+      window.sessionStorage.setItem(profilePromptDismissKey(user.id), '1');
+    }
   };
 
   const popularRoutes = [
@@ -421,6 +489,37 @@ const HomePage = () => {
           </button>
         </div>
       </div>
+
+      {showProfilePrompt && (
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-900/45 px-4 pb-8 sm:items-center sm:pb-0">
+          <div
+            className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl"
+            aria-modal="true"
+            role="dialog"
+          >
+            <h2 className="text-xl font-bold text-slate-900">Complete your profile</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Add your name and email to finish setup and make your account easier to identify.
+            </p>
+            <div className="mt-5 flex items-center gap-3">
+              <button
+                onClick={handleDismissProfilePrompt}
+                className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                type="button"
+              >
+                Later
+              </button>
+              <button
+                onClick={handleCompleteProfile}
+                className="flex-1 rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-600"
+                type="button"
+              >
+                Complete now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { GoogleMap, Marker, Polyline, useJsApiLoader } from '@react-google-maps/api';
+import { googleMapsLoaderOptions, hasGoogleMapsApiKey } from '../../lib/googleMapsLoader';
 
 const defaultCenter = {
   lat: 28.6139,
   lng: 77.2090,
 };
-
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim() || '';
 
 const mapOptions: google.maps.MapOptions = {
   disableDefaultUI: false,
@@ -50,10 +49,8 @@ const MapComponent: React.FC<MapComponentProps> = ({
 }) => {
   const mapRef = useRef<google.maps.Map | null>(null);
   const [isMapMounted, setIsMapMounted] = useState(false);
-  const hasGoogleMapsApiKey = GOOGLE_MAPS_API_KEY.length > 0;
   const { isLoaded: isScriptLoaded, loadError } = useJsApiLoader({
-    id: 'rider-app-map-component',
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    ...googleMapsLoaderOptions,
   });
 
   const onLoad = (map: google.maps.Map) => {

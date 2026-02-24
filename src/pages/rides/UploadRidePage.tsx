@@ -4,10 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { rideService, mapsService } from '../../services';
 import { LocationSearch, RoutePreview } from '../../components/maps';
 import { useJsApiLoader } from '@react-google-maps/api';
+import { googleMapsLoaderOptions } from '../../lib/googleMapsLoader';
 import type { Location, RideEstimate } from '../../types/maps';
-
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-const libraries: ("places")[] = ['places'];
 
 const MapLoadingFallback = () => (
   <div style={{
@@ -41,8 +39,7 @@ const UploadRidePage = () => {
   const history = useHistory();
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries,
+    ...googleMapsLoaderOptions,
   });
 
   // Initialize maps service when Google Maps is loaded
