@@ -4,6 +4,7 @@ import { ArrowLeft, CheckCircle2, MapPin, Navigation as NavigationIcon, Target }
 import { useJsApiLoader } from '@react-google-maps/api';
 import { useAuth } from '../../context/AuthContext';
 import { LocationSearch } from '../../components/maps';
+import { googleMapsLoaderOptions } from '../../lib/googleMapsLoader';
 import { mapsService, locationService } from '../../services';
 import type { Location as MapLocation } from '../../types/maps';
 
@@ -17,9 +18,6 @@ interface SelectLocationState {
   start?: MapLocation;
   end?: MapLocation;
 }
-
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-const libraries: ('places')[] = ['places'];
 
 const SelectLocationPage = () => {
   const { isAuthLoaded } = useAuth();
@@ -35,8 +33,7 @@ const SelectLocationPage = () => {
   const returnTo = navState.returnTo || '/home';
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY || '',
-    libraries,
+    ...googleMapsLoaderOptions,
   });
 
   useEffect(() => {
@@ -106,7 +103,7 @@ const SelectLocationPage = () => {
     try {
       const coords = await locationService.getCurrentPosition();
       if (!coords) {
-        setError('Unable to read your current location.');
+        setError('Unable to detect your location right now. Ensure GPS is on and try again from an open area.');
         return;
       }
 

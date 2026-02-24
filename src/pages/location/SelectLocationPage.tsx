@@ -4,10 +4,9 @@ import { useHistory, useLocation } from 'react-router';
 import { useJsApiLoader } from '@react-google-maps/api';
 import { ArrowLeft, Check } from 'lucide-react';
 import LocationSearch from '../../components/maps/LocationSearch';
+import { googleMapsLoaderOptions } from '../../lib/googleMapsLoader';
 import { mapsService } from '../../services';
 import { Location } from '../../types/maps';
-
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 interface LocationState {
   type: 'pickup' | 'dropoff' | 'start' | 'end';
@@ -24,9 +23,7 @@ const SelectLocationPage = () => {
   const [isReady, setIsReady] = useState(false);
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries: ['places'],
-    version: 'weekly'
+    ...googleMapsLoaderOptions,
   });
 
   useEffect(() => {

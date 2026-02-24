@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useHistory } from 'react-router';
+import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services';
 import {
@@ -17,38 +17,86 @@ import {
   FileText,
 } from 'lucide-react';
 
+interface ProfilePageLocationState {
+  openEditor?: boolean;
+}
+
+const PLACEHOLDER_PROFILE_EMAIL_REGEX = /^phone-[^@]+@riderapp\.local$/i;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const isSystemGeneratedEmail = (value?: string | null) => {
+  const email = value?.trim().toLowerCase() || '';
+  if (!email) return true;
+  if (email.endsWith('@otp.riderapp.local')) return true;
+  if (PLACEHOLDER_PROFILE_EMAIL_REGEX.test(email)) return true;
+  return false;
+};
+
 const ProfilePage = () => {
   const { user, refreshUser, logout, isAuthLoaded } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const location = useLocation<ProfilePageLocationState>();
+  const [editing, setEditing] = useState(Boolean(location.state?.openEditor));
   const [fullName, setFullName] = useState(user?.fullName || '');
+  const [email, setEmail] = useState(user?.email || '');
   const [language, setLanguage] = useState(user?.language || 'en');
   const [notifications, setNotifications] = useState<boolean>(user?.notificationPreferences || true);
+  const [saveError, setSaveError] = useState('');
   const history = useHistory();
 
   useEffect(() => {
     if (user) {
       setFullName(user.fullName);
+      setEmail(isSystemGeneratedEmail(user.email) ? '' : user.email);
       setLanguage(user.language);
       setNotifications(user.notificationPreferences);
     }
   }, [user]);
 
+  useEffect(() => {
+    if (location.state?.openEditor) {
+      setEditing(true);
+    }
+  }, [location.state]);
+
   const handleSave = async () => {
     if (!user) return;
 
     try {
+      setSaveError('');
       setLoading(true);
-      await authService.updateProfile(
+      const normalizedFullName = fullName.trim();
+      const normalizedEmail = email.trim();
+
+      if (!normalizedFullName) {
+        setSaveError('Full name is required.');
+        return;
+      }
+      if (!EMAIL_REGEX.test(normalizedEmail)) {
+        setSaveError('Enter a valid email address.');
+        return;
+      }
+
+      const updateResult = await authService.updateProfile(
         {
-          fullName,
+          email: normalizedEmail,
+          fullName: normalizedFullName,
           language,
           notificationPreferences: notifications,
         },
         user.id,
       );
+
+      if (!updateResult.success) {
+        setSaveError(updateResult.error || 'Failed to update profile.');
+        return;
+      }
+
       await refreshUser();
       setEditing(false);
+    } catch (saveProfileError) {
+      console.error('Failed to save profile:', saveProfileError);
+      setSaveError('Failed to update profile. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -110,10 +158,10 @@ const ProfilePage = () => {
   }
 
   const initials = user.fullName?.charAt(0)?.toUpperCase() || 'R';
-  const displayEmail = user.email?.includes('@otp.riderapp.local') ? 'Phone sign-in account' : user.email;
+  const displayEmail = isSystemGeneratedEmail(user.email) ? 'Email not added yet' : user.email;
 
   return (
-    <div className="min-h-screen bg-slate-100 pb-24">
+    <div className="h-screen overflow-y-auto bg-slate-100 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
       <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 px-4 pb-20 pt-12">
         <div className="mx-auto max-w-2xl">
           <div className="mb-4 flex items-center justify-between">
@@ -215,6 +263,17 @@ const ProfilePage = () => {
               </label>
 
               <label className="block">
+                <span className="text-sm font-medium text-slate-600">Email address</span>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="you@example.com"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                />
+              </label>
+
+              <label className="block">
                 <span className="text-sm font-medium text-slate-600">Language</span>
                 <select
                   value={language}
@@ -239,6 +298,12 @@ const ProfilePage = () => {
                   />
                 </button>
               </div>
+
+              {saveError && (
+                <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                  {saveError}
+                </p>
+              )}
 
               <button
                 onClick={handleSave}

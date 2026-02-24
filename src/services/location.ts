@@ -20,6 +20,8 @@ class LocationService {
   private watchId: string | null = null;
   private readonly permissionTimeoutMs = 12000;
   private readonly positionTimeoutMs = 10000;
+  private readonly fallbackPositionTimeoutMs = 20000;
+  private readonly cachedPositionMaxAgeMs = 5 * 60 * 1000;
 
   private async withTimeout<T>(operation: () => Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -40,6 +42,57 @@ class LocationService {
    */
   private isNative(): boolean {
     return Capacitor.isNativePlatform();
+  }
+
+  private async getBrowserPermissionState(): Promise<PermissionState | null> {
+    if (typeof navigator === 'undefined' || !navigator.permissions?.query) {
+      return null;
+    }
+
+    try {
+      const status = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+      return status.state;
+    } catch (error) {
+      console.warn('Failed to read geolocation permission state:', error);
+      return null;
+    }
+  }
+
+  private getBrowserCurrentPosition(options: PositionOptions): Promise<GeolocationPosition> {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported by this browser'));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(resolve, reject, options);
+    });
+  }
+
+  private isPermissionDeniedError(error: unknown): boolean {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code?: unknown }).code === 1
+    ) {
+      return true;
+    }
+
+    return error instanceof Error && /permission|denied/i.test(error.message);
+  }
+
+  private isPositionTimeoutError(error: unknown): boolean {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code?: unknown }).code === 3
+    ) {
+      return true;
+    }
+
+    return error instanceof Error && /timeout/i.test(error.message);
   }
 
   /**
@@ -67,40 +120,48 @@ class LocationService {
         );
         return request.location === 'granted';
       } else {
-        // Web: Use browser's native geolocation to trigger permission popup
-        return new Promise((resolve) => {
-          if (!navigator.geolocation) {
-            console.error('Geolocation is not supported by this browser');
-            resolve(false);
-            return;
+        if (!navigator.geolocation) {
+          console.error('Geolocation is not supported by this browser');
+          return false;
+        }
+
+        const permissionState = await this.getBrowserPermissionState();
+        if (permissionState === 'granted') {
+          return true;
+        }
+        if (permissionState === 'denied') {
+          return false;
+        }
+
+        // Permission is prompt/unknown: trigger browser prompt with a coarse, cached-friendly request.
+        try {
+          await this.withTimeout(
+            () =>
+              this.getBrowserCurrentPosition({
+                enableHighAccuracy: false,
+                timeout: this.positionTimeoutMs,
+                maximumAge: this.cachedPositionMaxAgeMs,
+              }),
+            this.permissionTimeoutMs,
+            'Geolocation permission check timed out',
+          );
+          return true;
+        } catch (error) {
+          if (this.isPermissionDeniedError(error)) {
+            console.error('Geolocation permission denied:', error);
+            return false;
           }
 
-          let settled = false;
-          const finish = (value: boolean) => {
-            if (settled) return;
-            settled = true;
-            resolve(value);
-          };
+          if (this.isPositionTimeoutError(error)) {
+            const postPromptState = await this.getBrowserPermissionState();
+            if (postPromptState === 'granted') {
+              return true;
+            }
+          }
 
-          const hardTimeout = setTimeout(() => {
-            console.error('Geolocation permission check timed out');
-            finish(false);
-          }, this.permissionTimeoutMs);
-
-          // This will trigger the browser's permission popup
-          navigator.geolocation.getCurrentPosition(
-            () => {
-              clearTimeout(hardTimeout);
-              finish(true);
-            },
-            (error) => {
-              console.error('Geolocation permission error:', error);
-              clearTimeout(hardTimeout);
-              finish(false);
-            },
-            { timeout: this.positionTimeoutMs, enableHighAccuracy: true }
-          );
-        });
+          console.error('Geolocation permission error:', error);
+          return false;
+        }
       }
     } catch (error) {
       console.error('Error checking location permissions:', error);
@@ -120,26 +181,54 @@ class LocationService {
       }
 
       if (this.isNative()) {
-        // Native mobile: Use Capacitor plugin
-        const position = await Geolocation.getCurrentPosition({
-          enableHighAccuracy: true,
-          timeout: this.positionTimeoutMs,
-        });
-        return this.convertPosition(position);
+        // Native mobile: try precise fix first, then relax to coarse/cached if timeout.
+        try {
+          const position = await Geolocation.getCurrentPosition({
+            enableHighAccuracy: true,
+            timeout: this.positionTimeoutMs,
+            maximumAge: 0,
+          });
+          return this.convertPosition(position);
+        } catch (error) {
+          if (!this.isPositionTimeoutError(error)) {
+            throw error;
+          }
+
+          const fallbackPosition = await Geolocation.getCurrentPosition({
+            enableHighAccuracy: false,
+            timeout: this.fallbackPositionTimeoutMs,
+            maximumAge: this.cachedPositionMaxAgeMs,
+          });
+          return this.convertPosition(fallbackPosition);
+        }
       } else {
-        // Web: Use browser's native geolocation
-        return new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              resolve(this.convertBrowserPosition(position));
-            },
-            (error) => {
-              console.error('Error getting current position:', error);
-              reject(error);
-            },
-            { enableHighAccuracy: true, timeout: this.positionTimeoutMs }
-          );
-        });
+        // Web: try precise fix first, then coarse/cached fallback for low-GPS environments.
+        const attempts: PositionOptions[] = [
+          { enableHighAccuracy: true, timeout: this.positionTimeoutMs, maximumAge: 0 },
+          {
+            enableHighAccuracy: false,
+            timeout: this.fallbackPositionTimeoutMs,
+            maximumAge: this.cachedPositionMaxAgeMs,
+          },
+        ];
+
+        let lastError: unknown = null;
+        for (const attempt of attempts) {
+          try {
+            const position = await this.getBrowserCurrentPosition(attempt);
+            return this.convertBrowserPosition(position);
+          } catch (error) {
+            lastError = error;
+            if (this.isPermissionDeniedError(error)) {
+              break;
+            }
+          }
+        }
+
+        if (lastError) {
+          console.error('Error getting current position:', lastError);
+        }
+        return null;
       }
     } catch (error) {
       console.error('Error getting current position:', error);
