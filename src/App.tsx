@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { LocationPermission } from './components/permissions';
 import { locationService } from './services';
 import LoadingOverlay from './components/LoadingOverlay';
+import SplashScreen from './components/SplashScreen';
 
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -193,10 +194,25 @@ const AppContent: React.FC = () => {
   );
 };
 
+const SPLASH_SEEN_KEY = 'blinkcar_splash_seen';
+
 const App: React.FC = () => {
+  const [showSplash, setShowSplash] = useState(() => {
+    return !localStorage.getItem(SPLASH_SEEN_KEY);
+  });
+
+  const handleSplashFinish = () => {
+    localStorage.setItem(SPLASH_SEEN_KEY, '1');
+    setShowSplash(false);
+  };
+
   return (
     <IonApp>
-      <AppContent />
+      {showSplash ? (
+        <SplashScreen onFinish={handleSplashFinish} />
+      ) : (
+        <AppContent />
+      )}
     </IonApp>
   );
 };
