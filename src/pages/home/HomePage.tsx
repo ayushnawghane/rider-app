@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { 
-  Search, 
-  MapPin, 
-  Clock, 
-  Users, 
-  Plus, 
-  Car, 
-  Award, 
-  HelpCircle, 
+import {
+  Search,
+  MapPin,
+  Clock,
+  Users,
+  Plus,
+  Car,
+  Award,
+  HelpCircle,
   ArrowRightLeft,
   Phone,
   MessageCircle,
@@ -57,7 +57,7 @@ const HomePage = () => {
   const { user, isAuthLoaded, logout } = useAuth();
   const history = useHistory();
   const location = useLocation<{ pickup?: Location; dropoff?: Location }>();
-  
+
   const [pickup, setPickup] = useState<Location | null>(null);
   const [dropoff, setDropoff] = useState<Location | null>(null);
   const [departureTime, setDepartureTime] = useState<string>('');
@@ -153,10 +153,10 @@ const HomePage = () => {
   return (
     <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
       {/* Orange Header Section */}
-      <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 pt-12 pb-6 px-4">
+      <div className="relative pt-10 pb-0 px-4 overflow-hidden min-h-[200px]" style={{ background: 'linear-gradient(160deg, #e8521a 0%, #f07840 40%, #f8b49a 75%, #fde8dc 100%)' }}>
         {/* Top Row: Notifications & Profile */}
-        <div className="flex justify-end items-center gap-3 mb-4">
-          <button className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center relative">
+        <div className="flex justify-end items-center gap-3 mb-3 relative z-10">
+          <button className="w-10 h-10 bg-white/25 backdrop-blur-sm rounded-xl flex items-center justify-center relative shadow">
             <Bell className="w-5 h-5 text-white" />
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
           </button>
@@ -169,31 +169,38 @@ const HomePage = () => {
           </button>
         </div>
 
-        {/* Greeting & Location */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Hi, {user?.firstName || 'Rider'}
-          </h1>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
-              <MapPin className="w-4 h-4 text-white" />
-              <span className="text-white text-sm font-medium">Mumbai, IN</span>
-            </div>
-            <div className="flex items-center gap-1.5 bg-yellow-500/90 rounded-full px-3 py-1.5">
-              <Star className="w-4 h-4 text-white fill-white" />
-              <span className="text-white text-sm font-bold">Lvl {userStats.level}</span>
+        {/* Greeting & car illustration - side by side */}
+        <div className="flex items-end justify-between relative z-10">
+          {/* Left: Greeting & Location */}
+          <div className="pb-6">
+            <h1 className="text-3xl font-bold text-white mb-3 drop-shadow-sm">
+              Hi, {user?.firstName || 'Rider'}
+            </h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5 bg-white/25 backdrop-blur-sm rounded-full px-3 py-1.5">
+                <MapPin className="w-4 h-4 text-white" />
+                <span className="text-white text-sm font-medium">Mumbai, IN</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-yellow-400/90 rounded-full px-3 py-1.5 shadow">
+                <Star className="w-4 h-4 text-white fill-white" />
+                <span className="text-white text-sm font-bold">Lvl {userStats.level}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Car Illustration */}
-        <div className="absolute top-16 right-4 opacity-20">
-          <Car className="w-32 h-32 text-white" />
+          {/* Right: Car Illustration */}
+          <div className="flex-shrink-0 -mb-1 -mr-2">
+            <img
+              src="/home.png"
+              alt="Car illustration"
+              className="w-48 h-40 object-contain object-bottom drop-shadow-xl"
+            />
+          </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="px-4 -mt-4">
+      <div className="px-4 mt-4">
         {/* Search & Route Card */}
         <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
           {/* Search Bar */}
@@ -210,7 +217,7 @@ const HomePage = () => {
           <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-3 mb-4 min-w-0">
             <div className="min-w-0">
               <label className="text-xs text-gray-500 mb-1 block">From</label>
-              <button 
+              <button
                 onClick={() => history.push('/select-location', {
                   type: 'pickup',
                   returnTo: '/home',
@@ -225,17 +232,17 @@ const HomePage = () => {
                 </span>
               </button>
             </div>
-            
-            <button 
+
+            <button
               onClick={handleSwapLocations}
               className="mt-5 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors shrink-0"
             >
               <ArrowRightLeft className="w-5 h-5 text-gray-600" />
             </button>
-            
+
             <div className="min-w-0">
               <label className="text-xs text-gray-500 mb-1 block">To</label>
-              <button 
+              <button
                 onClick={() => history.push('/select-location', {
                   type: 'dropoff',
                   returnTo: '/home',
@@ -266,14 +273,14 @@ const HomePage = () => {
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
               <Users className="w-5 h-5 text-primary-500" />
               <div className="flex items-center gap-4 flex-1">
-                <button 
+                <button
                   onClick={() => setPassengerCount(Math.max(1, passengerCount - 1))}
                   className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-100"
                 >
                   -
                 </button>
                 <span className="text-gray-700 font-medium w-6 text-center">{passengerCount.toString().padStart(2, '0')}</span>
-                <button 
+                <button
                   onClick={() => setPassengerCount(Math.min(6, passengerCount + 1))}
                   className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-100"
                 >
@@ -304,9 +311,9 @@ const HomePage = () => {
             <div className="flex items-start gap-4 mb-4">
               <div className="relative">
                 <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden">
-                  <img 
-                    src={activeRide.driver?.avatar || 'https://via.placeholder.com/64'} 
-                    alt="Driver" 
+                  <img
+                    src={activeRide.driver?.avatar || 'https://via.placeholder.com/64'}
+                    alt="Driver"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -328,13 +335,13 @@ const HomePage = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
               <span>Pickup : {activeRide.startLocation}</span>
               <span className="text-gray-400">|</span>
               <span>Drop Off : {activeRide.endLocation}</span>
             </div>
-            
+
             <div className="grid grid-cols-3 gap-2">
               <button className="flex items-center justify-center gap-2 py-2.5 bg-primary-500 text-white rounded-xl font-medium">
                 <Phone className="w-4 h-4" />
@@ -354,7 +361,7 @@ const HomePage = () => {
 
         {/* Quick Actions Grid */}
         <div className="grid grid-cols-4 gap-3 mb-6">
-          <button 
+          <button
             onClick={() => history.push('/publish-ride')}
             className="flex flex-col items-center gap-2"
           >
@@ -366,8 +373,8 @@ const HomePage = () => {
             </div>
             <span className="text-xs font-medium text-gray-700">Publish Ride</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => history.push('/find-ride')}
             className="flex flex-col items-center gap-2"
           >
@@ -379,8 +386,8 @@ const HomePage = () => {
             </div>
             <span className="text-xs font-medium text-gray-700">Find Ride</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => history.push('/rewards')}
             className="flex flex-col items-center gap-2"
           >
@@ -389,8 +396,8 @@ const HomePage = () => {
             </div>
             <span className="text-xs font-medium text-gray-700">Reward Points</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => history.push('/rides/history')}
             className="flex flex-col items-center gap-2"
           >
@@ -405,17 +412,17 @@ const HomePage = () => {
         <div className="mb-6">
           <h2 className="text-xl font-bold text-gray-900 mb-1">Main Routes</h2>
           <p className="text-gray-500 text-sm mb-4">Select the best way to travel</p>
-          
+
           <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
             {popularRoutes.map((route) => (
-              <button 
+              <button
                 key={route.city}
                 className="flex-shrink-0 w-40"
                 onClick={() => setDropoff({ address: route.city, lat: 0, lng: 0 })}
               >
                 <div className="w-full h-24 rounded-xl overflow-hidden mb-2">
-                  <img 
-                    src={route.image} 
+                  <img
+                    src={route.image}
                     alt={route.city}
                     className="w-full h-full object-cover"
                   />
@@ -433,7 +440,7 @@ const HomePage = () => {
           <p className="text-primary-100 text-sm mb-4">
             Get 2x points on your first 3 rides this month
           </p>
-          <button 
+          <button
             onClick={() => history.push('/rewards')}
             className="bg-white text-primary-600 px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-primary-50 transition-colors"
           >
@@ -459,28 +466,28 @@ const HomePage = () => {
             <Navigation className="w-6 h-6" />
             <span className="text-xs font-medium">Home</span>
           </button>
-          <button 
+          <button
             onClick={() => history.push('/publish-ride')}
             className="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-primary-600"
           >
             <Plus className="w-6 h-6" />
             <span className="text-xs font-medium">Publish</span>
           </button>
-          <button 
+          <button
             onClick={() => history.push('/find-ride')}
             className="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-primary-600"
           >
             <Search className="w-6 h-6" />
             <span className="text-xs font-medium">Find</span>
           </button>
-          <button 
+          <button
             onClick={() => history.push('/rewards')}
             className="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-primary-600"
           >
             <Award className="w-6 h-6" />
             <span className="text-xs font-medium">Rewards</span>
           </button>
-          <button 
+          <button
             onClick={() => history.push('/profile')}
             className="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-primary-600"
           >

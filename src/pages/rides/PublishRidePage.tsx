@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { rideService } from '../../services';
-import { 
-  MapPin, 
-  Clock, 
-  Users, 
-  Car, 
+import {
+  MapPin,
+  Clock,
+  Users,
+  Car,
   ArrowLeft,
   Plus,
   Minus,
@@ -43,7 +43,7 @@ const PublishRidePage = () => {
   const { user, isAuthLoaded } = useAuth();
   const history = useHistory();
   const location = useLocation<PublishRideLocationState>();
-  
+
   const [startLocation, setStartLocation] = useState<Location | null>(null);
   const [endLocation, setEndLocation] = useState<Location | null>(null);
   const [departureTime, setDepartureTime] = useState<string>('');
@@ -164,7 +164,12 @@ const PublishRidePage = () => {
     }
   };
 
-  const vehicleTypes = ['Sedan', 'SUV', 'Hatchback', 'Luxury'];
+  const vehicleTypes = [
+    { label: 'Sedan', image: '/car-sedan.png' },
+    { label: 'SUV', image: '/car-suv.png' },
+    { label: 'Hatchback', image: '/car-hatchback.png' },
+    { label: 'Luxury', image: '/car-luxury.png' },
+  ];
 
   if (!isAuthLoaded) {
     return (
@@ -182,7 +187,7 @@ const PublishRidePage = () => {
       {/* Header */}
       <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 pt-12 pb-6 px-4">
         <div className="flex items-center gap-4 mb-4">
-          <button 
+          <button
             onClick={handleBackToHome}
             className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center"
           >
@@ -210,9 +215,9 @@ const PublishRidePage = () => {
           {/* Route Selection */}
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Route Details</h2>
-            
+
             {/* From */}
-            <button 
+            <button
               onClick={() => history.push('/select-location', {
                 type: 'start',
                 returnTo: '/publish-ride',
@@ -220,11 +225,10 @@ const PublishRidePage = () => {
                 end: endLocation || undefined,
                 departureTime: departureTime || undefined,
               })}
-              className={`w-full p-4 border-2 rounded-xl mb-3 text-left transition-colors ${
-                fieldErrors.startLocation
+              className={`w-full p-4 border-2 rounded-xl mb-3 text-left transition-colors ${fieldErrors.startLocation
                   ? 'border-red-300 bg-red-50'
                   : 'border-primary-100 hover:border-primary-300'
-              }`}
+                }`}
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
@@ -243,7 +247,7 @@ const PublishRidePage = () => {
             )}
 
             {/* To */}
-            <button 
+            <button
               onClick={() => history.push('/select-location', {
                 type: 'end',
                 returnTo: '/publish-ride',
@@ -251,11 +255,10 @@ const PublishRidePage = () => {
                 end: endLocation || undefined,
                 departureTime: departureTime || undefined,
               })}
-              className={`w-full p-4 border-2 rounded-xl text-left transition-colors ${
-                fieldErrors.endLocation
+              className={`w-full p-4 border-2 rounded-xl text-left transition-colors ${fieldErrors.endLocation
                   ? 'border-red-300 bg-red-50'
                   : 'border-primary-100 hover:border-primary-300'
-              }`}
+                }`}
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -278,9 +281,8 @@ const PublishRidePage = () => {
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Departure Time</h2>
             <div
-              className={`flex items-center gap-3 p-4 rounded-xl border-2 ${
-                fieldErrors.departureTime ? 'border-red-300 bg-red-50' : 'border-transparent bg-gray-50'
-              }`}
+              className={`flex items-center gap-3 p-4 rounded-xl border-2 ${fieldErrors.departureTime ? 'border-red-300 bg-red-50' : 'border-transparent bg-gray-50'
+                }`}
             >
               <Clock className="w-5 h-5 text-primary-500" />
               <input
@@ -310,14 +312,14 @@ const PublishRidePage = () => {
             <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
               <Users className="w-5 h-5 text-primary-500" />
               <div className="flex items-center gap-6">
-                <button 
+                <button
                   onClick={() => setAvailableSeats(Math.max(1, availableSeats - 1))}
                   className="w-12 h-12 rounded-xl bg-white border-2 border-gray-200 flex items-center justify-center hover:border-primary-300 transition-colors"
                 >
                   <Minus className="w-5 h-5 text-gray-600" />
                 </button>
                 <span className="text-2xl font-bold text-gray-900 w-8 text-center">{availableSeats}</span>
-                <button 
+                <button
                   onClick={() => setAvailableSeats(Math.min(6, availableSeats + 1))}
                   className="w-12 h-12 rounded-xl bg-white border-2 border-gray-200 flex items-center justify-center hover:border-primary-300 transition-colors"
                 >
@@ -346,21 +348,25 @@ const PublishRidePage = () => {
           {/* Vehicle Details */}
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Vehicle Details</h2>
-            
+
             {/* Vehicle Type */}
             <div className="grid grid-cols-2 gap-3 mb-4">
-              {vehicleTypes.map((type) => (
+              {vehicleTypes.map(({ label, image }) => (
                 <button
-                  key={type}
-                  onClick={() => setVehicleType(type)}
-                  className={`p-3 rounded-xl border-2 text-sm font-medium transition-colors ${
-                    vehicleType === type 
-                      ? 'border-primary-500 bg-primary-50 text-primary-700' 
-                      : 'border-gray-200 text-gray-700 hover:border-primary-300'
-                  }`}
+                  key={label}
+                  onClick={() => setVehicleType(label)}
+                  className={`p-3 rounded-xl border-2 text-sm font-medium transition-all ${vehicleType === label
+                      ? 'border-primary-500 bg-primary-50 text-primary-700 shadow-md shadow-primary-100'
+                      : 'border-gray-200 text-gray-600 hover:border-primary-300 hover:bg-gray-50'
+                    }`}
                 >
-                  <Car className="w-5 h-5 mx-auto mb-1" />
-                  {type}
+                  <img
+                    src={image}
+                    alt={label}
+                    className={`w-16 h-10 object-contain mx-auto mb-1.5 transition-opacity ${vehicleType === label ? 'opacity-100' : 'opacity-60'
+                      }`}
+                  />
+                  <span className="block text-center">{label}</span>
                 </button>
               ))}
             </div>
@@ -382,9 +388,8 @@ const PublishRidePage = () => {
                   });
                 }}
                 placeholder="Vehicle Number (e.g., MH01AB1234)"
-                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary-500 ${
-                  fieldErrors.vehicleNumber ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                } ${lightFieldClass}`}
+                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary-500 ${fieldErrors.vehicleNumber ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  } ${lightFieldClass}`}
               />
             </div>
             {fieldErrors.vehicleNumber && (
