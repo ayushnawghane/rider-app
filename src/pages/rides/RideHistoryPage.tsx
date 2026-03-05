@@ -244,12 +244,20 @@ const RideHistoryPage = () => {
                           📅 {formatDate(ride.date)}
                         </span>
                       </div>
-                      <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
+                      <div style={{ marginTop: '8px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '12px', color: '#4b5563', background: '#f3f4f6', padding: '4px 8px', borderRadius: '6px' }}>
                           {ride.vehicleType}
                         </span>
                         <span style={{ fontSize: '12px', color: '#4b5563', background: '#f3f4f6', padding: '4px 8px', borderRadius: '6px' }}>
                           {ride.vehicleNumber}
+                        </span>
+                        {ride.pricePerSeat > 0 && (
+                          <span style={{ fontSize: '12px', color: '#f97316', background: '#fff7ed', padding: '4px 8px', borderRadius: '6px', fontWeight: '600' }}>
+                            ₹{ride.pricePerSeat}/seat
+                          </span>
+                        )}
+                        <span style={{ fontSize: '12px', color: '#6366f1', background: '#eef2ff', padding: '4px 8px', borderRadius: '6px' }}>
+                          {ride.availableSeats - ride.bookedSeats}/{ride.availableSeats} seats
                         </span>
                       </div>
                     </div>

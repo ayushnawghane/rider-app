@@ -149,6 +149,9 @@ const PublishRidePage = () => {
         vehicleType,
         vehicleNumber: vehicleNumber.trim().toUpperCase(),
         referenceId: buildReferenceId(),
+        availableSeats,
+        pricePerSeat,
+        notes: notes.trim() || undefined,
       });
 
       if (!result.success) {
@@ -226,8 +229,8 @@ const PublishRidePage = () => {
                 departureTime: departureTime || undefined,
               })}
               className={`w-full p-4 border-2 rounded-xl mb-3 text-left transition-colors ${fieldErrors.startLocation
-                  ? 'border-red-300 bg-red-50'
-                  : 'border-primary-100 hover:border-primary-300'
+                ? 'border-red-300 bg-red-50'
+                : 'border-primary-100 hover:border-primary-300'
                 }`}
             >
               <div className="flex items-center gap-3">
@@ -256,8 +259,8 @@ const PublishRidePage = () => {
                 departureTime: departureTime || undefined,
               })}
               className={`w-full p-4 border-2 rounded-xl text-left transition-colors ${fieldErrors.endLocation
-                  ? 'border-red-300 bg-red-50'
-                  : 'border-primary-100 hover:border-primary-300'
+                ? 'border-red-300 bg-red-50'
+                : 'border-primary-100 hover:border-primary-300'
                 }`}
             >
               <div className="flex items-center gap-3">
@@ -356,8 +359,8 @@ const PublishRidePage = () => {
                   key={label}
                   onClick={() => setVehicleType(label)}
                   className={`p-3 rounded-xl border-2 text-sm font-medium transition-all ${vehicleType === label
-                      ? 'border-primary-500 bg-primary-50 text-primary-700 shadow-md shadow-primary-100'
-                      : 'border-gray-200 text-gray-600 hover:border-primary-300 hover:bg-gray-50'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700 shadow-md shadow-primary-100'
+                    : 'border-gray-200 text-gray-600 hover:border-primary-300 hover:bg-gray-50'
                     }`}
                 >
                   <img

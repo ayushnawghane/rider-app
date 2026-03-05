@@ -65,12 +65,12 @@ const HomePage = () => {
   const [dismissedProfilePrompt, setDismissedProfilePrompt] = useState(false);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
   const [activeRide] = useState<PublishedRide | null>(null);
-  const [userStats] = useState<UserStats>({
-    level: 12,
-    points: 2450,
-    ridesTaken: 15,
-    ridesPublished: 8,
-    rating: 4.9
+  const [userStats] = useState({
+    level: user?.level ?? 1,
+    points: user?.totalPoints ?? 0,
+    ridesTaken: user?.ridesTaken ?? 0,
+    ridesPublished: user?.ridesPublished ?? 0,
+    rating: user?.ratingAsDriver ?? 0,
   });
 
   useEffect(() => {

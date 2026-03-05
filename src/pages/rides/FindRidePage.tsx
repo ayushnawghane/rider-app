@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { rideService } from '../../services';
-import { 
-  MapPin, 
-  Clock, 
-  Users, 
+import {
+  MapPin,
+  Clock,
+  Users,
   ArrowLeft,
   Search,
   Star,
@@ -33,7 +33,7 @@ const FindRidePage = () => {
   const { user, isAuthLoaded } = useAuth();
   const history = useHistory();
   const location = useLocation<FindRideLocationState>();
-  
+
   const [pickupLocation, setPickupLocation] = useState<SearchLocation | null>(null);
   const [dropoffLocation, setDropoffLocation] = useState<SearchLocation | null>(null);
   const [departureTime, setDepartureTime] = useState<string>('');
@@ -60,7 +60,7 @@ const FindRidePage = () => {
       if (state.departureTime) setDepartureTime(state.departureTime);
       if (state.passengerCount) setPassengerCount(state.passengerCount);
     }
-    
+
     // Set default time
     if (!departureTime) {
       const now = new Date();
@@ -92,8 +92,8 @@ const FindRidePage = () => {
         driverId: ride.userId,
         driver: {
           id: ride.userId,
-          name: ride.userId === user?.id ? 'You' : 'Rider',
-          avatar: 'https://via.placeholder.com/56',
+          name: ride.userId === user?.id ? 'You (Driver)' : 'Rider',
+          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + ride.userId,
           rating: 4.8,
           phone: ride.driverContact || 'N/A',
         },
@@ -106,13 +106,13 @@ const FindRidePage = () => {
         distance: ride.distance || 0,
         duration: ride.duration || 0,
         departureTime: ride.date,
-        availableSeats: 4,
-        bookedSeats: 0,
-        pricePerSeat: ride.fare || 150,
-        vehicleType: ride.vehicleType || 'Sedan',
-        vehicleNumber: ride.vehicleNumber || 'N/A',
+        availableSeats: ride.availableSeats,
+        bookedSeats: ride.bookedSeats,
+        pricePerSeat: ride.pricePerSeat,
+        vehicleType: ride.vehicleType,
+        vehicleNumber: ride.vehicleNumber,
         status: ride.status === 'cancelled' ? 'cancelled' : ride.status === 'completed' ? 'completed' : 'active',
-        notes: ride.userId === user?.id ? 'Your published ride' : undefined,
+        notes: ride.notes,
         createdAt: ride.createdAt,
         updatedAt: ride.updatedAt,
       }));
@@ -159,7 +159,7 @@ const FindRidePage = () => {
       {/* Header */}
       <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 pt-12 pb-6 px-4">
         <div className="flex items-center gap-4 mb-4">
-          <button 
+          <button
             onClick={handleBackToHome}
             className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center"
           >
@@ -167,7 +167,7 @@ const FindRidePage = () => {
           </button>
           <h1 className="text-2xl font-bold text-white">Find a Ride</h1>
         </div>
-        
+
         {/* Search Summary */}
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
           <div className="flex items-center gap-2 text-white mb-2">
@@ -195,7 +195,7 @@ const FindRidePage = () => {
       <div className="px-4 -mt-4 mb-4">
         <div className="bg-white rounded-2xl shadow-lg p-4">
           {/* Pickup */}
-          <button 
+          <button
             onClick={() => history.push('/select-location', {
               type: 'pickup',
               returnTo: '/find-ride',
@@ -213,7 +213,7 @@ const FindRidePage = () => {
           </button>
 
           {/* Dropoff */}
-          <button 
+          <button
             onClick={() => history.push('/select-location', {
               type: 'dropoff',
               returnTo: '/find-ride',
@@ -283,7 +283,7 @@ const FindRidePage = () => {
             <h2 className="text-lg font-semibold text-gray-900">
               {availableRides.length} rides available
             </h2>
-            <button 
+            <button
               onClick={() => setShowFilters(!showFilters)}
               className="flex items-center gap-1 text-primary-600 font-medium text-sm"
             >
@@ -299,11 +299,10 @@ const FindRidePage = () => {
                 <button
                   key={sort}
                   onClick={() => setSortBy(sort)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${
-                    sortBy === sort
+                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${sortBy === sort
                       ? 'bg-primary-500 text-white'
                       : 'bg-gray-100 text-gray-700'
-                  }`}
+                    }`}
                 >
                   {sort.charAt(0).toUpperCase() + sort.slice(1)}
                 </button>
@@ -314,7 +313,7 @@ const FindRidePage = () => {
           {/* Ride Cards */}
           <div className="space-y-4 pb-24">
             {availableRides.map((ride) => (
-              <div 
+              <div
                 key={ride.id}
                 className="bg-white rounded-2xl shadow-lg p-5"
               >
@@ -322,8 +321,8 @@ const FindRidePage = () => {
                 <div className="flex items-start gap-4 mb-4">
                   <div className="relative">
                     <div className="w-14 h-14 rounded-full bg-gray-200 overflow-hidden">
-                      <img 
-                        src={ride.driver?.avatar || 'https://via.placeholder.com/56'} 
+                      <img
+                        src={ride.driver?.avatar || 'https://via.placeholder.com/56'}
                         alt={ride.driver?.name}
                         className="w-full h-full object-cover"
                       />

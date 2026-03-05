@@ -17,6 +17,9 @@ interface ProfileRow {
   id: string;
   email: string;
   full_name: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
   phone: string;
   kyc_status?: 'pending' | 'approved' | 'rejected';
   kyc_document_url?: string;
@@ -24,6 +27,14 @@ interface ProfileRow {
   notification_preferences?: boolean;
   is_blocked?: boolean;
   role?: 'rider' | 'driver' | 'admin';
+  total_points?: number;
+  level?: number;
+  rating_as_driver?: number;
+  rating_as_passenger?: number;
+  rides_taken?: number;
+  rides_published?: number;
+  referral_code?: string;
+  vehicle_details?: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
 }
@@ -103,6 +114,10 @@ const toUserFromAuth = (authUser: AuthUserLite): User => {
     notificationPreferences: true,
     isBlocked: false,
     role: 'rider',
+    totalPoints: 0,
+    level: 1,
+    ridesTaken: 0,
+    ridesPublished: 0,
     createdAt: authUser.created_at || new Date().toISOString(),
     updatedAt: authUser.updated_at || new Date().toISOString(),
   };
@@ -110,8 +125,16 @@ const toUserFromAuth = (authUser: AuthUserLite): User => {
 
 const mergeProfile = (baseUser: User, profile: ProfileRow): User => {
   const fullName = profile.full_name || baseUser.fullName;
-  const firstName = fullName.split(' ')[0] || baseUser.firstName || 'Rider';
-  const lastName = fullName.split(' ').slice(1).join(' ') || baseUser.lastName || '';
+  const firstName =
+    profile.first_name ||
+    fullName.split(' ')[0] ||
+    baseUser.firstName ||
+    'Rider';
+  const lastName =
+    profile.last_name ||
+    fullName.split(' ').slice(1).join(' ') ||
+    baseUser.lastName ||
+    '';
 
   return {
     ...baseUser,
@@ -120,6 +143,7 @@ const mergeProfile = (baseUser: User, profile: ProfileRow): User => {
     fullName,
     firstName,
     lastName,
+    avatarUrl: profile.avatar_url || baseUser.avatarUrl,
     phone: profile.phone || baseUser.phone,
     kycStatus: profile.kyc_status || baseUser.kycStatus,
     kycDocumentUrl: profile.kyc_document_url || baseUser.kycDocumentUrl,
@@ -127,6 +151,14 @@ const mergeProfile = (baseUser: User, profile: ProfileRow): User => {
     notificationPreferences: profile.notification_preferences ?? baseUser.notificationPreferences,
     isBlocked: profile.is_blocked ?? baseUser.isBlocked,
     role: profile.role || baseUser.role,
+    totalPoints: profile.total_points ?? baseUser.totalPoints,
+    level: profile.level ?? baseUser.level,
+    ratingAsDriver: profile.rating_as_driver ?? baseUser.ratingAsDriver,
+    ratingAsPassenger: profile.rating_as_passenger ?? baseUser.ratingAsPassenger,
+    ridesTaken: profile.rides_taken ?? baseUser.ridesTaken,
+    ridesPublished: profile.rides_published ?? baseUser.ridesPublished,
+    referralCode: profile.referral_code ?? baseUser.referralCode,
+    vehicleDetails: profile.vehicle_details ?? baseUser.vehicleDetails,
     createdAt: profile.created_at || baseUser.createdAt,
     updatedAt: profile.updated_at || baseUser.updatedAt,
   };
@@ -329,13 +361,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const hintUser = session?.user
         ? ({
-            id: session.user.id,
-            email: session.user.email,
-            phone: session.user.phone,
-            user_metadata: session.user.user_metadata,
-            created_at: session.user.created_at,
-            updated_at: session.user.updated_at,
-          } as AuthUserLite)
+          id: session.user.id,
+          email: session.user.email,
+          phone: session.user.phone,
+          user_metadata: session.user.user_metadata,
+          created_at: session.user.created_at,
+          updated_at: session.user.updated_at,
+        } as AuthUserLite)
         : null;
 
       void runRefreshUser(false, hintUser).catch((refreshError) => {

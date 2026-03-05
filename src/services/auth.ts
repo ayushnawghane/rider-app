@@ -48,41 +48,94 @@ class AuthService {
 
   async updateProfile(params: ProfileUpdateParams, userId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const profileUpdatePayload: {
-        email?: string;
-        full_name?: string;
-        language?: string;
-        notification_preferences?: boolean;
-      } = {};
+      // ── Step 1: Update Supabase Auth user metadata ─────────────────────────
+      // IMPORTANT: Supabase typically has a trigger that syncs auth.users metadata
+      // → profiles table. We MUST update auth metadata first so the trigger
+      // doesn't overwrite our profile changes.
+      const authMetaUpdate: Record<string, unknown> = {};
+      let newEmail: string | undefined;
 
-      if (typeof params.email === 'string') {
-        profileUpdatePayload.email = params.email;
+      if (typeof params.fullName === 'string' && params.fullName.trim()) {
+        const trimmed = params.fullName.trim();
+        const parts = trimmed.split(' ');
+        authMetaUpdate.full_name = trimmed;
+        authMetaUpdate.first_name = parts[0] || '';
+        authMetaUpdate.last_name = parts.slice(1).join(' ') || '';
       }
-      if (typeof params.fullName === 'string') {
-        profileUpdatePayload.full_name = params.fullName;
+
+      if (typeof params.email === 'string' && params.email.trim()) {
+        newEmail = params.email.trim();
+        // Do NOT pass email to updateUser here — it triggers a confirmation
+        // email flow. We store it directly in the profiles row instead.
+        // Only update auth metadata for full_name.
       }
+
+      if (Object.keys(authMetaUpdate).length > 0) {
+        const { error: authError } = await supabase.auth.updateUser({
+          data: authMetaUpdate,
+        });
+        if (authError) {
+          console.warn('[updateProfile] Auth metadata update failed:', authError.message);
+          // Non-fatal: continue to update the profile row anyway
+        }
+      }
+
+      // ── Step 2: Build the profiles row update payload ──────────────────────
+      const profilePayload: Record<string, unknown> = {
+        updated_at: new Date().toISOString(),
+      };
+
+      if (typeof params.fullName === 'string' && params.fullName.trim()) {
+        const trimmed = params.fullName.trim();
+        const parts = trimmed.split(' ');
+        profilePayload.full_name = trimmed;
+        profilePayload.first_name = parts[0] || '';
+        profilePayload.last_name = parts.slice(1).join(' ') || null;
+      }
+
+      if (newEmail) {
+        profilePayload.email = newEmail;
+      }
+
       if (typeof params.language === 'string') {
-        profileUpdatePayload.language = params.language;
-      }
-      if (typeof params.notificationPreferences === 'boolean') {
-        profileUpdatePayload.notification_preferences = params.notificationPreferences;
+        profilePayload.language = params.language;
       }
 
-      if (Object.keys(profileUpdatePayload).length === 0) {
+      if (typeof params.notificationPreferences === 'boolean') {
+        profilePayload.notification_preferences = params.notificationPreferences;
+      }
+
+      // Nothing meaningful to update
+      if (Object.keys(profilePayload).length === 1) {
         return { success: true };
       }
 
-      const { error } = await supabase
+      console.log('[updateProfile] profiles payload:', profilePayload);
+
+      const { data, error } = await supabase
         .from('profiles')
-        .update(profileUpdatePayload)
-        .eq('id', userId);
+        .update(profilePayload)
+        .eq('id', userId)
+        .select('id, full_name, email, first_name, last_name');
+
+      console.log('[updateProfile] profiles result:', { data, error });
 
       if (error) {
+        console.error('[updateProfile] Supabase error:', error);
         return { success: false, error: error.message };
+      }
+
+      if (!data || data.length === 0) {
+        console.error('[updateProfile] 0 rows updated — RLS policy likely missing.');
+        return {
+          success: false,
+          error: 'Save failed: permission denied. Run the profiles RLS migration in Supabase.',
+        };
       }
 
       return { success: true };
     } catch (error) {
+      console.error('[updateProfile] Unexpected error:', error);
       return { success: false, error: 'An unexpected error occurred' };
     }
   }
@@ -150,17 +203,31 @@ class AuthService {
   }
 
   private mapProfileToUser(profile: any): User {
+    const fullName = profile.full_name || 'Rider';
+    const firstName = profile.first_name || fullName.split(' ')[0] || 'Rider';
+    const lastName = profile.last_name || fullName.split(' ').slice(1).join(' ') || '';
     return {
       id: profile.id,
       email: profile.email,
-      fullName: profile.full_name,
+      fullName,
+      firstName,
+      lastName,
+      avatarUrl: profile.avatar_url,
       phone: profile.phone,
-      kycStatus: profile.kyc_status,
+      kycStatus: profile.kyc_status || 'pending',
       kycDocumentUrl: profile.kyc_document_url,
-      language: profile.language,
-      notificationPreferences: profile.notification_preferences,
-      isBlocked: profile.is_blocked,
-      role: profile.role,
+      language: profile.language || 'en',
+      notificationPreferences: profile.notification_preferences ?? true,
+      isBlocked: profile.is_blocked ?? false,
+      role: profile.role || 'rider',
+      totalPoints: profile.total_points ?? 0,
+      level: profile.level ?? 1,
+      ratingAsDriver: profile.rating_as_driver,
+      ratingAsPassenger: profile.rating_as_passenger,
+      ridesTaken: profile.rides_taken ?? 0,
+      ridesPublished: profile.rides_published ?? 0,
+      referralCode: profile.referral_code,
+      vehicleDetails: profile.vehicle_details,
       createdAt: profile.created_at,
       updatedAt: profile.updated_at,
     };

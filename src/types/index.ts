@@ -4,6 +4,7 @@ export interface User {
   fullName: string;
   firstName?: string;
   lastName?: string;
+  avatarUrl?: string;
   phone: string;
   kycStatus: 'pending' | 'approved' | 'rejected';
   kycDocumentUrl?: string;
@@ -11,6 +12,17 @@ export interface User {
   notificationPreferences: boolean;
   isBlocked: boolean;
   role: 'rider' | 'driver' | 'admin';
+  // Gamification
+  totalPoints: number;
+  level: number;
+  // Stats
+  ratingAsDriver?: number;
+  ratingAsPassenger?: number;
+  ridesTaken: number;
+  ridesPublished: number;
+  // Optional
+  referralCode?: string;
+  vehicleDetails?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -124,10 +136,39 @@ export interface Ride {
   vehicleNumber: string;
   referenceId: string;
   status: 'pending' | 'active' | 'completed' | 'cancelled';
+  // Carpool-specific
+  availableSeats: number;
+  bookedSeats: number;
+  pricePerSeat: number;
+  notes?: string;
+  routePolyline?: string;
+  // Computed / optional
   fare?: number;
   duration?: number;
   distance?: number;
   driverContact?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Booking {
+  id: string;
+  rideId: string;
+  passengerId: string;
+  seatsBooked: number;
+  totalPrice: number;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  pickupLocation?: string;
+  dropLocation?: string;
+  // Ratings
+  driverRating?: number;
+  driverReview?: string;
+  passengerRating?: number;
+  passengerReview?: string;
+  // Timestamps
+  confirmationTime?: string;
+  completionTime?: string;
+  cancellationTime?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -228,6 +269,9 @@ export interface RideCreateParams {
   vehicleType: string;
   vehicleNumber: string;
   referenceId: string;
+  availableSeats?: number;
+  pricePerSeat?: number;
+  notes?: string;
 }
 
 export interface DisputeCreateParams {

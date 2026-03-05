@@ -20,6 +20,9 @@ class RideService {
           vehicle_type: params.vehicleType,
           vehicle_number: params.vehicleNumber,
           reference_id: params.referenceId,
+          available_seats: params.availableSeats ?? 3,
+          price_per_seat: params.pricePerSeat ?? 0,
+          notes: params.notes,
           status: 'pending',
         })
         .select()
@@ -83,6 +86,74 @@ class RideService {
 
       return { success: true, participant: this.mapRideParticipant(data) };
     } catch (error) {
+      return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
+  // ─── Bookings ────────────────────────────────────────────────────────────
+
+  async createBooking(params: {
+    rideId: string;
+    passengerId: string;
+    seatsBooked: number;
+    totalPrice: number;
+    pickupLocation?: string;
+    dropLocation?: string;
+  }): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .insert({
+          ride_id: params.rideId,
+          passenger_id: params.passengerId,
+          seats_booked: params.seatsBooked,
+          total_price: params.totalPrice,
+          pickup_location: params.pickupLocation,
+          drop_location: params.dropLocation,
+          status: 'pending',
+        });
+
+      if (error) return { success: false, error: error.message };
+      return { success: true };
+    } catch {
+      return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
+  async getBookingsByRide(rideId: string): Promise<{ success: boolean; bookings?: any[]; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*, passenger:profiles(id, full_name, first_name, last_name, avatar_url, rating_as_passenger)')
+        .eq('ride_id', rideId)
+        .order('created_at', { ascending: true });
+
+      if (error) return { success: false, error: error.message };
+      return { success: true, bookings: data || [] };
+    } catch {
+      return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
+  async submitRating(params: {
+    bookingId: string;
+    isDriverRating: boolean;
+    rating: number;
+    review?: string;
+  }): Promise<{ success: boolean; error?: string }> {
+    const updates = params.isDriverRating
+      ? { driver_rating: params.rating, driver_review: params.review }
+      : { passenger_rating: params.rating, passenger_review: params.review };
+
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update(updates)
+        .eq('id', params.bookingId);
+
+      if (error) return { success: false, error: error.message };
+      return { success: true };
+    } catch {
       return { success: false, error: 'An unexpected error occurred' };
     }
   }
@@ -249,6 +320,8 @@ class RideService {
     }
   }
 
+  // ─── Private mappers ─────────────────────────────────────────────────────
+
   private mapRideToRide(data: any): Ride {
     return {
       id: data.id,
@@ -263,6 +336,13 @@ class RideService {
       vehicleNumber: data.vehicle_number,
       referenceId: data.reference_id,
       status: data.status,
+      // Carpool
+      availableSeats: data.available_seats ?? 3,
+      bookedSeats: data.booked_seats ?? 0,
+      pricePerSeat: data.price_per_seat ?? 0,
+      notes: data.notes,
+      routePolyline: data.route_polyline,
+      // Optional
       fare: data.fare,
       duration: data.duration,
       distance: data.distance,
