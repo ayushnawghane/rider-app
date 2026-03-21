@@ -14,6 +14,7 @@ import type {
   MessageCreateParams,
   SosCreateParams,
   ProfileUpdateParams,
+  VehicleDetails,
 } from '../types';
 
 class AuthService {
@@ -103,6 +104,10 @@ class AuthService {
 
       if (typeof params.notificationPreferences === 'boolean') {
         profilePayload.notification_preferences = params.notificationPreferences;
+      }
+
+      if (params.vehicleDetails && typeof params.vehicleDetails === 'object') {
+        profilePayload.vehicle_details = params.vehicleDetails as VehicleDetails;
       }
 
       // Nothing meaningful to update

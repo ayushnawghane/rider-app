@@ -7,3 +7,4 @@ export { notificationService } from './notification';
 export { sosService } from './sos';
 export { mapsService } from './maps';
 export { locationService } from './location';
+export { vehicleService } from './vehicle';

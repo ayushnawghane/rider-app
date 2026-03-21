@@ -12,6 +12,7 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import KycUploadPage from './pages/auth/KycUploadPage';
 import HomePage from './pages/home/HomePage';
+import GoogleCallbackPage from './pages/auth/GoogleCallbackPage';
 import UploadRidePage from './pages/rides/UploadRidePage';
 import PublishRidePage from './pages/rides/PublishRidePage';
 import FindRidePage from './pages/rides/FindRidePage';
@@ -27,6 +28,7 @@ import NotificationsPage from './pages/profile/NotificationsPage';
 import RewardsPage from './pages/rewards/RewardsPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import SelectLocationPage from './pages/common/SelectLocationPage';
+import TripTrackingPage from './pages/rides/TripTrackingPage';
 
 import '@ionic/react/css/core.css';
 import './theme/variables.css';
@@ -63,12 +65,14 @@ const RegisterScreen = withIonPage(RegisterPage);
 const HomeScreen = withIonPage(HomePage);
 const UploadRideScreen = withIonPage(UploadRidePage);
 const PublishRideScreen = withIonPage(PublishRidePage);
+const GoogleCallbackScreen = withIonPage(GoogleCallbackPage);
 const FindRideScreen = withIonPage(FindRidePage);
 const RideHistoryScreen = withIonPage(RideHistoryPage);
 const SelectLocationScreen = withIonPage(SelectLocationPage);
 const RewardsScreen = withIonPage(RewardsPage);
 const SafetyScreen = withIonPage(SafetyPage);
 const ProfileScreen = withIonPage(ProfilePage);
+const TripTrackingScreen = withIonPage(TripTrackingPage);
 
 const AppRoutes: React.FC = () => {
   const { user, isAuthLoaded } = useAuth();
@@ -94,6 +98,7 @@ const AppRoutes: React.FC = () => {
       <IonRouterOutlet>
         <Route exact path="/login" render={renderPublic(LoginScreen)} />
         <Route exact path="/register" render={renderPublic(RegisterScreen)} />
+        <Route exact path="/auth/google/callback" render={renderPublic(GoogleCallbackScreen)} />
         <Route exact path="/home" render={renderPrivate(HomeScreen)} />
         <Route exact path="/" render={renderPrivate(HomeScreen)} />
         <Route exact path="/upload-ride" render={renderPrivate(UploadRideScreen)} />
@@ -104,6 +109,7 @@ const AppRoutes: React.FC = () => {
         <Route exact path="/rides/detail/:id" render={renderPrivate(RideDetailPage)} />
         <Route exact path="/rides/:id([0-9a-fA-F-]{36})" render={renderPrivate(RideDetailPage)} />
         <Route exact path="/rides/active/:id" render={renderPrivate(ActiveRidePage)} />
+        <Route exact path="/trips/tracking/:id" render={renderPrivate(TripTrackingScreen)} />
         <Route exact path="/rewards" render={renderPrivate(RewardsScreen)} />
         <Route exact path="/support" render={renderPrivate(SupportPage)} />
         <Route exact path="/support/dispute/new" render={renderPrivate(NewDisputePage)} />

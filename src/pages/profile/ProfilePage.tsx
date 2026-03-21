@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { authService } from '../../services';
+import { authService, vehicleService } from '../../services';
+import type { VehicleDetails } from '../../types';
 import {
   ArrowLeft,
   Bell,
   Camera,
+  Car,
   ChevronRight,
   Clock3,
   Globe2,
@@ -15,6 +17,8 @@ import {
   Settings,
   Shield,
   FileText,
+  Bookmark,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface ProfilePageLocationState {
@@ -44,12 +48,29 @@ const ProfilePage = () => {
   const [saveError, setSaveError] = useState('');
   const history = useHistory();
 
+  // Vehicle state
+  const [vehicleMake, setVehicleMake] = useState(user?.vehicleDetails?.make || '');
+  const [vehicleModel, setVehicleModel] = useState(user?.vehicleDetails?.model || '');
+  const [vehicleNumber, setVehicleNumber] = useState(user?.vehicleDetails?.vehicleNumber || '');
+  const [vehicleType, setVehicleType] = useState(user?.vehicleDetails?.vehicleType || '');
+  const [vehicleColor, setVehicleColor] = useState(user?.vehicleDetails?.color || '');
+  const [savingVehicle, setSavingVehicle] = useState(false);
+  const [vehicleSaved, setVehicleSaved] = useState(false);
+
   useEffect(() => {
     if (user) {
       setFullName(user.fullName);
       setEmail(isSystemGeneratedEmail(user.email) ? '' : user.email);
       setLanguage(user.language);
       setNotifications(user.notificationPreferences);
+      // Sync vehicle details
+      if (user.vehicleDetails) {
+        setVehicleMake(user.vehicleDetails.make || '');
+        setVehicleModel(user.vehicleDetails.model || '');
+        setVehicleNumber(user.vehicleDetails.vehicleNumber || '');
+        setVehicleType(user.vehicleDetails.vehicleType || '');
+        setVehicleColor(user.vehicleDetails.color || '');
+      }
     }
   }, [user]);
 
@@ -102,6 +123,27 @@ const ProfilePage = () => {
     }
   };
 
+  const handleSaveVehicle = async () => {
+    if (!user) return;
+    setSavingVehicle(true);
+    setVehicleSaved(false);
+    try {
+      const vehicleDetails: VehicleDetails = {
+        make: vehicleMake.trim() || undefined,
+        model: vehicleModel.trim() || undefined,
+        vehicleNumber: vehicleNumber.trim().toUpperCase() || undefined,
+        vehicleType: vehicleType.trim() || undefined,
+        color: vehicleColor.trim() || undefined,
+      };
+      await vehicleService.saveVehicleDetails(user.id, vehicleDetails);
+      await refreshUser();
+      setVehicleSaved(true);
+      setTimeout(() => setVehicleSaved(false), 3000);
+    } finally {
+      setSavingVehicle(false);
+    }
+  };
+
   const handleLogout = async () => {
     await logout();
     history.replace('/login');
@@ -124,7 +166,7 @@ const ProfilePage = () => {
       },
       pending: {
         label: 'Pending',
-        icon: <Clock3 size={14} />, 
+        icon: <Clock3 size={14} />,
         className: 'bg-amber-50 text-amber-700 border border-amber-100',
       },
       rejected: {
@@ -244,6 +286,19 @@ const ProfilePage = () => {
                 {notifications ? 'Notifications enabled' : 'Notifications disabled'}
               </span>
             </div>
+            {user.vehicleDetails?.vehicleNumber && (
+              <div className="flex items-center gap-3 px-4 py-3">
+                <div className="grid h-9 w-9 place-items-center rounded-xl bg-orange-100 text-orange-700">
+                  <Car size={16} />
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-slate-700">
+                    {[user.vehicleDetails.make, user.vehicleDetails.model].filter(Boolean).join(' ') || user.vehicleDetails.vehicleType || 'Vehicle'}
+                  </span>
+                  <p className="text-xs text-slate-500">{user.vehicleDetails.vehicleNumber}</p>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -311,6 +366,89 @@ const ProfilePage = () => {
                 className="w-full rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {loading ? 'Saving...' : 'Save changes'}
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* Vehicle Details Section (always shown when editing) */}
+        {editing && (
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <Car size={18} className="text-orange-500" />
+              <h3 className="text-base font-semibold text-slate-800">Vehicle Details</h3>
+            </div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="text-xs font-medium text-slate-600">Make</span>
+                  <input
+                    type="text"
+                    value={vehicleMake}
+                    onChange={(e) => setVehicleMake(e.target.value)}
+                    placeholder="e.g. Toyota"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs font-medium text-slate-600">Model</span>
+                  <input
+                    type="text"
+                    value={vehicleModel}
+                    onChange={(e) => setVehicleModel(e.target.value)}
+                    placeholder="e.g. Camry"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                  />
+                </label>
+              </div>
+              <label className="block">
+                <span className="text-xs font-medium text-slate-600">Vehicle Number</span>
+                <input
+                  type="text"
+                  value={vehicleNumber}
+                  onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
+                  placeholder="e.g. MH01AB1234"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 font-mono"
+                />
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="text-xs font-medium text-slate-600">Type</span>
+                  <select
+                    value={vehicleType}
+                    onChange={(e) => setVehicleType(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                  >
+                    <option value="">Select type</option>
+                    <option value="Sedan">Sedan</option>
+                    <option value="SUV">SUV</option>
+                    <option value="Hatchback">Hatchback</option>
+                    <option value="Bike">Bike</option>
+                    <option value="Auto">Auto</option>
+                    <option value="Luxury">Luxury</option>
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="text-xs font-medium text-slate-600">Color</span>
+                  <input
+                    type="text"
+                    value={vehicleColor}
+                    onChange={(e) => setVehicleColor(e.target.value)}
+                    placeholder="e.g. White"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                  />
+                </label>
+              </div>
+              <button
+                onClick={handleSaveVehicle}
+                disabled={savingVehicle}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-orange-300 bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-700 transition hover:bg-orange-100 disabled:opacity-60"
+              >
+                {vehicleSaved ? (
+                  <><CheckCircle2 size={16} className="text-green-600" /><span className="text-green-700">Vehicle saved!</span></>
+                ) : (
+                  <><Bookmark size={16} />{savingVehicle ? 'Saving...' : 'Save for Later'}</>
+                )}
               </button>
             </div>
           </section>

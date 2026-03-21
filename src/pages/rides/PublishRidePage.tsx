@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { rideService } from '../../services';
+import { rideService, vehicleService } from '../../services';
 import {
   MapPin,
   Clock,
@@ -12,7 +12,9 @@ import {
   Minus,
   IndianRupee,
   FileText,
-  ChevronRight
+  ChevronRight,
+  Bookmark,
+  CheckCircle2
 } from 'lucide-react';
 
 interface Location {
@@ -53,6 +55,8 @@ const PublishRidePage = () => {
   const [vehicleNumber, setVehicleNumber] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [savingVehicle, setSavingVehicle] = useState(false);
+  const [vehicleSaved, setVehicleSaved] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<PublishRideFieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -78,6 +82,15 @@ const PublishRidePage = () => {
     if (state.departureTime) setDepartureTime(state.departureTime.slice(0, 16));
   }, [location.state]);
 
+  // Pre-fill vehicle details from saved profile
+  useEffect(() => {
+    if (user?.vehicleDetails) {
+      const vd = user.vehicleDetails;
+      if (vd.vehicleType) setVehicleType(vd.vehicleType);
+      if (vd.vehicleNumber) setVehicleNumber(vd.vehicleNumber);
+    }
+  }, [user?.vehicleDetails]);
+
   useEffect(() => {
     if (!startLocation) return;
     setFieldErrors((prev) => {
@@ -97,6 +110,22 @@ const PublishRidePage = () => {
       return next;
     });
   }, [endLocation]);
+
+  const handleSaveVehicle = async () => {
+    if (!user || !vehicleNumber.trim()) return;
+    setSavingVehicle(true);
+    setVehicleSaved(false);
+    try {
+      await vehicleService.saveVehicleDetails(user.id, {
+        vehicleType,
+        vehicleNumber: vehicleNumber.trim().toUpperCase(),
+      });
+      setVehicleSaved(true);
+      setTimeout(() => setVehicleSaved(false), 3000);
+    } finally {
+      setSavingVehicle(false);
+    }
+  };
 
   const handlePublish = async () => {
     const nextFieldErrors: PublishRideFieldErrors = {};
@@ -374,7 +403,7 @@ const PublishRidePage = () => {
               ))}
             </div>
 
-            {/* Vehicle Number */}
+            {/* Vehicle Number + Save for Later */}
             <div className="relative">
               <Car className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -383,6 +412,7 @@ const PublishRidePage = () => {
                 onChange={(e) => {
                   setVehicleNumber(e.target.value.toUpperCase());
                   setSubmitError(null);
+                  setVehicleSaved(false);
                   setFieldErrors((prev) => {
                     if (!prev.vehicleNumber) return prev;
                     const next = { ...prev };
@@ -398,6 +428,20 @@ const PublishRidePage = () => {
             {fieldErrors.vehicleNumber && (
               <p className="mt-2 text-xs text-red-600">{fieldErrors.vehicleNumber}</p>
             )}
+
+            {/* Save for Later button */}
+            <button
+              type="button"
+              onClick={handleSaveVehicle}
+              disabled={savingVehicle || !vehicleNumber.trim()}
+              className="mt-3 flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-primary-300 bg-primary-50 text-primary-700 text-sm font-medium hover:bg-primary-100 disabled:opacity-50 transition-all"
+            >
+              {vehicleSaved ? (
+                <><CheckCircle2 className="w-4 h-4 text-green-600" /><span className="text-green-700">Saved!</span></>
+              ) : (
+                <><Bookmark className="w-4 h-4" />{savingVehicle ? 'Saving...' : 'Save for Later'}</>
+              )}
+            </button>
           </div>
 
           {/* Additional Notes */}

@@ -3,6 +3,7 @@ import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { rideService } from '../../services';
 import { SkeletonList } from '../../components/Skeleton';
+import { Navigation } from 'lucide-react';
 import type { Ride } from '../../types';
 
 const RideHistoryPage = () => {
@@ -244,7 +245,7 @@ const RideHistoryPage = () => {
                           📅 {formatDate(ride.date)}
                         </span>
                       </div>
-                      <div style={{ marginTop: '8px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <div style={{ marginTop: '8px', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                         <span style={{ fontSize: '12px', color: '#4b5563', background: '#f3f4f6', padding: '4px 8px', borderRadius: '6px' }}>
                           {ride.vehicleType}
                         </span>
@@ -259,6 +260,31 @@ const RideHistoryPage = () => {
                         <span style={{ fontSize: '12px', color: '#6366f1', background: '#eef2ff', padding: '4px 8px', borderRadius: '6px' }}>
                           {ride.availableSeats - ride.bookedSeats}/{ride.availableSeats} seats
                         </span>
+                        {(ride.status === 'active' || ride.status === 'pending') && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              history.push(`/trips/tracking/${ride.id}`);
+                            }}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              fontSize: '12px',
+                              color: 'white',
+                              background: '#6366f1',
+                              padding: '4px 10px',
+                              borderRadius: '8px',
+                              fontWeight: '600',
+                              border: 'none',
+                              cursor: 'pointer',
+                              marginLeft: 'auto',
+                            }}
+                          >
+                            <Navigation size={12} />
+                            Track Trip
+                          </button>
+                        )}
                       </div>
                     </div>
                     <span style={{ fontSize: '24px', color: '#9ca3af', alignSelf: 'center' }}>›</span>

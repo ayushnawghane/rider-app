@@ -1,19 +1,20 @@
 import { IonContent, IonPage, IonButton, IonToast } from '@ionic/react';
 import LoadingOverlay from '../../components/LoadingOverlay';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { rideService, locationService, mapsService } from '../../services';
+import { supabase } from '../../lib/supabase';
 import { MapComponent } from '../../components/maps';
-import { 
-  Phone, 
-  MessageSquare, 
-  ShieldAlert, 
-  MapPin, 
-  Navigation, 
-  Car, 
-  Clock, 
-  CheckCircle2, 
+import {
+  Phone,
+  MessageSquare,
+  ShieldAlert,
+  MapPin,
+  Navigation,
+  Car,
+  Clock,
+  CheckCircle2,
   AlertTriangle,
   Target,
   ChevronLeft,
@@ -25,7 +26,7 @@ const ActiveRidePage = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const history = useHistory();
-  
+
   const [ride, setRide] = useState<Ride | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -42,14 +43,14 @@ const ActiveRidePage = () => {
       const result = await rideService.getRideById(id);
       if (result.success && result.ride) {
         setRide(result.ride);
-        
+
         // Calculate route if coordinates are available
         if (result.ride.startLocationCoords && result.ride.endLocationCoords) {
           const route = await mapsService.calculateRoute(
             { lat: result.ride.startLocationCoords.lat, lng: result.ride.startLocationCoords.lng },
             { lat: result.ride.endLocationCoords.lat, lng: result.ride.endLocationCoords.lng }
           );
-          
+
           if (route) {
             const decodedPath = mapsService.decodePolyline(route.polyline);
             setRoutePath(decodedPath);
@@ -63,45 +64,80 @@ const ActiveRidePage = () => {
     fetchRide();
   }, [id]);
 
-  // Start location tracking for live updates
+  // Start location tracking + live_locations publishing + Realtime subscription
   useEffect(() => {
+    if (!ride || !user) return;
+    let locationInsertInterval: ReturnType<typeof setInterval> | null = null;
+
     const startTracking = async () => {
       // Get initial location
       const position = await locationService.getCurrentPosition();
       if (position) {
         setCurrentLocation({ lat: position.lat, lng: position.lng });
+        // Publish initial location
+        await supabase.from('live_locations').insert({
+          ride_id: ride.id,
+          user_id: user.id,
+          lat: position.lat,
+          lng: position.lng,
+          accuracy: position.accuracy,
+        });
       }
 
-      // Start watching position
+      // Watch position + publish every update
       await locationService.startWatching(
-        (position) => {
-          setCurrentLocation({ lat: position.lat, lng: position.lng });
+        async (pos) => {
+          setCurrentLocation({ lat: pos.lat, lng: pos.lng });
         },
         (error) => {
           console.error('Location tracking error:', error);
         }
       );
+
+      // Publish location every 10 seconds
+      locationInsertInterval = setInterval(async () => {
+        const pos = await locationService.getCurrentPosition();
+        if (pos) {
+          await supabase.from('live_locations').insert({
+            ride_id: ride.id,
+            user_id: user.id,
+            lat: pos.lat,
+            lng: pos.lng,
+            accuracy: pos.accuracy,
+          });
+        }
+      }, 10000);
     };
 
     startTracking();
 
-    // Simulate driver location updates (in real app, this would come from backend)
-    const driverInterval = setInterval(() => {
-      if (ride?.startLocationCoords) {
-        // Simulate driver moving towards pickup
-        const randomOffset = () => (Math.random() - 0.5) * 0.001;
-        setDriverLocation({
-          lat: ride.startLocationCoords.lat + randomOffset(),
-          lng: ride.startLocationCoords.lng + randomOffset(),
-        });
-      }
-    }, 5000);
+    // Subscribe to live_locations for this ride via Realtime
+    const channel = supabase
+      .channel(`live_locations:${ride.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'live_locations',
+          filter: `ride_id=eq.${ride.id}`,
+        },
+        (payload) => {
+          const row = payload.new as { user_id: string; lat: number; lng: number };
+          // Show other participants' location as the driver/co-rider marker
+          if (row.user_id !== user.id) {
+            setDriverLocation({ lat: row.lat, lng: row.lng });
+          }
+        }
+      )
+      .subscribe();
 
     return () => {
       locationService.stopWatching();
-      clearInterval(driverInterval);
+      if (locationInsertInterval) clearInterval(locationInsertInterval);
+      supabase.removeChannel(channel);
     };
-  }, [ride]);
+  }, [ride, user]);
 
   const handleContactDriver = () => {
     if (ride?.driverContact) {
@@ -133,7 +169,7 @@ const ActiveRidePage = () => {
       { id: 'arrived', label: 'Arrived', icon: MapPin },
       { id: 'completed', label: 'Completed', icon: CheckCircle2 },
     ];
-    
+
     const currentIndex = steps.findIndex(s => s.id === status);
     return { steps, currentIndex };
   };
@@ -150,12 +186,16 @@ const ActiveRidePage = () => {
     }] : []),
     ...(driverLocation ? [{
       position: driverLocation,
-      title: 'Driver',
+      title: 'Co-rider',
+    }] : []),
+    ...(currentLocation ? [{
+      position: currentLocation,
+      title: 'You',
     }] : []),
   ];
 
-  const mapCenter = isAutoRecenter && currentLocation 
-    ? currentLocation 
+  const mapCenter = isAutoRecenter && currentLocation
+    ? currentLocation
     : ride?.startLocationCoords || { lat: 28.6139, lng: 77.2090 };
 
   if (loading) {
@@ -177,8 +217,8 @@ const ActiveRidePage = () => {
               <AlertTriangle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h2 className="text-xl font-bold text-gray-900 mb-2">Ride Not Found</h2>
               <p className="text-gray-500">The ride you're looking for doesn't exist.</p>
-              <IonButton 
-                expand="block" 
+              <IonButton
+                expand="block"
                 onClick={() => history.push('/home')}
                 className="mt-4"
               >
@@ -267,12 +307,11 @@ const ActiveRidePage = () => {
 
                     return (
                       <div key={step.id} className="flex-1 flex flex-col items-center">
-                        <div 
-                          className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
-                            isCompleted 
-                              ? 'bg-primary-500 text-white' 
-                              : 'bg-gray-100 text-gray-400'
-                          } ${isCurrent ? 'ring-4 ring-primary-100' : ''}`}
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${isCompleted
+                            ? 'bg-primary-500 text-white'
+                            : 'bg-gray-100 text-gray-400'
+                            } ${isCurrent ? 'ring-4 ring-primary-100' : ''}`}
                         >
                           <Icon className="w-5 h-5" />
                         </div>
@@ -280,9 +319,8 @@ const ActiveRidePage = () => {
                           {step.label}
                         </span>
                         {index < steps.length - 1 && (
-                          <div className={`absolute h-0.5 w-full top-5 left-1/2 -z-10 ${
-                            isCompleted ? 'bg-primary-500' : 'bg-gray-200'
-                          }`} style={{ width: '25%' }} />
+                          <div className={`absolute h-0.5 w-full top-5 left-1/2 -z-10 ${isCompleted ? 'bg-primary-500' : 'bg-gray-200'
+                            }`} style={{ width: '25%' }} />
                         )}
                       </div>
                     );

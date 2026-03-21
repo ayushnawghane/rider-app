@@ -1,3 +1,11 @@
+export interface VehicleDetails {
+  make?: string;
+  model?: string;
+  vehicleNumber?: string;
+  vehicleType?: string;
+  color?: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -22,7 +30,7 @@ export interface User {
   ridesPublished: number;
   // Optional
   referralCode?: string;
-  vehicleDetails?: Record<string, unknown>;
+  vehicleDetails?: VehicleDetails;
   createdAt: string;
   updatedAt: string;
 }
@@ -299,4 +307,5 @@ export interface ProfileUpdateParams {
   fullName?: string;
   language?: string;
   notificationPreferences?: boolean;
+  vehicleDetails?: VehicleDetails;
 }
