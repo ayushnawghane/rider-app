@@ -43,6 +43,7 @@ const ProfilePage = () => {
   const [editing, setEditing] = useState(Boolean(location.state?.openEditor));
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState(user?.phone?.startsWith('temp_') || user?.phone?.startsWith('phone-') ? '' : user?.phone || '');
   const [language, setLanguage] = useState(user?.language || 'en');
   const [notifications, setNotifications] = useState<boolean>(user?.notificationPreferences || true);
   const [saveError, setSaveError] = useState('');
@@ -61,6 +62,7 @@ const ProfilePage = () => {
     if (user) {
       setFullName(user.fullName);
       setEmail(isSystemGeneratedEmail(user.email) ? '' : user.email);
+      setPhone(user.phone?.startsWith('temp_') || user.phone?.startsWith('phone-') ? '' : user.phone || '');
       setLanguage(user.language);
       setNotifications(user.notificationPreferences);
       // Sync vehicle details
@@ -102,6 +104,7 @@ const ProfilePage = () => {
         {
           email: normalizedEmail,
           fullName: normalizedFullName,
+          phone: phone.trim(),
           language,
           notificationPreferences: notifications,
         },
@@ -239,8 +242,12 @@ const ProfilePage = () => {
         <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-start gap-4">
             <div className="relative">
-              <div className="grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-4xl font-bold text-white">
-                {initials}
+              <div className="grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-4xl font-bold text-white overflow-hidden">
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={user.fullName} className="h-full w-full object-cover" />
+                ) : (
+                  initials
+                )}
               </div>
               {editing && (
                 <button
@@ -324,6 +331,17 @@ const ProfilePage = () => {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="you@example.com"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-medium text-slate-600">Mobile number</span>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  placeholder="+91 9876543210"
                   className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
                 />
               </label>

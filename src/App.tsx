@@ -12,7 +12,6 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import KycUploadPage from './pages/auth/KycUploadPage';
 import HomePage from './pages/home/HomePage';
-import GoogleCallbackPage from './pages/auth/GoogleCallbackPage';
 import UploadRidePage from './pages/rides/UploadRidePage';
 import PublishRidePage from './pages/rides/PublishRidePage';
 import FindRidePage from './pages/rides/FindRidePage';
@@ -65,7 +64,6 @@ const RegisterScreen = withIonPage(RegisterPage);
 const HomeScreen = withIonPage(HomePage);
 const UploadRideScreen = withIonPage(UploadRidePage);
 const PublishRideScreen = withIonPage(PublishRidePage);
-const GoogleCallbackScreen = withIonPage(GoogleCallbackPage);
 const FindRideScreen = withIonPage(FindRidePage);
 const RideHistoryScreen = withIonPage(RideHistoryPage);
 const SelectLocationScreen = withIonPage(SelectLocationPage);
@@ -98,7 +96,6 @@ const AppRoutes: React.FC = () => {
       <IonRouterOutlet>
         <Route exact path="/login" render={renderPublic(LoginScreen)} />
         <Route exact path="/register" render={renderPublic(RegisterScreen)} />
-        <Route exact path="/auth/google/callback" render={renderPublic(GoogleCallbackScreen)} />
         <Route exact path="/home" render={renderPrivate(HomeScreen)} />
         <Route exact path="/" render={renderPrivate(HomeScreen)} />
         <Route exact path="/upload-ride" render={renderPrivate(UploadRideScreen)} />
@@ -113,7 +110,7 @@ const AppRoutes: React.FC = () => {
         <Route exact path="/rewards" render={renderPrivate(RewardsScreen)} />
         <Route exact path="/support" render={renderPrivate(SupportPage)} />
         <Route exact path="/support/dispute/new" render={renderPrivate(NewDisputePage)} />
-        <Route exact path="/support/dispute/:id" render={renderPrivate(DisputeChatPage)} />
+        <Route exact path="/support/dispute/:id([0-9a-fA-F-]{36})" render={renderPrivate(DisputeChatPage)} />
         <Route exact path="/safety" render={renderPrivate(SafetyScreen)} />
         <Route exact path="/safety/sos" render={renderPrivate(SafetyScreen)} />
         <Route exact path="/profile" render={renderPrivate(ProfileScreen)} />

@@ -3,6 +3,9 @@ import type { FormEvent } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { phoneOtpAuthService } from '../../services/phoneOtpAuth';
+import { authService } from '../../services/auth';
+
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 
 const normalizePhone = (input: string, countryCode: string) => {
   const digits = input.replace(/\D/g, '');
@@ -12,6 +15,9 @@ const normalizePhone = (input: string, countryCode: string) => {
   if (digits.length === 10) return `+${countryCode}${digits}`;
   return `+${digits}`;
 };
+
+// Client ID from Artifact 547
+const GOOGLE_CLIENT_ID = 'your-client-id-here'; // We'll update this shortly
 
 const RegisterPage = () => {
   const history = useHistory();
@@ -89,116 +95,147 @@ const RegisterPage = () => {
     }
   };
 
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    if (isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      await authService.signInWithGoogle(credentialResponse.credential);
+      history.replace('/home');
+    } catch (err: unknown) {
+      console.error('Google Sign-In Error:', err);
+      setError(err instanceof Error ? err.message : 'Google Sign-In failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '24px 16px' }}>
-      <div style={{ maxWidth: 380, margin: '0 auto', paddingTop: 48 }}>
-        <h1 style={{ fontSize: 32, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
-          Create Account
-        </h1>
-        <p style={{ color: '#64748b', marginBottom: 24 }}>
-          Verify your phone number to get started.
-        </p>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '24px 16px' }}>
+        <div style={{ maxWidth: 380, margin: '0 auto', paddingTop: 48 }}>
+          <h1 style={{ fontSize: 32, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
+            Create Account
+          </h1>
+          <p style={{ color: '#64748b', marginBottom: 24 }}>
+            Sign in with your Google account to get started.
+          </p>
 
-        <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-          <form onSubmit={handleSendOtp}>
-            <label style={{ fontSize: 14, color: '#334155', fontWeight: 600 }}>
-              Mobile number
-              <input
-                type="tel"
-                value={phoneNumber}
-                onChange={(event) => setPhoneNumber(event.target.value)}
-                placeholder="+91 9876543210"
-                disabled={isSubmitting}
-                style={{
-                  width: '100%',
-                  marginTop: 8,
-                  padding: '12px 14px',
-                  borderRadius: 10,
-                  border: '1px solid #cbd5e1',
-                  background: '#fff',
-                  color: '#0f172a',
-                }}
+          <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setError('Google Sign-In failed. Please try again.')}
+                useOneTap
               />
-            </label>
+            </div>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              style={{
-                width: '100%',
-                marginTop: 16,
-                padding: '13px 14px',
-                border: 0,
-                borderRadius: 12,
-                background: '#f97316',
-                color: '#fff',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              {isSubmitting ? 'Sending OTP...' : otpSent ? 'Resend OTP' : 'Send OTP'}
-            </button>
-          </form>
+            {/* Hidden Dev OTP Section */}
+            <div style={{ display: 'none' }}>
+              <form onSubmit={handleSendOtp}>
+                <label style={{ fontSize: 14, color: '#334155', fontWeight: 600 }}>
+                  Mobile number
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(event) => setPhoneNumber(event.target.value)}
+                    placeholder="+91 9876543210"
+                    disabled={isSubmitting}
+                    style={{
+                      width: '100%',
+                      marginTop: 8,
+                      padding: '12px 14px',
+                      borderRadius: 10,
+                      border: '1px solid #cbd5e1',
+                      background: '#fff',
+                      color: '#0f172a',
+                    }}
+                  />
+                </label>
 
-          {otpSent && (
-            <>
-              <label style={{ fontSize: 14, color: '#334155', fontWeight: 600, display: 'block', marginTop: 16 }}>
-                OTP code
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={otpCode}
-                  onChange={(event) => setOtpCode(event.target.value)}
-                  placeholder="Enter OTP"
+                <button
+                  type="submit"
                   disabled={isSubmitting}
                   style={{
                     width: '100%',
-                    marginTop: 8,
-                    padding: '12px 14px',
-                    borderRadius: 10,
-                    border: '1px solid #cbd5e1',
-                    background: '#fff',
-                    color: '#0f172a',
+                    marginTop: 16,
+                    padding: '13px 14px',
+                    border: 0,
+                    borderRadius: 12,
+                    background: '#f97316',
+                    color: '#fff',
+                    fontWeight: 700,
+                    cursor: 'pointer',
                   }}
-                />
-              </label>
+                >
+                  {isSubmitting ? 'Sending OTP...' : otpSent ? 'Resend OTP' : 'Send OTP'}
+                </button>
+              </form>
 
-              <button
-                onClick={handleVerifyOtp}
-                disabled={isSubmitting}
-                type="button"
-                style={{
-                  width: '100%',
-                  marginTop: 12,
-                  padding: '13px 14px',
-                  border: 0,
-                  borderRadius: 12,
-                  background: '#0f172a',
-                  color: '#fff',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                {isSubmitting ? 'Verifying...' : 'Verify OTP & Continue'}
-              </button>
-            </>
-          )}
+              {otpSent && (
+                <>
+                  <label style={{ fontSize: 14, color: '#334155', fontWeight: 600, display: 'block', marginTop: 16 }}>
+                    OTP code
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={otpCode}
+                      onChange={(event) => setOtpCode(event.target.value)}
+                      placeholder="Enter OTP"
+                      disabled={isSubmitting}
+                      style={{
+                        width: '100%',
+                        marginTop: 8,
+                        padding: '12px 14px',
+                        borderRadius: 10,
+                        border: '1px solid #cbd5e1',
+                        background: '#fff',
+                        color: '#0f172a',
+                      }}
+                    />
+                  </label>
 
-          {info && <p style={{ color: '#16a34a', fontSize: 13, marginTop: 12 }}>{info}</p>}
-          {error && <p style={{ color: '#dc2626', fontSize: 13, marginTop: 12 }}>{error}</p>}
+                  <button
+                    onClick={handleVerifyOtp}
+                    disabled={isSubmitting}
+                    type="button"
+                    style={{
+                      width: '100%',
+                      marginTop: 12,
+                      padding: '13px 14px',
+                      border: 0,
+                      borderRadius: 12,
+                      background: '#0f172a',
+                      color: '#fff',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {isSubmitting ? 'Verifying...' : 'Verify OTP & Continue'}
+                  </button>
+                </>
+              )}
+            </div>
+
+            {info && <p style={{ color: '#16a34a', fontSize: 13, marginTop: 12 }}>{info}</p>}
+            {error && <p style={{ color: '#dc2626', fontSize: 13, marginTop: 12 }}>{error}</p>}
+          </div>
+
+          <p style={{ textAlign: 'center', marginTop: 16, color: '#64748b' }}>
+            Already have an account?{' '}
+            <button
+              onClick={() => history.push('/login')}
+              style={{ border: 0, background: 'none', color: '#f97316', fontWeight: 700, cursor: 'pointer' }}
+            >
+              Sign in
+            </button>
+          </p>
         </div>
-
-        <p style={{ textAlign: 'center', marginTop: 16, color: '#64748b' }}>
-          Already have an account?{' '}
-          <button
-            onClick={() => history.push('/login')}
-            style={{ border: 0, background: 'none', color: '#f97316', fontWeight: 700, cursor: 'pointer' }}
-          >
-            Sign in
-          </button>
-        </p>
       </div>
-    </div>
+    </GoogleOAuthProvider>
   );
 };
 

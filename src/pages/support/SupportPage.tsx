@@ -126,42 +126,48 @@ const SupportPage = () => {
                     <HelpCircle className="h-7 w-7 text-primary-600" />
                   </div>
                   <h2 className="mb-1 text-lg font-bold text-gray-900">Need more help?</h2>
-                  <p className="text-sm text-gray-500">Raise another dispute anytime.</p>
+                  <p className="text-sm text-gray-500 mb-4">Raise another dispute anytime.</p>
+                  <button
+                    onClick={() => history.push('/support/dispute/new')}
+                    className="w-full btn btn-primary"
+                  >
+                    Raise New Dispute
+                  </button>
                 </div>
               </div>
 
               <div className="space-y-3">
-              {disputes.map((dispute) => {
-                const status = getStatusBadge(dispute.status);
-                return (
-                  <button
-                    key={dispute.id}
-                    onClick={() => history.push(`/support/dispute/${dispute.id}`)}
-                    className="card p-4 text-left hover:shadow-medium transition-all w-full animate-fade-in"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <MessageSquare className="w-6 h-6 text-warning-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="font-medium text-gray-900 capitalize">{dispute.disputeType}</span>
-                          <span className={`badge ${status.color} flex items-center gap-1.5`}>
-                            <status.icon className="w-3.5 h-3.5" />
-                            {status.label}
-                          </span>
+                {disputes.map((dispute) => {
+                  const status = getStatusBadge(dispute.status);
+                  return (
+                    <button
+                      key={dispute.id}
+                      onClick={() => history.push(`/support/dispute/${dispute.id}`)}
+                      className="card p-4 text-left hover:shadow-medium transition-all w-full animate-fade-in"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <MessageSquare className="w-6 h-6 text-warning-600" />
                         </div>
-                        <p className="text-sm text-gray-500 line-clamp-2 mb-2">{dispute.description}</p>
-                        <div className="flex items-center gap-4 text-sm">
-                          <span className="text-gray-500">#{dispute.id.slice(0, 8)}</span>
-                          <span className="text-gray-500">{formatDate(dispute.createdAt)}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-medium text-gray-900 capitalize">{dispute.disputeType}</span>
+                            <span className={`badge ${status.color} flex items-center gap-1.5`}>
+                              <status.icon className="w-3.5 h-3.5" />
+                              {status.label}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-500 line-clamp-2 mb-2">{dispute.description}</p>
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="text-gray-500">#{dispute.id.slice(0, 8)}</span>
+                            <span className="text-gray-500">{formatDate(dispute.createdAt)}</span>
+                          </div>
                         </div>
+                        <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
                       </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                    </div>
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })}
               </div>
             </>
           )}

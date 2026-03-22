@@ -10,17 +10,14 @@ export default defineConfig({
     react(),
     legacy()
   ],
+  server: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
-  },
-  server: {
-    proxy: {
-      '/api/auth': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-      }
-    }
   }
 })

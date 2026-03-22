@@ -308,4 +308,5 @@ export interface ProfileUpdateParams {
   language?: string;
   notificationPreferences?: boolean;
   vehicleDetails?: VehicleDetails;
+  phone?: string;
 }

@@ -51,6 +51,14 @@ const isProfileEmailIncomplete = (value?: string | null) => {
   return false;
 };
 
+const isProfilePhoneIncomplete = (value?: string | null) => {
+  const phone = value?.trim() || '';
+  if (!phone) return true;
+  if (phone.startsWith('temp_')) return true;
+  if (phone.startsWith('phone-')) return true;
+  return false;
+};
+
 const profilePromptDismissKey = (userId: string) => `profile-prompt-dismissed:${userId}`;
 
 const HomePage = () => {
@@ -109,7 +117,7 @@ const HomePage = () => {
     }
 
     setShowProfilePrompt(
-      isProfileNameIncomplete(user.fullName) || isProfileEmailIncomplete(user.email),
+      isProfileNameIncomplete(user.fullName) || isProfileEmailIncomplete(user.email) || isProfilePhoneIncomplete(user.phone),
     );
   }, [dismissedProfilePrompt, isAuthLoaded, user]);
 
@@ -506,7 +514,7 @@ const HomePage = () => {
           >
             <h2 className="text-xl font-bold text-slate-900">Complete your profile</h2>
             <p className="mt-2 text-sm text-slate-600">
-              Add your name and email to finish setup and make your account easier to identify.
+              Add your name, email, and mobile number to finish setup and make your account easier to identify.
             </p>
             <div className="mt-5 flex items-center gap-3">
               <button

@@ -101,6 +101,10 @@ const toUserFromAuth = (authUser: AuthUserLite): User => {
     (typeof meta.last_name === 'string' && meta.last_name.trim()) ||
     fullName.split(' ').slice(1).join(' ') ||
     '';
+  const avatarUrl =
+    (typeof meta.picture === 'string' && meta.picture) ||
+    (typeof meta.avatar_url === 'string' && meta.avatar_url) ||
+    undefined;
 
   return {
     id: authUser.id,
@@ -108,6 +112,7 @@ const toUserFromAuth = (authUser: AuthUserLite): User => {
     fullName,
     firstName,
     lastName,
+    avatarUrl,
     phone: authUser.phone || toFallbackPhone(authUser.id),
     kycStatus: 'pending',
     language: 'en',
@@ -260,6 +265,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: authUser.id,
           email: mappedUser.email,
           full_name: mappedUser.fullName,
+          avatar_url: mappedUser.avatarUrl,
           phone: mappedUser.phone,
           kyc_status: 'pending',
           language: 'en',

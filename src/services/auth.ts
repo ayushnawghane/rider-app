@@ -22,6 +22,25 @@ class AuthService {
     await supabase.auth.signOut();
   }
 
+  async signInWithGoogle(idToken: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: idToken,
+      });
+
+      if (error) {
+        console.error('Error signing in with Google:', error.message);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Unexpected error during Google sign-in:', error);
+      return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
   async getCurrentUser(): Promise<User | null> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -108,6 +127,10 @@ class AuthService {
 
       if (params.vehicleDetails && typeof params.vehicleDetails === 'object') {
         profilePayload.vehicle_details = params.vehicleDetails as VehicleDetails;
+      }
+
+      if (typeof params.phone === 'string' && params.phone.trim()) {
+        profilePayload.phone = params.phone.trim();
       }
 
       // Nothing meaningful to update
