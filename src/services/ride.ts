@@ -12,6 +12,7 @@ class RideService {
         .from('rides')
         .insert({
           user_id: params.userId,
+          driver_id: params.userId,
           date: params.date,
           start_location: params.startLocation,
           end_location: params.endLocation,
@@ -215,7 +216,7 @@ class RideService {
 
       let query = supabase
         .from('rides')
-        .select('*')
+        .select('*, driver:profiles!driver_id(id, full_name, avatar_url, rating_as_driver, phone)')
         .in('status', ['pending', 'active']);
 
       if (startLocation) {
@@ -248,7 +249,7 @@ class RideService {
     try {
       const { data, error } = await supabase
         .from('rides')
-        .select('*')
+        .select('*, driver:profiles!driver_id(id, full_name, avatar_url, rating_as_driver, phone)')
         .eq('id', rideId)
         .single();
 
@@ -303,6 +304,31 @@ class RideService {
     }
   }
 
+  async updateRideDetails(rideId: string, updates: Partial<Pick<Ride, 'date' | 'availableSeats' | 'pricePerSeat' | 'notes' | 'vehicleNumber' | 'vehicleType'>>): Promise<{ success: boolean; error?: string }> {
+    try {
+      const dbUpdates: any = {};
+      if (updates.date) dbUpdates.date = updates.date;
+      if (updates.availableSeats !== undefined) dbUpdates.available_seats = updates.availableSeats;
+      if (updates.pricePerSeat !== undefined) dbUpdates.price_per_seat = updates.pricePerSeat;
+      if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+      if (updates.vehicleNumber) dbUpdates.vehicle_number = updates.vehicleNumber;
+      if (updates.vehicleType) dbUpdates.vehicle_type = updates.vehicleType;
+
+      const { error } = await supabase
+        .from('rides')
+        .update(dbUpdates)
+        .eq('id', rideId);
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
   async deleteRide(rideId: string): Promise<{ success: boolean; error?: string }> {
     try {
       const { error } = await supabase
@@ -327,6 +353,13 @@ class RideService {
       id: data.id,
       userId: data.user_id,
       driverId: data.driver_id,
+      driver: data.driver && !Array.isArray(data.driver) ? {
+        id: data.driver.id,
+        name: data.driver.full_name,
+        avatar: data.driver.avatar_url,
+        rating: data.driver.rating_as_driver || 5.0,
+        phone: data.driver.phone,
+      } : undefined,
       date: data.date,
       startLocation: data.start_location,
       endLocation: data.end_location,

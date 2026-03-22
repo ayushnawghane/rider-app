@@ -18,6 +18,7 @@ import FindRidePage from './pages/rides/FindRidePage';
 import RideHistoryPage from './pages/rides/RideHistoryPage';
 import RideDetailPage from './pages/rides/RideDetailPage';
 import ActiveRidePage from './pages/rides/ActiveRidePage';
+import EditRidePage from './pages/rides/EditRidePage';
 import SupportPage from './pages/support/SupportPage';
 import NewDisputePage from './pages/support/NewDisputePage';
 import DisputeChatPage from './pages/support/DisputeChatPage';
@@ -67,6 +68,7 @@ const PublishRideScreen = withIonPage(PublishRidePage);
 const FindRideScreen = withIonPage(FindRidePage);
 const RideHistoryScreen = withIonPage(RideHistoryPage);
 const SelectLocationScreen = withIonPage(SelectLocationPage);
+const EditRideScreen = withIonPage(EditRidePage);
 const RewardsScreen = withIonPage(RewardsPage);
 const SafetyScreen = withIonPage(SafetyPage);
 const ProfileScreen = withIonPage(ProfilePage);
@@ -103,6 +105,7 @@ const AppRoutes: React.FC = () => {
         <Route exact path="/find-ride" render={renderPrivate(FindRideScreen)} />
         <Route exact path="/select-location" render={renderPrivate(SelectLocationScreen)} />
         <Route exact path="/rides/history" render={renderPrivate(RideHistoryScreen)} />
+        <Route exact path="/rides/edit/:id" render={renderPrivate(EditRideScreen)} />
         <Route exact path="/rides/detail/:id" render={renderPrivate(RideDetailPage)} />
         <Route exact path="/rides/:id([0-9a-fA-F-]{36})" render={renderPrivate(RideDetailPage)} />
         <Route exact path="/rides/active/:id" render={renderPrivate(ActiveRidePage)} />
@@ -200,19 +203,20 @@ const AppContent: React.FC = () => {
 const SPLASH_SEEN_KEY = 'blinkcar_splash_seen';
 
 const App: React.FC = () => {
-  const [showSplash, setShowSplash] = useState(() => {
-    return !localStorage.getItem(SPLASH_SEEN_KEY);
-  });
+  const [showSplash, setShowSplash] = useState(true);
+  const hasSeenOnboarding = Boolean(localStorage.getItem(SPLASH_SEEN_KEY));
 
   const handleSplashFinish = () => {
-    localStorage.setItem(SPLASH_SEEN_KEY, '1');
+    if (!hasSeenOnboarding) {
+      localStorage.setItem(SPLASH_SEEN_KEY, '1');
+    }
     setShowSplash(false);
   };
 
   return (
     <IonApp>
       {showSplash ? (
-        <SplashScreen onFinish={handleSplashFinish} />
+        <SplashScreen onFinish={handleSplashFinish} hasSeenOnboarding={hasSeenOnboarding} />
       ) : (
         <AppContent />
       )}

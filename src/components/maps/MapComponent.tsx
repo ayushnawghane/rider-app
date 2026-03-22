@@ -29,7 +29,7 @@ interface MapComponentProps {
   markers?: Array<{
     position: { lat: number; lng: number };
     title?: string;
-    icon?: string;
+    icon?: string | google.maps.Icon | google.maps.Symbol;
   }>;
   routePath?: Array<{ lat: number; lng: number }>;
   onMapClick?: (e: google.maps.MapMouseEvent) => void;
@@ -190,9 +190,9 @@ const MapComponent: React.FC<MapComponentProps> = ({
           <Polyline
             path={routePath}
             options={{
-              strokeColor: '#6366f1',
-              strokeOpacity: 0.8,
-              strokeWeight: 4,
+              strokeColor: '#111827',
+              strokeOpacity: 0.9,
+              strokeWeight: 5,
               clickable: false,
               draggable: false,
               editable: false,

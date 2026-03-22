@@ -33,14 +33,14 @@ const RideDetailPage = () => {
       const result = await rideService.getRideById(id);
       if (result.success && result.ride) {
         setRide(result.ride);
-        
+
         // Calculate route if coordinates are available
         if (result.ride.startLocationCoords && result.ride.endLocationCoords) {
           const route = await mapsService.calculateRoute(
             { lat: result.ride.startLocationCoords.lat, lng: result.ride.startLocationCoords.lng },
             { lat: result.ride.endLocationCoords.lat, lng: result.ride.endLocationCoords.lng }
           );
-          
+
           if (route) {
             const decodedPath = mapsService.decodePolyline(route.polyline);
             setRoutePath(decodedPath);
@@ -327,11 +327,10 @@ const RideDetailPage = () => {
                 <button
                   onClick={handleJoinRide}
                   disabled={isJoining || isJoined}
-                  className={`w-full py-3 rounded-xl font-semibold transition-colors ${
-                    isJoined
+                  className={`w-full py-3 rounded-xl font-semibold transition-colors ${isJoined
                       ? 'bg-green-100 text-green-700 cursor-default'
                       : 'bg-primary-500 text-white hover:bg-primary-600'
-                  } disabled:opacity-80 disabled:cursor-not-allowed`}
+                    } disabled:opacity-80 disabled:cursor-not-allowed`}
                 >
                   {isJoined
                     ? 'Joined Ride'
@@ -342,6 +341,27 @@ const RideDetailPage = () => {
                 <p className="text-xs text-gray-500 mt-2">Earn +30 points when you join this ride.</p>
                 {joinError && <p className="text-xs text-red-600 mt-1">{joinError}</p>}
                 {joinSuccessMessage && <p className="text-xs text-green-600 mt-1">{joinSuccessMessage}</p>}
+              </div>
+            )}
+
+            {user?.id === ride.userId && (
+              <div className="grid gap-3">
+                {ride.status === 'pending' && (
+                  <button
+                    onClick={() => history.push(`/rides/edit/${ride.id}`)}
+                    className="w-full py-4 bg-white border-2 border-primary-200 text-primary-700 font-semibold rounded-xl hover:bg-primary-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    Edit Ride Details
+                  </button>
+                )}
+                {['pending', 'active'].includes(ride.status) && (
+                  <button
+                    onClick={() => history.push(`/rides/active/${ride.id}`)}
+                    className="w-full py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/30 transition-all flex items-center justify-center gap-2"
+                  >
+                    {ride.status === 'pending' ? 'Go to Start Console' : 'Go to Tracking Console'}
+                  </button>
+                )}
               </div>
             )}
 

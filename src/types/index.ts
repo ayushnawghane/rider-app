@@ -135,6 +135,13 @@ export interface Ride {
   id: string;
   userId: string;
   driverId?: string;
+  driver?: {
+    id: string;
+    name: string;
+    avatar: string;
+    rating: number;
+    phone: string;
+  };
   date: string;
   startLocation: string;
   endLocation: string;

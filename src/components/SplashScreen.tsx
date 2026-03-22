@@ -5,6 +5,7 @@ import splash3 from '../assets/images/splash3.png';
 
 interface SplashScreenProps {
     onFinish: () => void;
+    hasSeenOnboarding?: boolean;
 }
 
 const ONBOARDING_SLIDES = [
@@ -36,27 +37,31 @@ const ONBOARDING_SLIDES = [
     },
 ];
 
-const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
+const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, hasSeenOnboarding = false }) => {
     const [phase, setPhase] = useState<'brand' | 'onboarding'>('brand');
     const [slideIndex, setSlideIndex] = useState(0);
     const [animating, setAnimating] = useState(false);
     const [brandVisible, setBrandVisible] = useState(false);
     const [slideVisible, setSlideVisible] = useState(false);
 
-    // Brand splash animation: fade in → hold → fade out → switch to onboarding
+    // Brand splash animation: fade in → hold → fade out → switch to onboarding or exit
     useEffect(() => {
         const t1 = setTimeout(() => setBrandVisible(true), 100);
         const t2 = setTimeout(() => setBrandVisible(false), 2000);
         const t3 = setTimeout(() => {
-            setPhase('onboarding');
-            setTimeout(() => setSlideVisible(true), 80);
+            if (hasSeenOnboarding) {
+                onFinish();
+            } else {
+                setPhase('onboarding');
+                setTimeout(() => setSlideVisible(true), 80);
+            }
         }, 2700);
         return () => {
             clearTimeout(t1);
             clearTimeout(t2);
             clearTimeout(t3);
         };
-    }, []);
+    }, [hasSeenOnboarding, onFinish]);
 
     const goToSlide = (index: number) => {
         if (animating) return;
@@ -89,8 +94,8 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
         return (
             <div style={styles.root}>
                 <div style={{ ...styles.brandContainer, opacity: brandVisible ? 1 : 0, transition: 'opacity 0.6s ease' }}>
-                    <span style={styles.brandLogo}>blink</span>
-                    <span style={{ ...styles.brandLogo, color: '#FF5722' }}>car</span>
+                    <img src="/logo.png" alt="Blinkcar Logo" style={{ width: 48, height: 48, marginRight: 12, objectFit: 'contain', borderRadius: 12 }} />
+                    <span style={{ ...styles.brandLogo, color: '#FF5722' }}>Blinkcar</span>
                 </div>
             </div>
         );

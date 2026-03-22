@@ -4,7 +4,6 @@ import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { phoneOtpAuthService } from '../../services/phoneOtpAuth';
 import { authService } from '../../services/auth';
-
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 
 const normalizePhone = (input: string, countryCode: string) => {
@@ -15,9 +14,6 @@ const normalizePhone = (input: string, countryCode: string) => {
   if (digits.length === 10) return `+${countryCode}${digits}`;
   return `+${digits}`;
 };
-
-// Client ID from Artifact 547
-const GOOGLE_CLIENT_ID = 'your-client-id-here'; // We'll update this shortly
 
 const RegisterPage = () => {
   const history = useHistory();
@@ -95,7 +91,7 @@ const RegisterPage = () => {
     }
   };
 
-  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     if (isSubmitting) return;
@@ -113,30 +109,51 @@ const RegisterPage = () => {
   };
 
   return (
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '24px 16px' }}>
-        <div style={{ maxWidth: 380, margin: '0 auto', paddingTop: 48 }}>
-          <h1 style={{ fontSize: 32, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
-            Create Account
-          </h1>
-          <p style={{ color: '#64748b', marginBottom: 24 }}>
-            Sign in with your Google account to get started.
-          </p>
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <div className="relative min-h-screen overflow-hidden bg-gray-50 px-4 py-10 sm:px-6 lg:px-8">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-20 top-10 h-72 w-72 rounded-full bg-primary-200/50 blur-3xl" />
+          <div className="absolute -right-20 bottom-10 h-72 w-72 rounded-full bg-orange-100/70 blur-3xl" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(255,237,213,0.55),rgba(249,250,251,0.92)_45%,rgba(249,250,251,1))]" />
+        </div>
 
-          <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => setError('Google Sign-In failed. Please try again.')}
-                useOneTap
-              />
+        <div className="relative mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md items-center">
+          <div className="w-full rounded-3xl border border-primary-100/80 bg-white p-6 shadow-strong sm:p-8">
+            <div className="mb-7 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img
+                  src="/logo.png"
+                  alt="Blinkcar"
+                  className="h-11 w-11 rounded-xl border border-primary-100 bg-white object-contain p-1"
+                />
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-600">Blinkcar</p>
+                  <h1 className="text-xl font-bold tracking-tight text-gray-900">Create account</h1>
+                </div>
+              </div>
+              <span className="rounded-full bg-primary-100 px-3 py-1 text-xs font-semibold text-primary-700">Free</span>
             </div>
 
-            {/* Hidden Dev OTP Section */}
-            <div style={{ display: 'none' }}>
+            <p className="mb-6 text-sm leading-relaxed text-gray-600">
+              Join Blinkcar and start booking reliable rides with transparent pricing and trusted drivers.
+            </p>
+
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 shadow-soft sm:p-5">
+              <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+                Sign up with Google
+              </p>
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError('Google Sign-In failed. Please try again.')}
+                  useOneTap
+                />
+              </div>
+            </div>
+
+            <div className="hidden">
               <form onSubmit={handleSendOtp}>
-                <label style={{ fontSize: 14, color: '#334155', fontWeight: 600 }}>
+                <label className="block text-sm font-medium text-gray-700">
                   Mobile number
                   <input
                     type="tel"
@@ -144,32 +161,14 @@ const RegisterPage = () => {
                     onChange={(event) => setPhoneNumber(event.target.value)}
                     placeholder="+91 9876543210"
                     disabled={isSubmitting}
-                    style={{
-                      width: '100%',
-                      marginTop: 8,
-                      padding: '12px 14px',
-                      borderRadius: 10,
-                      border: '1px solid #cbd5e1',
-                      background: '#fff',
-                      color: '#0f172a',
-                    }}
+                    className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
                   />
                 </label>
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  style={{
-                    width: '100%',
-                    marginTop: 16,
-                    padding: '13px 14px',
-                    border: 0,
-                    borderRadius: 12,
-                    background: '#f97316',
-                    color: '#fff',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
+                  className="mt-4 flex w-full justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50"
                 >
                   {isSubmitting ? 'Sending OTP...' : otpSent ? 'Resend OTP' : 'Send OTP'}
                 </button>
@@ -177,7 +176,7 @@ const RegisterPage = () => {
 
               {otpSent && (
                 <>
-                  <label style={{ fontSize: 14, color: '#334155', fontWeight: 600, display: 'block', marginTop: 16 }}>
+                  <label className="mt-4 block text-sm font-medium text-gray-700">
                     OTP code
                     <input
                       type="text"
@@ -186,15 +185,7 @@ const RegisterPage = () => {
                       onChange={(event) => setOtpCode(event.target.value)}
                       placeholder="Enter OTP"
                       disabled={isSubmitting}
-                      style={{
-                        width: '100%',
-                        marginTop: 8,
-                        padding: '12px 14px',
-                        borderRadius: 10,
-                        border: '1px solid #cbd5e1',
-                        background: '#fff',
-                        color: '#0f172a',
-                      }}
+                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
                     />
                   </label>
 
@@ -202,17 +193,7 @@ const RegisterPage = () => {
                     onClick={handleVerifyOtp}
                     disabled={isSubmitting}
                     type="button"
-                    style={{
-                      width: '100%',
-                      marginTop: 12,
-                      padding: '13px 14px',
-                      border: 0,
-                      borderRadius: 12,
-                      background: '#0f172a',
-                      color: '#fff',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                    }}
+                    className="mt-4 flex w-full justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50"
                   >
                     {isSubmitting ? 'Verifying...' : 'Verify OTP & Continue'}
                   </button>
@@ -220,19 +201,27 @@ const RegisterPage = () => {
               )}
             </div>
 
-            {info && <p style={{ color: '#16a34a', fontSize: 13, marginTop: 12 }}>{info}</p>}
-            {error && <p style={{ color: '#dc2626', fontSize: 13, marginTop: 12 }}>{error}</p>}
-          </div>
+            {info && (
+              <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                {info}
+              </div>
+            )}
+            {error && (
+              <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                {error}
+              </div>
+            )}
 
-          <p style={{ textAlign: 'center', marginTop: 16, color: '#64748b' }}>
-            Already have an account?{' '}
-            <button
-              onClick={() => history.push('/login')}
-              style={{ border: 0, background: 'none', color: '#f97316', fontWeight: 700, cursor: 'pointer' }}
-            >
-              Sign in
-            </button>
-          </p>
+            <p className="mt-7 text-center text-sm text-gray-600">
+              Already have an account?{' '}
+              <button
+                onClick={() => history.push('/login')}
+                className="font-semibold text-primary-600 transition-colors hover:text-primary-500"
+              >
+                Sign in
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </GoogleOAuthProvider>

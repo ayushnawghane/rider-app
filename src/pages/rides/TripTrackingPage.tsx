@@ -15,6 +15,35 @@ import {
 import type { Ride } from '../../types';
 import LoadingOverlay from '../../components/LoadingOverlay';
 
+const getMarkerIcon = (type: 'pickup' | 'drop' | 'driver' | 'user'): google.maps.Icon | undefined => {
+    if (typeof window === 'undefined' || !window.google) return undefined;
+
+    const baseSVG = `data:image/svg+xml;charset=UTF-8,`;
+    switch (type) {
+        case 'pickup':
+            return {
+                url: baseSVG + encodeURIComponent(`<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="12" fill="#10B981" fill-opacity="0.2"/><circle cx="16" cy="16" r="6" fill="#10B981"/><circle cx="16" cy="16" r="2" fill="white"/></svg>`),
+                anchor: new google.maps.Point(16, 16),
+            };
+        case 'drop':
+            return {
+                url: baseSVG + encodeURIComponent(`<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="10" width="12" height="12" fill="#EF4444"/><rect x="14" y="14" width="4" height="4" fill="white"/></svg>`),
+                anchor: new google.maps.Point(16, 16),
+            };
+        case 'driver':
+            return {
+                url: '/car-sedan.png',
+                scaledSize: new google.maps.Size(48, 48),
+                anchor: new google.maps.Point(24, 24),
+            };
+        case 'user':
+            return {
+                url: baseSVG + encodeURIComponent(`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#3B82F6" fill-opacity="0.2"/><circle cx="12" cy="12" r="6" fill="#3B82F6"/><circle cx="12" cy="12" r="2" fill="white"/></svg>`),
+                anchor: new google.maps.Point(12, 12),
+            };
+    }
+};
+
 const TripTrackingPage = () => {
     const { id } = useParams<{ id: string }>();
     const { user } = useAuth();
@@ -120,13 +149,13 @@ const TripTrackingPage = () => {
 
     const markers = [
         ...(ride?.startLocationCoords
-            ? [{ position: { lat: ride.startLocationCoords.lat, lng: ride.startLocationCoords.lng }, title: 'Pickup' }]
+            ? [{ position: { lat: ride.startLocationCoords.lat, lng: ride.startLocationCoords.lng }, title: 'Pickup', icon: getMarkerIcon('pickup') }]
             : []),
         ...(ride?.endLocationCoords
-            ? [{ position: { lat: ride.endLocationCoords.lat, lng: ride.endLocationCoords.lng }, title: 'Drop' }]
+            ? [{ position: { lat: ride.endLocationCoords.lat, lng: ride.endLocationCoords.lng }, title: 'Drop', icon: getMarkerIcon('drop') }]
             : []),
         ...(currentLocation
-            ? [{ position: currentLocation, title: 'You' }]
+            ? [{ position: currentLocation, title: 'You', icon: getMarkerIcon('user') }]
             : []),
     ];
 
@@ -171,10 +200,10 @@ const TripTrackingPage = () => {
                     </div>
                     <div
                         className={`rounded-full px-3 py-1 text-xs font-medium ${ride.status === 'active'
-                                ? 'bg-green-100 text-green-700'
-                                : ride.status === 'completed'
-                                    ? 'bg-blue-100 text-blue-700'
-                                    : 'bg-amber-100 text-amber-700'
+                            ? 'bg-green-100 text-green-700'
+                            : ride.status === 'completed'
+                                ? 'bg-blue-100 text-blue-700'
+                                : 'bg-amber-100 text-amber-700'
                             }`}
                     >
                         {ride.status.charAt(0).toUpperCase() + ride.status.slice(1)}
@@ -213,12 +242,32 @@ const TripTrackingPage = () => {
             </div>
 
             {/* Bottom sheet */}
-            <div className="relative z-10 -mt-6 rounded-t-3xl bg-white shadow-strong">
-                <div className="flex justify-center pb-2 pt-3">
+            <div className="relative z-10 -mt-6 rounded-t-3xl bg-white shadow-strong flex flex-col max-h-[50vh]">
+                <div className="flex justify-center pb-2 pt-3 flex-shrink-0">
                     <div className="h-1 w-12 rounded-full bg-gray-300" />
                 </div>
 
-                <div className="max-h-60 overflow-y-auto px-4 pb-8">
+                <div className="overflow-y-auto px-4 pb-8 flex-1">
+
+                    {/* Driver & Vehicle Profile (Uber-like) */}
+                    <div className="flex items-center pb-4 mb-5 border-b border-gray-100">
+                        <div className="w-14 h-14 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 border-2 border-white shadow-sm">
+                            <img src={ride.driver?.avatar || `https://ui-avatars.com/api/?name=${ride.driver?.name || 'Driver'}&background=random`} alt="Driver" className="w-full h-full object-cover" />
+                        </div>
+                        <div className="ml-4 flex-1">
+                            <h3 className="text-base font-bold text-gray-900">{ride.driver?.name || 'Your Driver'}</h3>
+                            <div className="flex items-center text-sm text-gray-500 mt-0.5">
+                                <span className="font-medium text-warning-500 flex items-center gap-1">★ {ride.driver?.rating ? ride.driver.rating.toFixed(1) : '4.9'}</span>
+                                <span className="mx-2">•</span>
+                                <span>{ride.vehicleType}</span>
+                            </div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                            <div className="bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
+                                <span className="text-sm font-bold text-gray-900 tracking-wide">{ride.vehicleNumber}</span>
+                            </div>
+                        </div>
+                    </div>
                     {/* Progress bar */}
                     <div className="mb-5">
                         <div className="mb-2 flex items-center justify-between">
@@ -239,24 +288,24 @@ const TripTrackingPage = () => {
 
                     {/* Route */}
                     <div className="mb-4 rounded-2xl border border-gray-100 bg-gray-50 p-4">
-                        <div className="space-y-3">
-                            <div className="flex items-start gap-3">
-                                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
-                                    <MapPin className="h-4 w-4 text-primary-600" />
+                        <div className="space-y-4">
+                            <div className="flex items-start gap-4">
+                                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white border border-gray-200 mt-0.5 shadow-sm">
+                                    <div className="w-2.5 h-2.5 bg-gray-900 rounded-full" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-500">Pickup</p>
-                                    <p className="font-medium text-gray-900">{ride.startLocation}</p>
+                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Pickup</p>
+                                    <p className="font-medium text-gray-900 leading-tight">{ride.startLocation}</p>
                                 </div>
                             </div>
-                            <div className="ml-4 h-4 w-0.5 bg-gray-200" />
-                            <div className="flex items-start gap-3">
-                                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-green-100">
-                                    <Navigation className="h-4 w-4 text-green-600" />
+                            <div className="ml-4 h-6 w-0.5 bg-gray-300" />
+                            <div className="flex items-start gap-4">
+                                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white border border-gray-200 mt-0.5 shadow-sm">
+                                    <div className="w-2.5 h-2.5 bg-primary-600 rounded-sm" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-500">Drop</p>
-                                    <p className="font-medium text-gray-900">{ride.endLocation}</p>
+                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Dropoff</p>
+                                    <p className="font-medium text-gray-900 leading-tight">{ride.endLocation}</p>
                                 </div>
                             </div>
                         </div>
