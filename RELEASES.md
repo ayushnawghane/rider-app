@@ -8,7 +8,7 @@ Keep track of all production builds, database migrations, and major feature upda
 **Release Name:** Genesis
 
 ### Overview
-The foundational release for the Blinkcar rider application, compiling the full React footprint into an Android App Bundle (`app-release.aab`) ready for Google Play.
+The foundational release for the Blinkcar rider application, compiled into an Android App Bundle (`app-release.aab`) with the unique package ID `com.blinkcar.app`. Ready for Google Play submission.
 
 ### Core Features
 - **Carpooling Engine:** Full support for searching, publishing, and joining intercity rides via seamless Supabase integration.

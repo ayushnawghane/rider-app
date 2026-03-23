@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
-  appName: 'rider app',
+  appId: 'com.blinkcar.app',
+  appName: 'Blinkcar',
   webDir: 'dist'
 };
 
