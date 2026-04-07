@@ -19,14 +19,18 @@ import {
   FileText,
   Bookmark,
   CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
+import { isProfileIncomplete } from '../../utils/profileCompletion';
 
 interface ProfilePageLocationState {
   openEditor?: boolean;
+  requireCompletion?: boolean;
 }
 
 const PLACEHOLDER_PROFILE_EMAIL_REGEX = /^phone-[^@]+@riderapp\.local$/i;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^\+?[1-9]\d{7,14}$/;
 
 const isSystemGeneratedEmail = (value?: string | null) => {
   const email = value?.trim().toLowerCase() || '';
@@ -40,7 +44,8 @@ const ProfilePage = () => {
   const { user, refreshUser, logout, isAuthLoaded } = useAuth();
   const [loading, setLoading] = useState(false);
   const location = useLocation<ProfilePageLocationState>();
-  const [editing, setEditing] = useState(Boolean(location.state?.openEditor));
+  const requiresProfileCompletion = Boolean(location.state?.requireCompletion) || isProfileIncomplete(user);
+  const [editing, setEditing] = useState(Boolean(location.state?.openEditor) || requiresProfileCompletion);
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone?.startsWith('temp_') || user?.phone?.startsWith('phone-') ? '' : user?.phone || '');
@@ -82,6 +87,12 @@ const ProfilePage = () => {
     }
   }, [location.state]);
 
+  useEffect(() => {
+    if (requiresProfileCompletion) {
+      setEditing(true);
+    }
+  }, [requiresProfileCompletion]);
+
   const handleSave = async () => {
     if (!user) return;
 
@@ -97,6 +108,10 @@ const ProfilePage = () => {
       }
       if (!EMAIL_REGEX.test(normalizedEmail)) {
         setSaveError('Enter a valid email address.');
+        return;
+      }
+      if (!PHONE_REGEX.test(phone.trim().replace(/[\s-]/g, ''))) {
+        setSaveError('Enter a valid mobile number.');
         return;
       }
 
@@ -153,6 +168,10 @@ const ProfilePage = () => {
   };
 
   const handleBack = () => {
+    if (requiresProfileCompletion) {
+      return;
+    }
+
     if (history.length > 1) {
       history.goBack();
       return;
@@ -206,13 +225,14 @@ const ProfilePage = () => {
   const displayEmail = isSystemGeneratedEmail(user.email) ? 'Email not added yet' : user.email;
 
   return (
-    <div className="h-screen overflow-y-auto bg-slate-100 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div className="app-scroll-screen app-bottom-nav-safe bg-slate-100">
       <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 px-4 pb-20 pt-12">
         <div className="mx-auto max-w-2xl">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
                 onClick={handleBack}
+                disabled={requiresProfileCompletion}
                 className="grid h-12 w-12 place-items-center rounded-2xl border border-white/35 bg-white/20 text-white backdrop-blur"
                 aria-label="Go back"
               >
@@ -224,7 +244,7 @@ const ProfilePage = () => {
             </div>
 
             <button
-              onClick={() => setEditing(!editing)}
+              onClick={() => setEditing((prev) => (requiresProfileCompletion ? true : !prev))}
               className="grid h-12 w-12 place-items-center rounded-2xl border border-white/35 bg-white/20 text-white backdrop-blur"
               aria-label={editing ? 'Cancel editing profile' : 'Edit profile'}
             >
@@ -240,6 +260,20 @@ const ProfilePage = () => {
 
       <div className="mx-auto -mt-12 max-w-2xl space-y-4 px-4">
         <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          {requiresProfileCompletion && (
+            <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
+              <div className="flex items-start gap-3">
+                <AlertCircle size={18} className="mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold">Complete your profile to continue</p>
+                  <p className="mt-1 text-sm text-amber-800">
+                    Your Google account is signed in, but we still need your missing contact details like mobile number.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-start gap-4">
             <div className="relative">
               <div className="grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-4xl font-bold text-white overflow-hidden">

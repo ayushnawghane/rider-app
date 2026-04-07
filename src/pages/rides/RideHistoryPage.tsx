@@ -48,10 +48,11 @@ const RideHistoryPage = () => {
   };
 
   const containerStyle: React.CSSProperties = {
-    height: '100vh',
+    height: 'calc(100vh - var(--app-bottom-nav-height))',
     overflow: 'auto',
     background: '#f9fafb',
     padding: '16px',
+    paddingBottom: 'calc(var(--app-bottom-nav-height) + 16px)',
     WebkitOverflowScrolling: 'touch'
   };
 

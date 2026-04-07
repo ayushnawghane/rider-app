@@ -329,7 +329,7 @@ const RewardsPage = () => {
   }
 
   return (
-    <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div className="app-scroll-screen app-bottom-nav-safe bg-gray-50">
       <div className={`bg-gradient-to-br ${getTierColor(userStats.level)} pt-12 pb-8 px-4`}>
         <div className="flex items-center gap-4 mb-6">
           <button

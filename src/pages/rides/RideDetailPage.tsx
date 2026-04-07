@@ -205,7 +205,7 @@ const RideDetailPage = () => {
             </button>
           </header>
 
-          <div className="space-y-6 pb-8">
+          <div className="space-y-6 app-bottom-nav-safe">
             {/* Map Section */}
             {hasMapData && (
               <div className="card overflow-hidden">

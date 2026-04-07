@@ -297,7 +297,7 @@ const ActiveRidePage = () => {
   return (
     <IonPage>
       <IonContent className="bg-gray-50">
-        <div className="h-screen flex flex-col">
+        <div className="app-scroll-screen flex flex-col bg-gray-50">
           {/* Header */}
           <header className="bg-white px-4 py-3 shadow-sm z-10">
             <div className="flex items-center justify-between">
@@ -356,7 +356,7 @@ const ActiveRidePage = () => {
               <div className="w-12 h-1 bg-gray-300 rounded-full" />
             </div>
 
-            <div className="px-4 pb-6 overflow-y-auto flex-1">
+            <div className="px-4 app-bottom-nav-safe overflow-y-auto flex-1">
 
               {/* Driver & Vehicle Profile (Uber-like) */}
               <div className="flex items-center pb-4 mb-4 border-b border-gray-100">

@@ -213,8 +213,8 @@ const PublishRidePage = () => {
 
   return (
     <div
-      className="h-screen overflow-y-auto bg-gray-50 pb-24 publish-ride-light"
-      style={{ WebkitOverflowScrolling: 'touch', colorScheme: 'light' }}
+      className="app-scroll-screen app-bottom-nav-safe bg-gray-50 publish-ride-light"
+      style={{ colorScheme: 'light' }}
     >
       {/* Header */}
       <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 pt-12 pb-6 px-4">

@@ -6,6 +6,10 @@
 http://ionicframework.com/docs/theming/ */
 
 @layer base {
+  :root {
+    --app-bottom-nav-height: calc(76px + env(safe-area-inset-bottom));
+  }
+
   body {
     @apply bg-gray-50 text-gray-900 font-sans;
   }
@@ -13,6 +17,27 @@ http://ionicframework.com/docs/theming/ */
   * {
     @apply box-border;
   }
+}
+
+.app-bottom-nav {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 60;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -8px 28px rgba(15, 23, 42, 0.08);
+}
+
+.app-bottom-nav-safe {
+  padding-bottom: calc(var(--app-bottom-nav-height) + 16px);
+}
+
+.app-scroll-screen {
+  height: calc(100vh - var(--app-bottom-nav-height));
+  min-height: calc(100vh - var(--app-bottom-nav-height));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 @layer components {

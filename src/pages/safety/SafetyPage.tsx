@@ -168,10 +168,11 @@ const SafetyPage: React.FC = () => {
 
   return (
     <div style={{ 
-      height: '100vh', 
+      height: 'calc(100vh - var(--app-bottom-nav-height))', 
       overflow: 'auto', 
       background: '#f9fafb', 
       padding: '16px',
+      paddingBottom: 'calc(var(--app-bottom-nav-height) + 16px)',
       WebkitOverflowScrolling: 'touch'
     }}>
       {/* Header */}
@@ -405,7 +406,7 @@ const SafetyPage: React.FC = () => {
       {showToast && (
         <div style={{
           position: 'fixed',
-          bottom: '24px',
+          bottom: 'calc(var(--app-bottom-nav-height) + 16px)',
           left: '50%',
           transform: 'translateX(-50%)',
           background: '#1f2937',

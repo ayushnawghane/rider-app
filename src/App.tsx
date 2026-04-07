@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { IonApp, IonPage, IonRouterOutlet } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { Redirect, Route } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LocationPermission } from './components/permissions';
 import { locationService } from './services';
 import LoadingOverlay from './components/LoadingOverlay';
 import SplashScreen from './components/SplashScreen';
+import MobileBottomNav from './components/navigation/MobileBottomNav';
+import { isProfileIncomplete } from './utils/profileCompletion';
 
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -76,13 +79,29 @@ const TripTrackingScreen = withIonPage(TripTrackingPage);
 
 const AppRoutes: React.FC = () => {
   const { user, isAuthLoaded } = useAuth();
+  const location = useLocation();
+
+  const getPostAuthRedirect = () => {
+    if (!user) {
+      return '/login';
+    }
+
+    if (isProfileIncomplete(user)) {
+      return {
+        pathname: '/profile',
+        state: { openEditor: true, requireCompletion: true },
+      };
+    }
+
+    return '/home';
+  };
 
   const renderPublic = (Component: RoutedComponent) => (props: unknown) => {
     const routeProps = props as Record<string, unknown>;
     if (!isAuthLoaded) {
       return <LoadingOverlay isOpen message="Loading..." />;
     }
-    return !user ? <Component {...routeProps} /> : <Redirect to="/home" />;
+    return !user ? <Component {...routeProps} /> : <Redirect to={getPostAuthRedirect()} />;
   };
 
   const renderPrivate = (Component: RoutedComponent) => (props: unknown) => {
@@ -90,11 +109,34 @@ const AppRoutes: React.FC = () => {
     if (!isAuthLoaded) {
       return <LoadingOverlay isOpen message="Loading..." />;
     }
-    return user ? <Component {...routeProps} /> : <Redirect to="/login" />;
+    if (!user) {
+      return <Redirect to="/login" />;
+    }
+
+    const pathname =
+      typeof routeProps.location === 'object' &&
+      routeProps.location !== null &&
+      'pathname' in routeProps.location &&
+      typeof (routeProps.location as { pathname?: unknown }).pathname === 'string'
+        ? (routeProps.location as { pathname: string }).pathname
+        : '';
+
+    if (isProfileIncomplete(user) && pathname !== '/profile') {
+      return (
+        <Redirect
+          to={{
+            pathname: '/profile',
+            state: { openEditor: true, requireCompletion: true },
+          }}
+        />
+      );
+    }
+
+    return <Component {...routeProps} />;
   };
 
   return (
-    <IonReactRouter>
+    <>
       <IonRouterOutlet>
         <Route exact path="/login" render={renderPublic(LoginScreen)} />
         <Route exact path="/register" render={renderPublic(RegisterScreen)} />
@@ -125,11 +167,12 @@ const AppRoutes: React.FC = () => {
             if (!isAuthLoaded) {
               return <LoadingOverlay isOpen message="Loading..." />;
             }
-            return <Redirect to={user ? '/home' : '/login'} />;
+            return <Redirect to={user ? getPostAuthRedirect() : '/login'} />;
           }}
         />
       </IonRouterOutlet>
-    </IonReactRouter>
+      {user && location.pathname !== '/login' && location.pathname !== '/register' && <MobileBottomNav />}
+    </>
   );
 };
 
@@ -195,7 +238,9 @@ const AppContent: React.FC = () => {
 
   return (
     <AuthProvider>
-      <AppRoutes />
+      <IonReactRouter>
+        <AppRoutes />
+      </IonReactRouter>
     </AuthProvider>
   );
 };

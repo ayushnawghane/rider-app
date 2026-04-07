@@ -225,9 +225,23 @@ BEGIN
     INSERT INTO public.profiles (id, email, full_name, phone)
     VALUES (
         NEW.id,
-        NEW.email,
-        COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
-        NEW.phone
+        COALESCE(
+            NEW.email,
+            NEW.raw_user_meta_data->>'email',
+            'user-' || NEW.id::text || '@otp.riderapp.local'
+        ),
+        COALESCE(
+            NEW.raw_user_meta_data->>'full_name',
+            NEW.raw_user_meta_data->>'name',
+            NEW.email,
+            NEW.phone,
+            'Rider'
+        ),
+        COALESCE(
+            NEW.raw_user_meta_data->>'phone',
+            NEW.phone,
+            'temp_' || NEW.id::text
+        )
     );
     RETURN NEW;
 END;

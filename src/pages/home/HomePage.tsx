@@ -19,45 +19,13 @@ import {
   Navigation
 } from 'lucide-react';
 import type { PublishedRide, UserStats } from '../../types';
+import { isProfileIncomplete } from '../../utils/profileCompletion';
 
 interface Location {
   address: string;
   lat: number;
   lng: number;
 }
-
-const GENERIC_PROFILE_NAMES = new Set(['rider', 'user']);
-const PLACEHOLDER_PROFILE_EMAIL_REGEX = /^phone-[^@]+@riderapp\.local$/i;
-
-const looksLikeEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-
-const isProfileNameIncomplete = (value?: string | null) => {
-  const fullName = value?.trim() || '';
-  if (!fullName) return true;
-
-  const normalizedName = fullName.toLowerCase();
-  if (GENERIC_PROFILE_NAMES.has(normalizedName)) return true;
-  if (normalizedName.startsWith('phone-')) return true;
-  if (looksLikeEmail(fullName)) return true;
-
-  return false;
-};
-
-const isProfileEmailIncomplete = (value?: string | null) => {
-  const email = value?.trim().toLowerCase() || '';
-  if (!email) return true;
-  if (email.endsWith('@otp.riderapp.local')) return true;
-  if (PLACEHOLDER_PROFILE_EMAIL_REGEX.test(email)) return true;
-  return false;
-};
-
-const isProfilePhoneIncomplete = (value?: string | null) => {
-  const phone = value?.trim() || '';
-  if (!phone) return true;
-  if (phone.startsWith('temp_')) return true;
-  if (phone.startsWith('phone-')) return true;
-  return false;
-};
 
 const profilePromptDismissKey = (userId: string) => `profile-prompt-dismissed:${userId}`;
 
@@ -116,9 +84,7 @@ const HomePage = () => {
       return;
     }
 
-    setShowProfilePrompt(
-      isProfileNameIncomplete(user.fullName) || isProfileEmailIncomplete(user.email) || isProfilePhoneIncomplete(user.phone),
-    );
+    setShowProfilePrompt(isProfileIncomplete(user));
   }, [dismissedProfilePrompt, isAuthLoaded, user]);
 
   const handleSwapLocations = () => {
@@ -159,7 +125,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="h-screen overflow-y-auto bg-gray-50 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div className="app-scroll-screen app-bottom-nav-safe bg-gray-50">
       {/* Orange Header Section */}
       <div className="relative pt-10 pb-0 px-4 overflow-hidden min-h-[200px]" style={{ background: 'linear-gradient(160deg, #e8521a 0%, #f07840 40%, #f8b49a 75%, #fde8dc 100%)' }}>
         {/* Top Row: Notifications & Profile */}
@@ -461,49 +427,12 @@ const HomePage = () => {
       <button
         onClick={() => history.push('/support')}
         className="fixed bottom-24 right-4 z-30 flex items-center gap-2 rounded-full bg-primary-500 px-4 py-3 text-white shadow-lg shadow-primary-500/30 transition-all active:scale-95"
+        style={{ bottom: 'calc(env(safe-area-inset-bottom) + 92px)' }}
         type="button"
       >
         <HelpCircle className="h-5 w-5" />
         <span className="text-sm font-semibold">Help</span>
       </button>
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 safe-area-bottom">
-        <div className="flex justify-around items-center max-w-lg mx-auto">
-          <button className="flex flex-col items-center gap-1 p-2 text-primary-600">
-            <Navigation className="w-6 h-6" />
-            <span className="text-xs font-medium">Home</span>
-          </button>
-          <button
-            onClick={() => history.push('/publish-ride')}
-            className="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-primary-600"
-          >
-            <Plus className="w-6 h-6" />
-            <span className="text-xs font-medium">Publish</span>
-          </button>
-          <button
-            onClick={() => history.push('/find-ride')}
-            className="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-primary-600"
-          >
-            <Search className="w-6 h-6" />
-            <span className="text-xs font-medium">Find</span>
-          </button>
-          <button
-            onClick={() => history.push('/rewards')}
-            className="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-primary-600"
-          >
-            <Award className="w-6 h-6" />
-            <span className="text-xs font-medium">Rewards</span>
-          </button>
-          <button
-            onClick={() => history.push('/profile')}
-            className="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-primary-600"
-          >
-            <Users className="w-6 h-6" />
-            <span className="text-xs font-medium">Profile</span>
-          </button>
-        </div>
-      </div>
 
       {showProfilePrompt && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-900/45 px-4 pb-8 sm:items-center sm:pb-0">

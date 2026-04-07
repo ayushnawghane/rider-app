@@ -1,35 +1,19 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { phoneOtpAuthService } from '../../services/phoneOtpAuth';
 import { authService } from '../../services/auth';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 
-const normalizePhone = (input: string, countryCode: string) => {
-  const digits = input.replace(/\D/g, '');
-  if (!digits) return '';
-  if (input.trim().startsWith('+')) return `+${digits}`;
-  if (digits.startsWith(countryCode) && digits.length > 10) return `+${digits}`;
-  if (digits.length === 10) return `+${countryCode}${digits}`;
-  return `+${digits}`;
-};
+const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
 const LoginPage = () => {
   const history = useHistory();
   const { user, isAuthLoaded } = useAuth();
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [normalizedPhone, setNormalizedPhone] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
-
-  const countryCode = useMemo(
-    () => String(import.meta.env.VITE_PHONE_COUNTRY_CODE || '91').replace(/\D/g, '') || '91',
-    [],
-  );
 
   useEffect(() => {
     if (isAuthLoaded && user) {
@@ -37,64 +21,34 @@ const LoginPage = () => {
     }
   }, [isAuthLoaded, user, history]);
 
-  const handleSendOtp = async (event: FormEvent<HTMLFormElement>) => {
+  const handleEmailLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isSubmitting) return;
+
     setError(null);
-    setInfo(null);
-    const phone = normalizePhone(phoneNumber, countryCode);
-    if (!/^\+\d{10,15}$/.test(phone)) {
-      setError('Enter a valid mobile number including country code.');
+
+    if (!isValidEmail(email)) {
+      setError('Enter a valid email address.');
+      return;
+    }
+
+    if (!password) {
+      setError('Enter your password.');
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const sendResult = await phoneOtpAuthService.sendOtp(phone);
-      setNormalizedPhone(phone);
-      setOtpSent(true);
-      const requestSuffix = sendResult.requestId ? ` (request: ${sendResult.requestId})` : '';
-      setInfo(`${sendResult.message || `OTP sent to ${phone}`}${requestSuffix}`);
-    } catch (sendError: unknown) {
-      const message =
-        sendError instanceof Error
-          ? sendError.message
-          : 'Failed to send OTP. Check Supabase SMS provider configuration.';
-      setError(message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+      const result = await authService.signInWithEmailPassword(email, password);
 
-  const handleVerifyOtp = async () => {
-    if (isSubmitting) {
-      return;
-    }
-    setError(null);
-    setInfo(null);
+      if (!result.success) {
+        setError(result.error || 'Login failed.');
+        return;
+      }
 
-    if (isAuthLoaded && user) {
       history.replace('/home');
-      return;
-    }
-
-    const phone = normalizedPhone || normalizePhone(phoneNumber, countryCode);
-    if (!/^\+\d{10,15}$/.test(phone)) {
-      setError('Enter a valid mobile number.');
-      return;
-    }
-    if (!otpCode.trim()) {
-      setError('Enter the OTP code.');
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      await phoneOtpAuthService.verifyOtp(phone, otpCode.trim());
-      history.replace('/home');
-    } catch (verifyOtpError: unknown) {
-      const message =
-        verifyOtpError instanceof Error ? verifyOtpError.message : 'OTP verification failed';
-      setError(message);
+    } catch (loginError: unknown) {
+      setError(loginError instanceof Error ? loginError.message : 'Login failed.');
     } finally {
       setIsSubmitting(false);
     }
@@ -104,10 +58,17 @@ const LoginPage = () => {
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     if (isSubmitting) return;
+
     try {
       setIsSubmitting(true);
       setError(null);
-      await authService.signInWithGoogle(credentialResponse.credential);
+      const result = await authService.signInWithGoogle(credentialResponse.credential);
+
+      if (!result.success) {
+        setError(result.error || 'Google Sign-In failed');
+        return;
+      }
+
       history.replace('/home');
     } catch (err: unknown) {
       console.error('Google Sign-In Error:', err);
@@ -144,8 +105,50 @@ const LoginPage = () => {
             </div>
 
             <p className="mb-6 text-sm leading-relaxed text-gray-600">
-              Continue to your account and access rides, bookings, and real-time trip updates.
+              Sign in with your email and password, or keep using Google if you prefer.
             </p>
+
+            <form onSubmit={handleEmailLogin} className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Email
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  disabled={isSubmitting}
+                  className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                />
+              </label>
+
+              <label className="block text-sm font-medium text-gray-700">
+                Password
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  disabled={isSubmitting}
+                  className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                />
+              </label>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSubmitting ? 'Signing in...' : 'Sign in with email'}
+              </button>
+            </form>
+
+            <div className="my-6 flex items-center gap-3">
+              <div className="h-px flex-1 bg-gray-200" />
+              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">or</span>
+              <div className="h-px flex-1 bg-gray-200" />
+            </div>
 
             <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 shadow-soft sm:p-5">
               <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
@@ -160,61 +163,6 @@ const LoginPage = () => {
               </div>
             </div>
 
-            <div className="hidden">
-              <form onSubmit={handleSendOtp}>
-                <label className="block text-sm font-medium text-gray-700">
-                  Mobile number
-                  <input
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={(event) => setPhoneNumber(event.target.value)}
-                    placeholder="+91 9876543210"
-                    disabled={isSubmitting}
-                    className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
-                  />
-                </label>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="mt-4 flex w-full justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Sending OTP...' : otpSent ? 'Resend OTP' : 'Send OTP'}
-                </button>
-              </form>
-
-              {otpSent && (
-                <>
-                  <label className="mt-4 block text-sm font-medium text-gray-700">
-                    OTP code
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={otpCode}
-                      onChange={(event) => setOtpCode(event.target.value)}
-                      placeholder="Enter OTP"
-                      disabled={isSubmitting}
-                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
-                    />
-                  </label>
-
-                  <button
-                    onClick={handleVerifyOtp}
-                    disabled={isSubmitting}
-                    type="button"
-                    className="mt-4 flex w-full justify-center rounded-md border border-transparent bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50"
-                  >
-                    {isSubmitting ? 'Verifying...' : 'Verify OTP'}
-                  </button>
-                </>
-              )}
-            </div>
-
-            {info && (
-              <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                {info}
-              </div>
-            )}
             {error && (
               <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
                 {error}
@@ -226,6 +174,7 @@ const LoginPage = () => {
               <button
                 onClick={() => history.push('/register')}
                 className="font-semibold text-primary-600 transition-colors hover:text-primary-500"
+                type="button"
               >
                 Create account
               </button>

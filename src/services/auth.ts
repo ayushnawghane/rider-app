@@ -18,8 +18,125 @@ import type {
 } from '../types';
 
 class AuthService {
+  private normalizeEmail(email: string) {
+    return email.trim().toLowerCase();
+  }
+
+  private normalizePhone(phone: string) {
+    return phone.trim();
+  }
+
+  private splitFullName(fullName: string) {
+    const trimmedName = fullName.trim().replace(/\s+/g, ' ');
+    const [firstName = '', ...lastNameParts] = trimmedName.split(' ');
+
+    return {
+      fullName: trimmedName,
+      firstName,
+      lastName: lastNameParts.join(' '),
+    };
+  }
+
+  private async upsertProfile(params: {
+    userId: string;
+    email: string;
+    fullName: string;
+    phone: string;
+    avatarUrl?: string | null;
+  }) {
+    const { fullName, firstName, lastName } = this.splitFullName(params.fullName);
+
+    const profilePayload = {
+      id: params.userId,
+      email: this.normalizeEmail(params.email),
+      full_name: fullName,
+      first_name: firstName || null,
+      last_name: lastName || null,
+      phone: this.normalizePhone(params.phone),
+      avatar_url: params.avatarUrl ?? null,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase
+      .from('profiles')
+      .upsert(profilePayload, { onConflict: 'id' });
+
+    if (error) {
+      throw error;
+    }
+  }
+
   async logout(): Promise<void> {
     await supabase.auth.signOut();
+  }
+
+  async signInWithEmailPassword(email: string, password: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: this.normalizeEmail(email),
+        password,
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Unexpected error during email sign-in:', error);
+      return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
+  async signUpWithEmailPassword(params: {
+    fullName: string;
+    email: string;
+    phone: string;
+    password: string;
+  }): Promise<{ success: boolean; error?: string; requiresEmailVerification?: boolean }> {
+    const { fullName, firstName, lastName } = this.splitFullName(params.fullName);
+    const normalizedEmail = this.normalizeEmail(params.email);
+    const normalizedPhone = this.normalizePhone(params.phone);
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: normalizedEmail,
+        password: params.password,
+        options: {
+          data: {
+            full_name: fullName,
+            first_name: firstName,
+            last_name: lastName,
+            phone: normalizedPhone,
+          },
+        },
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        try {
+          await this.upsertProfile({
+            userId: data.user.id,
+            email: normalizedEmail,
+            fullName,
+            phone: normalizedPhone,
+          });
+        } catch (profileError) {
+          console.warn('Profile sync after email sign-up failed:', profileError);
+        }
+      }
+
+      return {
+        success: true,
+        requiresEmailVerification: !data.session,
+      };
+    } catch (error) {
+      console.error('Unexpected error during email sign-up:', error);
+      return { success: false, error: 'An unexpected error occurred' };
+    }
   }
 
   async signInWithGoogle(idToken: string): Promise<{ success: boolean; error?: string }> {
@@ -32,6 +149,40 @@ class AuthService {
       if (error) {
         console.error('Error signing in with Google:', error.message);
         return { success: false, error: error.message };
+      }
+
+      const authUser = data.user;
+      if (authUser) {
+        const email = authUser.email?.trim();
+        const fullName =
+          typeof authUser.user_metadata?.full_name === 'string'
+            ? authUser.user_metadata.full_name
+            : typeof authUser.user_metadata?.name === 'string'
+              ? authUser.user_metadata.name
+              : 'Rider';
+        const phone =
+          typeof authUser.phone === 'string' && authUser.phone.trim()
+            ? authUser.phone
+            : `phone-${authUser.id.slice(0, 12)}`;
+
+        if (email) {
+          try {
+            await this.upsertProfile({
+              userId: authUser.id,
+              email,
+              fullName,
+              phone,
+              avatarUrl:
+                typeof authUser.user_metadata?.avatar_url === 'string'
+                  ? authUser.user_metadata.avatar_url
+                  : typeof authUser.user_metadata?.picture === 'string'
+                    ? authUser.user_metadata.picture
+                    : null,
+            });
+          } catch (profileError) {
+            console.warn('Profile sync after Google sign-in failed:', profileError);
+          }
+        }
       }
 
       return { success: true };
