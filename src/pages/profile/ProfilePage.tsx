@@ -19,6 +19,7 @@ import {
   FileText,
   Bookmark,
   CheckCircle2,
+  ShieldCheck,
   AlertCircle,
 } from 'lucide-react';
 import { isProfileIncomplete } from '../../utils/profileCompletion';
@@ -548,6 +549,20 @@ const ProfilePage = () => {
             </div>
             <ChevronRight size={20} className="text-slate-400" />
           </button>
+
+          <button
+            onClick={() => history.push('/privacy-policy')}
+            className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left hover:bg-slate-50"
+          >
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-orange-100 text-orange-700">
+              <ShieldCheck size={18} />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-slate-800">Privacy Policy</p>
+              <p className="text-xs text-slate-500">Legal and data terms</p>
+            </div>
+            <ChevronRight size={20} className="text-slate-400" />
+          </button>
         </section>
 
         <button
@@ -556,6 +571,13 @@ const ProfilePage = () => {
         >
           <LogOut size={18} />
           Sign out
+        </button>
+
+        <button
+          onClick={() => history.push('/delete-account')}
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium text-slate-400 transition hover:text-rose-600"
+        >
+          Delete Account
         </button>
       </div>
     </div>

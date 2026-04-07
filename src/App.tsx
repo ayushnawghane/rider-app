@@ -32,6 +32,8 @@ import RewardsPage from './pages/rewards/RewardsPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import SelectLocationPage from './pages/common/SelectLocationPage';
 import TripTrackingPage from './pages/rides/TripTrackingPage';
+import DeleteAccountPage from './pages/auth/DeleteAccountPage';
+import PrivacyPolicyPage from './pages/auth/PrivacyPolicyPage';
 
 import '@ionic/react/css/core.css';
 import './theme/variables.css';
@@ -76,6 +78,8 @@ const RewardsScreen = withIonPage(RewardsPage);
 const SafetyScreen = withIonPage(SafetyPage);
 const ProfileScreen = withIonPage(ProfilePage);
 const TripTrackingScreen = withIonPage(TripTrackingPage);
+const DeleteAccountScreen = withIonPage(DeleteAccountPage);
+const PrivacyPolicyScreen = withIonPage(PrivacyPolicyPage);
 
 const AppRoutes: React.FC = () => {
   const { user, isAuthLoaded } = useAuth();
@@ -161,6 +165,8 @@ const AppRoutes: React.FC = () => {
         <Route exact path="/profile" render={renderPrivate(ProfileScreen)} />
         <Route exact path="/profile/kyc" render={renderPrivate(KycUploadPage)} />
         <Route exact path="/notifications" render={renderPrivate(NotificationsPage)} />
+        <Route exact path="/delete-account" render={renderPrivate(DeleteAccountScreen)} />
+        <Route exact path="/privacy-policy" component={PrivacyPolicyScreen} />
         <Route exact path="/admin" render={renderPrivate(AdminDashboardPage)} />
         <Route
           render={() => {

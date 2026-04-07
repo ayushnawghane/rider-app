@@ -319,6 +319,29 @@ class AuthService {
     }
   }
 
+  async deleteAccount(userId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      // 1. Delete user data from profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (profileError) {
+        console.error('Error deleting profile:', profileError.message);
+        return { success: false, error: profileError.message };
+      }
+
+      // 2. Sign out the user
+      await this.logout();
+
+      return { success: true };
+    } catch (error) {
+      console.error('Unexpected error during account deletion:', error);
+      return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
   async uploadKycDocument({ file, userId }: KycUploadParams): Promise<{ success: boolean; documentUrl?: string; error?: string }> {
     try {
       const fileName = `${userId}/kyc-${Date.now()}`;

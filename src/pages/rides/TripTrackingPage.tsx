@@ -94,7 +94,8 @@ const TripTrackingPage = () => {
                         { lat: result.ride.endLocationCoords.lat, lng: result.ride.endLocationCoords.lng },
                     );
                     if (route) {
-                        setRoutePath(mapsService.decodePolyline(route.polyline));
+                        const decoded = mapsService.decodePolyline(route.polyline);
+                        setRoutePath(decoded);
                         setEta(route.duration);
                     }
                 }
@@ -211,7 +212,7 @@ const TripTrackingPage = () => {
                 </div>
             </header>
 
-            {/* Map */}
+            {/* Map + Route Animation */}
             <div className="relative flex-1">
                 <MapComponent
                     center={mapCenter}
@@ -220,6 +221,7 @@ const TripTrackingPage = () => {
                     fitBounds={false}
                     className="h-full"
                 />
+
 
                 {/* Recenter */}
                 <button

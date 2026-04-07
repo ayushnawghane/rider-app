@@ -1,0 +1,75 @@
+workflows:
+  android-release:
+    name: Android Release Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      # ── Android signing ──────────────────────────────────────────────────
+      # Upload your keystore to Codemagic (Team Settings → Code signing)
+      # and set these environment variables there (mark as secret).
+      android_signing:
+        - blinkcar_keystore          # name of the keystore you upload in Codemagic
+      groups:
+        - blinkcar_env               # group that holds CM_KEYSTORE_*, etc.
+      vars:
+        PACKAGE_NAME: "com.blinkcar.app"
+      node: 20.19.0
+      java: 17
+
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+
+    scripts:
+      # 1. Install JS dependencies
+      - name: Install npm dependencies
+        script: npm ci
+
+      # 2. Build the web bundle (tsc + vite)
+      - name: Build web assets
+        script: npm run build
+
+      # 3. Sync into the Android project via Capacitor
+      - name: Capacitor sync
+        script: npx cap sync android
+
+      # 4. Set executable permission on gradlew
+      - name: Make gradlew executable
+        script: chmod +x android/gradlew
+
+      # 5. Build a signed release APK (and AAB for Play Store)
+      - name: Build Android release
+        script: |
+          cd android
+          ./gradlew bundleRelease assembleRelease \
+            -Pandroid.injected.signing.store.file=$CM_KEYSTORE_PATH \
+            -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$CM_KEY_PASSWORD
+
+    artifacts:
+      # Signed APK (sideload / direct install)
+      - android/app/build/outputs/apk/release/*.apk
+      # Signed AAB (Google Play Store)
+      - android/app/build/outputs/bundle/release/*.aab
+      # Mapping file for crash deobfuscation
+      - android/app/build/outputs/mapping/release/mapping.txt
+
+    publishing:
+      email:
+        recipients:
+          - builds@blinkcar.app          # replace with your email
+        notify:
+          success: true
+          failure: true
+      # Uncomment and configure to publish directly to Google Play:
+      # google_play:
+      #   credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+      #   track: internal
+      #   submit_as_draft: true
