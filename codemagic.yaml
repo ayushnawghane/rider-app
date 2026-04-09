@@ -14,7 +14,7 @@ workflows:
         - blinkcar_env               # group that holds CM_KEYSTORE_*, etc.
       vars:
         PACKAGE_NAME: "com.blinkcar.app"
-      node: 20.19.0
+      node: 22.11.0
       java: 17
 
     triggering:
@@ -98,7 +98,7 @@ workflows:
         APP_STORE_CONNECT_KEY_IDENTIFIER: $APP_STORE_CONNECT_KEY_IDENTIFIER
         APP_STORE_CONNECT_ISSUER_ID: $APP_STORE_CONNECT_ISSUER_ID
         APP_STORE_CONNECT_PRIVATE_KEY: $APP_STORE_CONNECT_PRIVATE_KEY
-      node: 20.19.0
+      node: 22.11.0
       xcode: latest
       cocoapods: default
 
