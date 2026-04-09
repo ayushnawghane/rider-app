@@ -92,7 +92,7 @@ workflows:
       groups:
         - blinkcar_env                    # must contain APP_STORE_CONNECT_* vars
       vars:
-        XCODE_WORKSPACE: "ios/App/App.xcodeproj"
+        XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
         BUNDLE_ID: "com.blinkcar.app"
         APP_STORE_CONNECT_KEY_IDENTIFIER: $APP_STORE_CONNECT_KEY_IDENTIFIER
@@ -124,18 +124,12 @@ workflows:
       - name: Capacitor sync
         script: npx cap sync ios
 
-      # 4. Install CocoaPods dependencies
-      - name: Install CocoaPods
-        script: |
-          cd ios/App
-          pod install --repo-update
-
-      # 5. Set up App Store Connect API key for signing
+      # 4. Set up App Store Connect API key for signing
       - name: Set up App Store Connect API key
         script: |
           echo $APP_STORE_CONNECT_PRIVATE_KEY | base64 --decode > /tmp/AuthKey.p8
 
-      # 6. Set up code signing identities & provisioning profiles
+      # 5. Set up code signing identities & provisioning profiles
       - name: Set up code signing
         script: |
           keychain initialize
@@ -145,18 +139,18 @@ workflows:
           keychain add-certificates
           xcode-project use-profiles
 
-      # 7. Increment build number using App Store Connect latest
+      # 6. Increment build number using App Store Connect latest
       - name: Increment build number
         script: |
           BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number $BUNDLE_ID)
           cd ios/App
           agvtool new-version -all $((BUILD_NUMBER + 1))
 
-      # 8. Build & archive the Xcode project
+      # 7. Build & archive the Xcode project
       - name: Build iOS
         script: |
           xcode-project build-ipa \
-            --workspace "ios/App/App.xcworkspace" \
+            --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
 
     artifacts:
