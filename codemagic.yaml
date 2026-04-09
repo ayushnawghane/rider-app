@@ -134,9 +134,16 @@ workflows:
       # 5. Increment build number using App Store Connect latest
       - name: Increment build number
         script: |
-          BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number $BUNDLE_ID)
+          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number $BUNDLE_ID || echo 0)
+          NEXT_BUILD_NUMBER=$((LATEST_BUILD_NUMBER + 1))
+          # Ensure uniqueness even when multiple CI runs happen close together.
+          if [ -n "$CM_BUILD_ID" ] && [ "$CM_BUILD_ID" -gt "$NEXT_BUILD_NUMBER" ]; then
+            BUILD_NUMBER="$CM_BUILD_ID"
+          else
+            BUILD_NUMBER="$NEXT_BUILD_NUMBER"
+          fi
           cd ios/App
-          agvtool new-version -all $((BUILD_NUMBER + 1))
+          agvtool new-version -all "$BUILD_NUMBER"
 
       # 6. Build & archive the Xcode project
       - name: Build iOS
