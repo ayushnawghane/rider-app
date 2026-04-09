@@ -124,12 +124,7 @@ workflows:
       - name: Capacitor sync
         script: npx cap sync ios
 
-      # 4. Set up App Store Connect API key for signing
-      - name: Set up App Store Connect API key
-        script: |
-          echo $APP_STORE_CONNECT_PRIVATE_KEY | base64 --decode > /tmp/AuthKey.p8
-
-      # 5. Set up code signing identities & provisioning profiles
+      # 4. Set up code signing identities & provisioning profiles
       - name: Set up code signing
         script: |
           keychain initialize
@@ -139,14 +134,14 @@ workflows:
           keychain add-certificates
           xcode-project use-profiles
 
-      # 6. Increment build number using App Store Connect latest
+      # 5. Increment build number using App Store Connect latest
       - name: Increment build number
         script: |
           BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number $BUNDLE_ID)
           cd ios/App
           agvtool new-version -all $((BUILD_NUMBER + 1))
 
-      # 7. Build & archive the Xcode project
+      # 6. Build & archive the Xcode project
       - name: Build iOS
         script: |
           xcode-project build-ipa \
