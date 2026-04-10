@@ -51,7 +51,7 @@ workflows:
       - name: Build Android release
         script: |
           APP_VERSION=$(node -p "require('./package.json').version")
-          VERSION_CODE=${CM_BUILD_ID:-1}
+          VERSION_CODE=${BUILD_NUMBER:-${PROJECT_BUILD_NUMBER:-1}}
           cd android
           ./gradlew bundleRelease assembleRelease \
             -PappVersionCode=$VERSION_CODE \
@@ -143,18 +143,20 @@ workflows:
           keychain add-certificates
           xcode-project use-profiles
 
-      # 6. Increment build number using Codemagic build id
+      # 6. Increment build number using Codemagic numeric build counter
       - name: Increment build number
         script: |
-          if [ -n "$CM_BUILD_ID" ]; then
-            BUILD_NUMBER="$CM_BUILD_ID"
+          if [ -n "$BUILD_NUMBER" ]; then
+            IOS_BUILD_NUMBER="$BUILD_NUMBER"
+          elif [ -n "$PROJECT_BUILD_NUMBER" ]; then
+            IOS_BUILD_NUMBER="$PROJECT_BUILD_NUMBER"
           else
-            BUILD_NUMBER=$(date +%s)
+            IOS_BUILD_NUMBER=$(date +%s)
           fi
           cd ios/App
-          sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = $BUILD_NUMBER;/g" App.xcodeproj/project.pbxproj
-          agvtool new-version -all "$BUILD_NUMBER"
-          echo "Using iOS build number: $BUILD_NUMBER"
+          sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = $IOS_BUILD_NUMBER;/g" App.xcodeproj/project.pbxproj
+          agvtool new-version -all "$IOS_BUILD_NUMBER"
+          echo "Using iOS build number: $IOS_BUILD_NUMBER"
           grep -n "CURRENT_PROJECT_VERSION =" App.xcodeproj/project.pbxproj
 
       # 7. Build & archive the Xcode project
