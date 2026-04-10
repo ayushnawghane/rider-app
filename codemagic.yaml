@@ -143,19 +143,19 @@ workflows:
           keychain add-certificates
           xcode-project use-profiles
 
-      # 6. Increment build number using App Store Connect latest
+      # 6. Increment build number using Codemagic build id
       - name: Increment build number
         script: |
-          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number $BUNDLE_ID || echo 0)
-          NEXT_BUILD_NUMBER=$((LATEST_BUILD_NUMBER + 1))
-          # Ensure uniqueness even when multiple CI runs happen close together.
-          if [ -n "$CM_BUILD_ID" ] && [ "$CM_BUILD_ID" -gt "$NEXT_BUILD_NUMBER" ]; then
+          if [ -n "$CM_BUILD_ID" ]; then
             BUILD_NUMBER="$CM_BUILD_ID"
           else
-            BUILD_NUMBER="$NEXT_BUILD_NUMBER"
+            BUILD_NUMBER=$(date +%s)
           fi
           cd ios/App
+          sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = $BUILD_NUMBER;/g" App.xcodeproj/project.pbxproj
           agvtool new-version -all "$BUILD_NUMBER"
+          echo "Using iOS build number: $BUILD_NUMBER"
+          grep -n "CURRENT_PROJECT_VERSION =" App.xcodeproj/project.pbxproj
 
       # 7. Build & archive the Xcode project
       - name: Build iOS
