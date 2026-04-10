@@ -31,23 +31,31 @@ workflows:
       - name: Install npm dependencies
         script: npm ci
 
-      # 2. Build the web bundle (tsc + vite)
+      # 2. Sync semantic app version to native projects
+      - name: Sync semantic version
+        script: npm run version:sync
+
+      # 3. Build the web bundle (tsc + vite)
       - name: Build web assets
         script: npm run build
 
-      # 3. Sync into the Android project via Capacitor
+      # 4. Sync into the Android project via Capacitor
       - name: Capacitor sync
         script: npx cap sync android
 
-      # 4. Set executable permission on gradlew
+      # 5. Set executable permission on gradlew
       - name: Make gradlew executable
         script: chmod +x android/gradlew
 
-      # 5. Build a signed release APK (and AAB for Play Store)
+      # 6. Build a signed release APK (and AAB for Play Store)
       - name: Build Android release
         script: |
+          APP_VERSION=$(node -p "require('./package.json').version")
+          VERSION_CODE=${CM_BUILD_ID:-1}
           cd android
           ./gradlew bundleRelease assembleRelease \
+            -PappVersionCode=$VERSION_CODE \
+            -PappVersionName=$APP_VERSION \
             -Pandroid.injected.signing.store.file=$CM_KEYSTORE_PATH \
             -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
             -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
@@ -113,15 +121,19 @@ workflows:
       - name: Install npm dependencies
         script: npm ci
 
-      # 2. Build the web bundle (tsc + vite)
+      # 2. Sync semantic app version to native projects
+      - name: Sync semantic version
+        script: npm run version:sync
+
+      # 3. Build the web bundle (tsc + vite)
       - name: Build web assets
         script: npm run build
 
-      # 3. Sync into the iOS project via Capacitor
+      # 4. Sync into the iOS project via Capacitor
       - name: Capacitor sync
         script: npx cap sync ios
 
-      # 4. Set up code signing identities & provisioning profiles
+      # 5. Set up code signing identities & provisioning profiles
       - name: Set up code signing
         script: |
           keychain initialize
@@ -131,7 +143,7 @@ workflows:
           keychain add-certificates
           xcode-project use-profiles
 
-      # 5. Increment build number using App Store Connect latest
+      # 6. Increment build number using App Store Connect latest
       - name: Increment build number
         script: |
           LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number $BUNDLE_ID || echo 0)
@@ -145,7 +157,7 @@ workflows:
           cd ios/App
           agvtool new-version -all "$BUILD_NUMBER"
 
-      # 6. Build & archive the Xcode project
+      # 7. Build & archive the Xcode project
       - name: Build iOS
         script: |
           xcode-project build-ipa \

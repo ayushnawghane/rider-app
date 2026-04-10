@@ -1,12 +1,13 @@
 {
   "name": "rider-app",
   "private": true,
-  "version": "0.0.1",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "version:sync": "node scripts/sync-version.mjs",
     "test.e2e": "cypress run",
     "test.unit": "vitest",
     "lint": "eslint"
