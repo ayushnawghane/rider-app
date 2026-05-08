@@ -90,8 +90,6 @@ workflows:
       ios_signing:
         distribution_type: app_store      # or: ad_hoc | development | enterprise
         bundle_identifier: com.blinkcar.app
-      groups:
-        - blinkcar_env                    # must contain APP_STORE_CONNECT_* vars
       vars:
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
@@ -131,9 +129,6 @@ workflows:
       - name: Set up code signing
         script: |
           keychain initialize
-          app-store-connect fetch-signing-files $BUNDLE_ID \
-            --type IOS_APP_STORE \
-            --create
           keychain add-certificates
           xcode-project use-profiles
 
@@ -174,9 +169,3 @@ workflows:
         notify:
           success: true
           failure: true
-      app_store_connect:
-        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
-        submit_to_testflight: true
-        submit_to_app_store: false
