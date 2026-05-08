@@ -1,0 +1,49 @@
+name: Trigger Codemagic
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      workflow_id:
+        description: Codemagic workflow to run
+        required: true
+        default: ios-release
+        type: choice
+        options:
+          - ios-release
+          - android-release
+      branch:
+        description: Branch to build
+        required: true
+        default: main
+
+permissions:
+  contents: read
+
+jobs:
+  trigger-codemagic:
+    name: Start Codemagic build
+    runs-on: ubuntu-latest
+    env:
+      CODEMAGIC_APP_ID: 69fd8f9a295e0207b5049915
+      CODEMAGIC_WORKFLOW_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.workflow_id || 'ios-release' }}
+      CODEMAGIC_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.ref_name }}
+    steps:
+      - name: Trigger Codemagic workflow
+        run: |
+          response=$(curl --fail-with-body --silent --show-error \
+            --request POST "https://api.codemagic.io/builds" \
+            --header "Content-Type: application/json" \
+            --header "x-auth-token: ${CODEMAGIC_API_TOKEN}" \
+            --data "{
+              \"appId\": \"${CODEMAGIC_APP_ID}\",
+              \"workflowId\": \"${CODEMAGIC_WORKFLOW_ID}\",
+              \"branch\": \"${CODEMAGIC_BRANCH}\",
+              \"labels\": [\"github-actions\"]
+            }")
+
+          echo "Codemagic response: ${response}"
+        env:
+          CODEMAGIC_API_TOKEN: ${{ secrets.CODEMAGIC_API_TOKEN }}
