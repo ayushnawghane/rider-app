@@ -5,8 +5,6 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Redirect, Route } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { LocationPermission } from './components/permissions';
-import { locationService } from './services';
 import LoadingOverlay from './components/LoadingOverlay';
 import SplashScreen from './components/SplashScreen';
 import MobileBottomNav from './components/navigation/MobileBottomNav';
@@ -32,6 +30,7 @@ import ProfilePage from './pages/profile/ProfilePage';
 import NotificationsPage from './pages/profile/NotificationsPage';
 import RewardsPage from './pages/rewards/RewardsPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminListPage from './pages/admin/AdminListPage';
 import SelectLocationPage from './pages/common/SelectLocationPage';
 import TripTrackingPage from './pages/rides/TripTrackingPage';
 import DeleteAccountPage from './pages/auth/DeleteAccountPage';
@@ -39,21 +38,6 @@ import PrivacyPolicyPage from './pages/auth/PrivacyPolicyPage';
 
 import '@ionic/react/css/core.css';
 import './theme/variables.css';
-
-const LOCATION_PERMISSION_TIMEOUT_MS = 12000;
-
-const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string) => {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
-  });
-
-  try {
-    return await Promise.race([promise, timeoutPromise]);
-  } finally {
-    if (timeoutId) clearTimeout(timeoutId);
-  }
-};
 
 type RoutedComponent = React.ComponentType<Record<string, unknown>>;
 
@@ -170,6 +154,7 @@ const AppRoutes: React.FC = () => {
         <Route exact path="/delete-account" render={renderPrivate(DeleteAccountScreen)} />
         <Route exact path="/privacy-policy" component={PrivacyPolicyScreen} />
         <Route exact path="/admin" render={renderPrivate(AdminDashboardPage)} />
+        <Route exact path="/admin/:section(users|rides|disputes)" render={renderPrivate(AdminListPage)} />
         <Route
           render={() => {
             if (!isAuthLoaded) {
@@ -185,9 +170,6 @@ const AppRoutes: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const [locationGranted, setLocationGranted] = useState<boolean | null>(null);
-  const [checkingLocation, setCheckingLocation] = useState(true);
-
   useEffect(() => {
     const listener = CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
       if (!url.startsWith(NATIVE_AUTH_REDIRECT_URL)) {
@@ -204,62 +186,6 @@ const AppContent: React.FC = () => {
       listener.then((handle) => handle.remove()).catch(() => undefined);
     };
   }, []);
-
-  useEffect(() => {
-    checkLocationPermission();
-  }, []);
-
-  const checkLocationPermission = async () => {
-    try {
-      setCheckingLocation(true);
-      const hasPermission = await withTimeout(
-        locationService.checkPermissions(),
-        LOCATION_PERMISSION_TIMEOUT_MS,
-        'Location permission check timed out',
-      );
-      setLocationGranted(hasPermission);
-    } catch (error) {
-      console.error('Error checking location permission:', error);
-      setLocationGranted(false);
-    } finally {
-      setCheckingLocation(false);
-    }
-  };
-
-  const handleLocationGranted = () => {
-    setLocationGranted(true);
-  };
-
-  if (checkingLocation) {
-    return (
-      <div style={{
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#f9fafb'
-      }}>
-        <div style={{
-          width: '40px',
-          height: '40px',
-          border: '3px solid #e5e7eb',
-          borderTopColor: '#6366f1',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }} />
-        <style>{`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    );
-  }
-
-  if (!locationGranted) {
-    return <LocationPermission onPermissionGranted={handleLocationGranted} />;
-  }
 
   return (
     <AuthProvider>

@@ -195,7 +195,7 @@ const RideHistoryPage = () => {
           <div style={{ ...cardStyle, textAlign: 'center', padding: '40px 24px' }}>
             <span style={{ fontSize: '64px' }}>🚗</span>
             <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#1f2937', margin: '16px 0 8px' }}>No Rides Yet</h2>
-            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 24px' }}>Publish your first ride to get started</p>
+            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 24px' }}>Publish a ride or join one from Find Ride to get started</p>
             <button
               onClick={() => history.push('/publish-ride')}
               style={primaryButtonStyle}
@@ -241,6 +241,16 @@ const RideHistoryPage = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                         <span style={statusBadgeStyle(ride.status)}>
                           {status.icon} {status.label}
+                        </span>
+                        <span style={{
+                          fontSize: '12px',
+                          color: ride.userRole === 'passenger' ? '#047857' : '#4338ca',
+                          background: ride.userRole === 'passenger' ? '#d1fae5' : '#eef2ff',
+                          padding: '4px 8px',
+                          borderRadius: '8px',
+                          fontWeight: 600,
+                        }}>
+                          {ride.userRole === 'passenger' ? 'Passenger' : 'Driver'}
                         </span>
                         <span style={{ fontSize: '13px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           📅 {formatDate(ride.date)}

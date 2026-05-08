@@ -5,6 +5,9 @@ import type {
   RideParticipant,
 } from '../types';
 
+const JOIN_RIDE_POINTS = 30;
+const PUBLISH_RIDE_POINTS = 50;
+
 class RideService {
   async createRide(params: RideCreateParams): Promise<{ success: boolean; ride?: Ride; error?: string }> {
     try {
@@ -33,7 +36,22 @@ class RideService {
         return { success: false, error: error.message };
       }
 
-      return { success: true, ride: this.mapRideToRide(data) };
+      const ride = this.mapRideToRide(data);
+      await Promise.allSettled([
+        this.createReward({
+          userId: params.userId,
+          rideId: ride.id,
+          points: PUBLISH_RIDE_POINTS,
+          action: 'publish_ride',
+          description: `Published a ride from ${ride.startLocation} to ${ride.endLocation}`,
+        }),
+        this.updateProfileStats(params.userId, {
+          pointsDelta: PUBLISH_RIDE_POINTS,
+          ridesPublishedDelta: 1,
+        }),
+      ]);
+
+      return { success: true, ride };
     } catch (error) {
       return { success: false, error: 'An unexpected error occurred' };
     }
@@ -45,9 +63,10 @@ class RideService {
     seatsBooked?: number;
   }): Promise<{ success: boolean; participant?: RideParticipant; error?: string }> {
     try {
+      const seatsBooked = Math.max(1, params.seatsBooked ?? 1);
       const { data: rideRow, error: rideError } = await supabase
         .from('rides')
-        .select('id, user_id, status')
+        .select('id, user_id, driver_id, status, available_seats, booked_seats, price_per_seat, start_location, end_location, date')
         .eq('id', params.rideId)
         .single();
 
@@ -67,13 +86,41 @@ class RideService {
         return { success: false, error: 'This ride is not available to join' };
       }
 
+      const availableSeats = rideRow.available_seats ?? 1;
+      const bookedSeats = rideRow.booked_seats ?? 0;
+      const remainingSeats = Math.max(0, availableSeats - bookedSeats);
+      if (remainingSeats < seatsBooked) {
+        return {
+          success: false,
+          error: remainingSeats > 0
+            ? `Only ${remainingSeats} seat${remainingSeats === 1 ? '' : 's'} left on this ride`
+            : 'This ride is fully booked',
+        };
+      }
+
+      const { data: existingParticipant, error: participantLookupError } = await supabase
+        .from('ride_participants')
+        .select('*')
+        .eq('ride_id', params.rideId)
+        .eq('user_id', params.userId)
+        .eq('status', 'joined')
+        .maybeSingle();
+
+      if (participantLookupError) {
+        return { success: false, error: participantLookupError.message };
+      }
+
+      if (existingParticipant) {
+        return { success: true, participant: this.mapRideParticipant(existingParticipant) };
+      }
+
       const { data, error } = await supabase
         .from('ride_participants')
         .upsert(
           {
             ride_id: params.rideId,
             user_id: params.userId,
-            seats_booked: Math.max(1, params.seatsBooked ?? 1),
+            seats_booked: seatsBooked,
             status: 'joined',
           },
           { onConflict: 'ride_id,user_id' },
@@ -84,6 +131,57 @@ class RideService {
       if (error) {
         return { success: false, error: error.message };
       }
+
+      const totalPrice = seatsBooked * (rideRow.price_per_seat ?? 0);
+      const bookingResult = await this.createBooking({
+        rideId: params.rideId,
+        passengerId: params.userId,
+        seatsBooked,
+        totalPrice,
+        pickupLocation: rideRow.start_location,
+        dropLocation: rideRow.end_location,
+      });
+
+      if (!bookingResult.success) {
+        await this.cancelParticipant(params.rideId, params.userId);
+        return { success: false, error: bookingResult.error || 'Unable to create booking' };
+      }
+
+      const { error: seatUpdateError } = await supabase
+        .from('rides')
+        .update({ booked_seats: bookedSeats + seatsBooked })
+        .eq('id', params.rideId);
+
+      if (seatUpdateError) {
+        await this.cancelParticipant(params.rideId, params.userId);
+        return { success: false, error: seatUpdateError.message };
+      }
+
+      await Promise.allSettled([
+        this.createReward({
+          userId: params.userId,
+          rideId: params.rideId,
+          points: JOIN_RIDE_POINTS,
+          action: 'join_ride',
+          description: `Joined a ride from ${rideRow.start_location} to ${rideRow.end_location}`,
+        }),
+        this.updateProfileStats(params.userId, {
+          pointsDelta: JOIN_RIDE_POINTS,
+          ridesTakenDelta: 1,
+        }),
+        this.createNotification({
+          userId: rideRow.user_id,
+          title: 'New rider joined',
+          message: `A passenger joined your ride from ${rideRow.start_location} to ${rideRow.end_location}.`,
+          type: 'ride',
+        }),
+        this.createNotification({
+          userId: params.userId,
+          title: 'Ride joined',
+          message: `You joined the ride from ${rideRow.start_location} to ${rideRow.end_location}.`,
+          type: 'ride',
+        }),
+      ]);
 
       return { success: true, participant: this.mapRideParticipant(data) };
     } catch (error) {
@@ -188,18 +286,53 @@ class RideService {
 
   async getRides(userId: string, limit = 50): Promise<{ success: boolean; rides?: Ride[]; error?: string }> {
     try {
-      const { data, error } = await supabase
+      const driverRidesQuery = supabase
         .from('rides')
-        .select('*')
+        .select('*, driver:profiles!driver_id(id, full_name, avatar_url, rating_as_driver, phone)')
         .eq('user_id', userId)
         .order('date', { ascending: false })
         .limit(limit);
 
-      if (error) {
-        return { success: false, error: error.message };
+      const passengerRidesQuery = supabase
+        .from('ride_participants')
+        .select('*, ride:rides(*, driver:profiles!driver_id(id, full_name, avatar_url, rating_as_driver, phone))')
+        .eq('user_id', userId)
+        .eq('status', 'joined')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      const [driverResult, passengerResult] = await Promise.all([
+        driverRidesQuery,
+        passengerRidesQuery,
+      ]);
+
+      if (driverResult.error) {
+        return { success: false, error: driverResult.error.message };
       }
 
-      return { success: true, rides: data.map((ride: any) => this.mapRideToRide(ride)) };
+      if (passengerResult.error) {
+        return { success: false, error: passengerResult.error.message };
+      }
+
+      const driverRides = (driverResult.data || []).map((ride: any) =>
+        this.mapRideToRide({ ...ride, user_role: 'driver' }),
+      );
+      const passengerRides = (passengerResult.data || [])
+        .filter((participant: any) => participant.ride)
+        .map((participant: any) =>
+          this.mapRideToRide({
+            ...participant.ride,
+            user_role: 'passenger',
+          }),
+        );
+
+      const ridesById = new Map<string, Ride>();
+      [...driverRides, ...passengerRides].forEach((ride) => ridesById.set(ride.id, ride));
+      const rides = Array.from(ridesById.values())
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, limit);
+
+      return { success: true, rides };
     } catch (error) {
       return { success: false, error: 'An unexpected error occurred' };
     }
@@ -379,7 +512,8 @@ class RideService {
       fare: data.fare,
       duration: data.duration,
       distance: data.distance,
-      driverContact: data.driver_contact,
+      driverContact: data.driver_contact || data.driver?.phone,
+      userRole: data.user_role,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     };
@@ -395,6 +529,93 @@ class RideService {
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     };
+  }
+
+  private async cancelParticipant(rideId: string, userId: string) {
+    await supabase
+      .from('ride_participants')
+      .update({ status: 'cancelled' })
+      .eq('ride_id', rideId)
+      .eq('user_id', userId);
+  }
+
+  private async createReward(params: {
+    userId: string;
+    rideId: string;
+    points: number;
+    action: 'publish_ride' | 'join_ride';
+    description: string;
+  }) {
+    const { error } = await supabase
+      .from('rewards')
+      .insert({
+        user_id: params.userId,
+        ride_id: params.rideId,
+        points: params.points,
+        action: params.action,
+        description: params.description,
+      });
+
+    if (error) {
+      console.warn('Reward write failed:', error.message);
+    }
+  }
+
+  private async createNotification(params: {
+    userId: string;
+    title: string;
+    message: string;
+    type: 'ride' | 'dispute' | 'system';
+  }) {
+    const { error } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: params.userId,
+        title: params.title,
+        message: params.message,
+        type: params.type,
+        read: false,
+      });
+
+    if (error) {
+      console.warn('Notification write failed:', error.message);
+    }
+  }
+
+  private async updateProfileStats(userId: string, deltas: {
+    pointsDelta?: number;
+    ridesTakenDelta?: number;
+    ridesPublishedDelta?: number;
+  }) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('total_points, level, rides_taken, rides_published')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error || !data) {
+      if (error) console.warn('Profile stats read failed:', error.message);
+      return;
+    }
+
+    const totalPoints = (data.total_points ?? 0) + (deltas.pointsDelta ?? 0);
+    const ridesTaken = (data.rides_taken ?? 0) + (deltas.ridesTakenDelta ?? 0);
+    const ridesPublished = (data.rides_published ?? 0) + (deltas.ridesPublishedDelta ?? 0);
+    const level = Math.max(data.level ?? 1, Math.floor(totalPoints / 500) + 1);
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        total_points: totalPoints,
+        rides_taken: ridesTaken,
+        rides_published: ridesPublished,
+        level,
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.warn('Profile stats update failed:', updateError.message);
+    }
   }
 }
 

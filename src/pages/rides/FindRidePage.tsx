@@ -89,13 +89,13 @@ const FindRidePage = () => {
 
       const rides = result.rides.map<PublishedRide>((ride) => ({
         id: ride.id,
-        driverId: ride.userId,
+        driverId: ride.driverId || ride.userId,
         driver: {
-          id: ride.userId,
-          name: ride.userId === user?.id ? 'You (Driver)' : 'Rider',
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + ride.userId,
-          rating: 4.8,
-          phone: ride.driverContact || 'N/A',
+          id: ride.driverId || ride.userId,
+          name: ride.userId === user?.id ? 'You (Driver)' : ride.driver?.name || 'Rider',
+          avatar: ride.driver?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + (ride.driverId || ride.userId),
+          rating: ride.driver?.rating || 4.8,
+          phone: ride.driverContact || ride.driver?.phone || 'N/A',
         },
         startLocation: ride.startLocation,
         endLocation: ride.endLocation,

@@ -162,6 +162,7 @@ export interface Ride {
   duration?: number;
   distance?: number;
   driverContact?: string;
+  userRole?: 'driver' | 'passenger';
   createdAt: string;
   updatedAt: string;
 }

@@ -85,7 +85,16 @@ describe('rideService', () => {
   it('prevents drivers from joining their own ride', async () => {
     const ridesQuery = createQuery({
       single: vi.fn().mockResolvedValue({
-        data: { id: 'ride-1', user_id: 'driver-1', status: 'pending' },
+        data: {
+          id: 'ride-1',
+          user_id: 'driver-1',
+          status: 'pending',
+          available_seats: 3,
+          booked_seats: 0,
+          price_per_seat: 150,
+          start_location: 'Bandra',
+          end_location: 'Andheri',
+        },
         error: null,
       }),
     });
@@ -103,11 +112,21 @@ describe('rideService', () => {
   it('upserts ride participation with at least one booked seat', async () => {
     const ridesQuery = createQuery({
       single: vi.fn().mockResolvedValue({
-        data: { id: 'ride-1', user_id: 'driver-1', status: 'pending' },
+        data: {
+          id: 'ride-1',
+          user_id: 'driver-1',
+          status: 'pending',
+          available_seats: 3,
+          booked_seats: 0,
+          price_per_seat: 150,
+          start_location: 'Bandra',
+          end_location: 'Andheri',
+        },
         error: null,
       }),
     });
     const participantsQuery = createQuery({
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
       single: vi.fn().mockResolvedValue({
         data: {
           id: 'participant-1',
@@ -121,8 +140,29 @@ describe('rideService', () => {
         error: null,
       }),
     });
+    const bookingsQuery = createQuery();
+    const rewardsQuery = createQuery();
+    const profilesQuery = createQuery({
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: {
+          total_points: 20,
+          level: 1,
+          rides_taken: 2,
+          rides_published: 0,
+        },
+        error: null,
+      }),
+    });
+    const notificationsQuery = createQuery();
     mocks.from.mockImplementation((table: string) => (
-      table === 'rides' ? ridesQuery : participantsQuery
+      ({
+        rides: ridesQuery,
+        ride_participants: participantsQuery,
+        bookings: bookingsQuery,
+        rewards: rewardsQuery,
+        profiles: profilesQuery,
+        notifications: notificationsQuery,
+      })[table] || createQuery()
     ));
 
     const result = await rideService.joinRide({
@@ -142,6 +182,62 @@ describe('rideService', () => {
       }),
       { onConflict: 'ride_id,user_id' },
     );
+    expect(ridesQuery.update).toHaveBeenCalledWith({ booked_seats: 1 });
+    expect(bookingsQuery.insert).toHaveBeenCalledWith(expect.objectContaining({
+      ride_id: 'ride-1',
+      passenger_id: 'passenger-1',
+      seats_booked: 1,
+      total_price: 150,
+      status: 'pending',
+    }));
+    expect(rewardsQuery.insert).toHaveBeenCalledWith(expect.objectContaining({
+      user_id: 'passenger-1',
+      points: 30,
+      action: 'join_ride',
+      ride_id: 'ride-1',
+    }));
+    expect(profilesQuery.update).toHaveBeenCalledWith(expect.objectContaining({
+      total_points: 50,
+      rides_taken: 3,
+    }));
+    expect(notificationsQuery.insert).toHaveBeenCalledTimes(2);
+  });
+
+  it('returns joined rides where the user is a passenger', async () => {
+    const driverQuery = createQuery({
+      limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+    });
+    const participantQuery = createQuery({
+      limit: vi.fn().mockResolvedValue({
+        data: [{
+          id: 'participant-1',
+          ride: {
+            ...rideRow,
+            id: 'joined-ride',
+            driver: {
+              id: 'driver-1',
+              full_name: 'Driver One',
+              avatar_url: null,
+              rating_as_driver: 4.9,
+              phone: '+919999999999',
+            },
+          },
+        }],
+        error: null,
+      }),
+    });
+
+    mocks.from.mockImplementation((table: string) => (
+      table === 'rides' ? driverQuery : participantQuery
+    ));
+
+    const result = await rideService.getRides('passenger-1');
+
+    expect(result.success).toBe(true);
+    expect(result.rides).toHaveLength(1);
+    expect(result.rides?.[0].id).toBe('joined-ride');
+    expect(result.rides?.[0].userRole).toBe('passenger');
+    expect(result.rides?.[0].driverContact).toBe('+919999999999');
   });
 
   it('composes ride search filters only when values are provided', async () => {
