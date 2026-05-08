@@ -263,14 +263,22 @@ const HomePage = () => {
         {/* Search & Route Card */}
         <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
           {/* Search Bar */}
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search destinations..."
-              className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-          </div>
+          <button
+            type="button"
+            onClick={() => history.push('/select-location', {
+              type: 'dropoff',
+              returnTo: '/home',
+              pickup: pickup || undefined,
+              dropoff: dropoff || undefined,
+            })}
+            className="relative mb-4 flex w-full items-center rounded-xl bg-gray-50 py-3 pl-10 pr-4 text-left text-gray-400 transition focus:outline-none focus:ring-2 focus:ring-primary-500 active:scale-[0.99]"
+            aria-label="Search destinations"
+          >
+            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <span className="block truncate">
+              {dropoff?.address || 'Search destinations...'}
+            </span>
+          </button>
 
           {/* From/To Selection */}
           <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-3 mb-4 min-w-0">
