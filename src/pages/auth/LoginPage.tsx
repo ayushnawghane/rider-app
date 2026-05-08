@@ -3,7 +3,6 @@ import type { FormEvent } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/auth';
-import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 
 const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
@@ -54,22 +53,17 @@ const LoginPage = () => {
     }
   };
 
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-
-  const handleGoogleSuccess = async (credentialResponse: any) => {
+  const handleGoogleSignIn = async () => {
     if (isSubmitting) return;
 
     try {
       setIsSubmitting(true);
       setError(null);
-      const result = await authService.signInWithGoogle(credentialResponse.credential);
+      const result = await authService.signInWithGoogleOAuth();
 
       if (!result.success) {
         setError(result.error || 'Google Sign-In failed');
-        return;
       }
-
-      history.replace('/home');
     } catch (err: unknown) {
       console.error('Google Sign-In Error:', err);
       setError(err instanceof Error ? err.message : 'Google Sign-In failed');
@@ -79,8 +73,7 @@ const LoginPage = () => {
   };
 
   return (
-    <GoogleOAuthProvider clientId={googleClientId}>
-      <div className="relative min-h-screen overflow-hidden bg-gray-50 px-4 py-10 sm:px-6 lg:px-8">
+    <div className="relative min-h-screen overflow-hidden bg-gray-50 px-4 py-10 sm:px-6 lg:px-8">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -left-20 top-16 h-72 w-72 rounded-full bg-primary-200/50 blur-3xl" />
           <div className="absolute -right-20 bottom-8 h-72 w-72 rounded-full bg-orange-100/70 blur-3xl" />
@@ -150,18 +143,14 @@ const LoginPage = () => {
               <div className="h-px flex-1 bg-gray-200" />
             </div>
 
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 shadow-soft sm:p-5">
-              <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
-                Continue with Google
-              </p>
-              <div className="flex justify-center">
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => setError('Google Sign-In failed. Please try again.')}
-                  useOneTap
-                />
-              </div>
-            </div>
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={isSubmitting}
+              className="flex min-h-[56px] w-full items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-gray-500 shadow-soft transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Continue with Google
+            </button>
 
             {error && (
               <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
@@ -181,8 +170,7 @@ const LoginPage = () => {
             </p>
           </div>
         </div>
-      </div>
-    </GoogleOAuthProvider>
+    </div>
   );
 };
 

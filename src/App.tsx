@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { IonApp, IonPage, IonRouterOutlet } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
+import { App as CapacitorApp } from '@capacitor/app';
 import { Redirect, Route } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -9,6 +10,7 @@ import { locationService } from './services';
 import LoadingOverlay from './components/LoadingOverlay';
 import SplashScreen from './components/SplashScreen';
 import MobileBottomNav from './components/navigation/MobileBottomNav';
+import { authService, NATIVE_AUTH_REDIRECT_URL } from './services/auth';
 import { isProfileIncomplete } from './utils/profileCompletion';
 
 import LoginPage from './pages/auth/LoginPage';
@@ -185,6 +187,23 @@ const AppRoutes: React.FC = () => {
 const AppContent: React.FC = () => {
   const [locationGranted, setLocationGranted] = useState<boolean | null>(null);
   const [checkingLocation, setCheckingLocation] = useState(true);
+
+  useEffect(() => {
+    const listener = CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
+      if (!url.startsWith(NATIVE_AUTH_REDIRECT_URL)) {
+        return;
+      }
+
+      const result = await authService.handleOAuthCallback(url);
+      if (!result.success) {
+        console.error('Google OAuth callback failed:', result.error);
+      }
+    });
+
+    return () => {
+      listener.then((handle) => handle.remove()).catch(() => undefined);
+    };
+  }, []);
 
   useEffect(() => {
     checkLocationPermission();

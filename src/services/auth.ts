@@ -1,4 +1,6 @@
 import { supabase } from '../lib/supabase';
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 import type {
   User,
   Ride,
@@ -16,6 +18,8 @@ import type {
   ProfileUpdateParams,
   VehicleDetails,
 } from '../types';
+
+export const NATIVE_AUTH_REDIRECT_URL = 'com.blinkcar.app://auth/callback';
 
 class AuthService {
   private normalizeEmail(email: string) {
@@ -189,6 +193,83 @@ class AuthService {
     } catch (error) {
       console.error('Unexpected error during Google sign-in:', error);
       return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
+  async signInWithGoogleOAuth(): Promise<{ success: boolean; error?: string }> {
+    try {
+      const redirectTo = Capacitor.isNativePlatform()
+        ? NATIVE_AUTH_REDIRECT_URL
+        : `${window.location.origin}/login`;
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo,
+          skipBrowserRedirect: Capacitor.isNativePlatform(),
+        },
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      if (Capacitor.isNativePlatform()) {
+        if (!data.url) {
+          return { success: false, error: 'Google Sign-In could not be started.' };
+        }
+
+        await Browser.open({
+          url: data.url,
+          presentationStyle: 'fullscreen',
+        });
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Unexpected error starting Google OAuth:', error);
+      return { success: false, error: 'Google Sign-In failed to start.' };
+    }
+  }
+
+  async handleOAuthCallback(callbackUrl: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const url = new URL(callbackUrl);
+      const code = url.searchParams.get('code');
+
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          return { success: false, error: error.message };
+        }
+        return { success: true };
+      }
+
+      const params = new URLSearchParams(url.hash.replace(/^#/, ''));
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        if (error) {
+          return { success: false, error: error.message };
+        }
+
+        return { success: true };
+      }
+
+      return { success: false, error: 'Google Sign-In did not return a session.' };
+    } catch (error) {
+      console.error('Unexpected error handling Google OAuth callback:', error);
+      return { success: false, error: 'Google Sign-In callback failed.' };
+    } finally {
+      if (Capacitor.isNativePlatform()) {
+        await Browser.close().catch(() => undefined);
+      }
     }
   }
 
