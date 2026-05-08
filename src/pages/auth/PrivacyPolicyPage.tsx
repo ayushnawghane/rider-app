@@ -11,7 +11,7 @@ const PrivacyPolicyPage: React.FC = () => {
       <IonContent className="ion-padding">
         <div className="min-h-screen bg-slate-50 pb-12">
           {/* Header */}
-          <div className="bg-orange-600 px-6 pt-12 pb-20 text-white">
+          <div className="bg-orange-600 px-6 app-header-top-safe pb-20 text-white">
             <div className="max-w-3xl mx-auto flex items-center justify-between">
               <button 
                 onClick={() => history.goBack()}

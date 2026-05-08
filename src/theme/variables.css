@@ -33,6 +33,18 @@ http://ionicframework.com/docs/theming/ */
   padding-bottom: calc(var(--app-bottom-nav-height) + 16px);
 }
 
+.app-top-safe {
+  padding-top: calc(env(safe-area-inset-top) + 16px);
+}
+
+.app-header-top-safe {
+  padding-top: calc(env(safe-area-inset-top) + 48px);
+}
+
+.app-toolbar-top-safe {
+  padding-top: calc(env(safe-area-inset-top) + 12px);
+}
+
 .app-scroll-screen {
   height: calc(100vh - var(--app-bottom-nav-height));
   min-height: calc(100vh - var(--app-bottom-nav-height));

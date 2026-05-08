@@ -63,7 +63,7 @@ const SimpleUploadRidePage = () => {
     return (
       <IonPage>
         <IonContent className="ion-padding bg-gray-50">
-          <div className="max-w-2xl mx-auto px-4 py-6">
+          <div className="max-w-2xl mx-auto px-4 app-top-safe pb-6">
             <div className="card p-8 text-center animate-fade-in">
               <div className="w-20 h-20 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="w-10 h-10 text-success-600" />
@@ -94,7 +94,7 @@ const SimpleUploadRidePage = () => {
   return (
     <IonPage>
       <IonContent className="ion-padding bg-gray-50">
-        <div className="max-w-2xl mx-auto px-4 py-6">
+        <div className="max-w-2xl mx-auto px-4 app-top-safe pb-6">
           <header className="mb-6">
             <button
               onClick={() => history.goBack()}

@@ -111,7 +111,7 @@ const DisputeChatPage = () => {
     return (
       <IonPage>
         <IonContent className="ion-padding bg-gray-50">
-          <div className="max-w-3xl mx-auto px-4 py-6">
+          <div className="max-w-3xl mx-auto px-4 app-top-safe pb-6">
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex gap-3 animate-pulse">
@@ -129,7 +129,7 @@ const DisputeChatPage = () => {
   return (
     <IonPage>
       <IonContent className="ion-padding bg-gray-50" fullscreen>
-        <div className="max-w-3xl mx-auto px-4 py-6 min-h-full flex flex-col">
+        <div className="max-w-3xl mx-auto px-4 app-top-safe pb-6 min-h-full flex flex-col">
           <header className="mb-4 flex-shrink-0">
             <button
               onClick={handleBack}

@@ -151,7 +151,7 @@ const RideDetailPage = () => {
     return (
       <IonPage>
         <IonContent className="ion-padding bg-gray-50">
-          <div className="max-w-2xl mx-auto px-4 py-6">
+          <div className="max-w-2xl mx-auto px-4 app-top-safe pb-6">
             <div className="space-y-4">
               <div className="h-8 bg-gray-200 rounded-lg animate-pulse w-3/4" />
               <div className="card p-6 space-y-4">
@@ -172,7 +172,7 @@ const RideDetailPage = () => {
     return (
       <IonPage>
         <IonContent className="ion-padding bg-gray-50">
-          <div className="max-w-2xl mx-auto px-4 py-6">
+          <div className="max-w-2xl mx-auto px-4 app-top-safe pb-6">
             <header className="mb-6">
               <button
                 onClick={() => history.goBack()}
@@ -200,7 +200,7 @@ const RideDetailPage = () => {
   return (
     <IonPage>
       <IonContent className="ion-padding bg-gray-50">
-        <div className="max-w-2xl mx-auto px-4 py-6">
+        <div className="max-w-2xl mx-auto px-4 app-top-safe pb-6">
           <header className="mb-6">
             <button
               onClick={() => history.goBack()}

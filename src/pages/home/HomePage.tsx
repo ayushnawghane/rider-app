@@ -26,6 +26,13 @@ interface Location {
   lng: number;
 }
 
+interface PopularRoute {
+  city: string;
+  image: string;
+  startingPrice: number;
+  location: Location;
+}
+
 const profilePromptDismissKey = (userId: string) => `profile-prompt-dismissed:${userId}`;
 
 const HomePage = () => {
@@ -96,6 +103,21 @@ const HomePage = () => {
     history.push('/find-ride', { pickup, dropoff, departureTime, passengerCount });
   };
 
+  const handlePopularRouteSelect = (route: PopularRoute) => {
+    const defaultPickup = pickup || {
+      address: 'Mumbai, Maharashtra, India',
+      lat: 19.076,
+      lng: 72.8777,
+    };
+
+    history.push('/find-ride', {
+      pickup: defaultPickup,
+      dropoff: route.location,
+      departureTime,
+      passengerCount,
+    });
+  };
+
   const handleCompleteProfile = () => {
     setShowProfilePrompt(false);
     history.push('/profile', { openEditor: true, fromProfilePrompt: true });
@@ -109,10 +131,25 @@ const HomePage = () => {
     }
   };
 
-  const popularRoutes = [
-    { city: 'Mumbai', image: 'https://images.unsplash.com/photo-1567157577867-05ccb1388e66?w=400&h=300&fit=crop', startingPrice: 150 },
-    { city: 'Pune', image: 'https://images.unsplash.com/photo-1595658658481-d53d3f999875?w=400&h=300&fit=crop', startingPrice: 120 },
-    { city: 'Delhi', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400&h=300&fit=crop', startingPrice: 200 },
+  const popularRoutes: PopularRoute[] = [
+    {
+      city: 'Mumbai',
+      image: 'https://images.unsplash.com/photo-1567157577867-05ccb1388e66?w=400&h=300&fit=crop',
+      startingPrice: 150,
+      location: { address: 'Mumbai, Maharashtra, India', lat: 19.076, lng: 72.8777 },
+    },
+    {
+      city: 'Pune',
+      image: 'https://images.unsplash.com/photo-1595658658481-d53d3f999875?w=400&h=300&fit=crop',
+      startingPrice: 120,
+      location: { address: 'Pune, Maharashtra, India', lat: 18.5204, lng: 73.8567 },
+    },
+    {
+      city: 'Delhi',
+      image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400&h=300&fit=crop',
+      startingPrice: 200,
+      location: { address: 'Delhi, India', lat: 28.6139, lng: 77.209 },
+    },
   ];
 
   if (!isAuthLoaded) {
@@ -390,8 +427,10 @@ const HomePage = () => {
             {popularRoutes.map((route) => (
               <button
                 key={route.city}
-                className="flex-shrink-0 w-40"
-                onClick={() => setDropoff({ address: route.city, lat: 0, lng: 0 })}
+                type="button"
+                className="flex-shrink-0 w-40 rounded-xl text-left transition active:scale-95"
+                onClick={() => handlePopularRouteSelect(route)}
+                aria-label={`Find rides to ${route.city}`}
               >
                 <div className="w-full h-24 rounded-xl overflow-hidden mb-2">
                   <img

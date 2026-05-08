@@ -273,7 +273,7 @@ const ActiveRidePage = () => {
     return (
       <IonPage>
         <IonContent className="ion-padding bg-gray-50">
-          <div className="max-w-2xl mx-auto px-4 py-6">
+          <div className="max-w-2xl mx-auto px-4 app-top-safe pb-6">
             <div className="card p-8 text-center">
               <AlertTriangle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h2 className="text-xl font-bold text-gray-900 mb-2">Ride Not Found</h2>
@@ -299,7 +299,7 @@ const ActiveRidePage = () => {
       <IonContent className="bg-gray-50">
         <div className="app-scroll-screen flex flex-col bg-gray-50">
           {/* Header */}
-          <header className="bg-white px-4 py-3 shadow-sm z-10">
+          <header className="bg-white px-4 app-toolbar-top-safe pb-3 shadow-sm z-10">
             <div className="flex items-center justify-between">
               <button
                 onClick={() => history.goBack()}

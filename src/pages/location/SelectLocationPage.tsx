@@ -190,7 +190,7 @@ const SelectLocationPage = () => {
           {/* Header */}
           <div style={{
             padding: '16px',
-            paddingTop: '48px',
+            paddingTop: 'calc(env(safe-area-inset-top) + 16px)',
             background: 'white',
             borderBottom: '1px solid #e5e7eb',
             display: 'flex',

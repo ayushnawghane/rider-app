@@ -72,7 +72,8 @@ const UploadRidePage = () => {
   const contentStyle: React.CSSProperties = {
     maxWidth: '680px',
     margin: '0 auto',
-    padding: '16px'
+    padding: '16px',
+    paddingTop: 'calc(env(safe-area-inset-top) + 16px)'
   };
 
   const backButtonStyle: React.CSSProperties = {

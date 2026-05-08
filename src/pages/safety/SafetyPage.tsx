@@ -172,6 +172,7 @@ const SafetyPage: React.FC = () => {
       overflow: 'auto', 
       background: '#f9fafb', 
       padding: '16px',
+      paddingTop: 'calc(env(safe-area-inset-top) + 16px)',
       paddingBottom: 'calc(var(--app-bottom-nav-height) + 16px)',
       WebkitOverflowScrolling: 'touch'
     }}>

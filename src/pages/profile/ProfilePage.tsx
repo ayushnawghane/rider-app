@@ -275,7 +275,7 @@ const ProfilePage = () => {
 
   if (!isAuthLoaded) {
     return (
-      <div className="min-h-screen bg-slate-100 px-4 pt-12 pb-20">
+      <div className="min-h-screen bg-slate-100 px-4 app-top-safe pb-20">
         <div className="mx-auto max-w-2xl animate-pulse space-y-4">
           <div className="h-36 rounded-3xl bg-slate-200" />
           <div className="h-48 rounded-3xl bg-slate-200" />
@@ -301,7 +301,7 @@ const ProfilePage = () => {
 
     return (
       <div className="app-scroll-screen bg-slate-100 pb-6">
-        <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 px-4 pb-20 pt-12">
+        <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 px-4 pb-20 app-header-top-safe">
           <div className="mx-auto max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/80">
               Profile setup
@@ -545,7 +545,7 @@ const ProfilePage = () => {
 
   return (
     <div className={`app-scroll-screen bg-slate-100 ${requiresProfileCompletion ? 'pb-6' : 'app-bottom-nav-safe'}`}>
-      <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 px-4 pb-20 pt-12">
+      <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 px-4 pb-20 app-header-top-safe">
         <div className="mx-auto max-w-2xl">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">

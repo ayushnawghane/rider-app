@@ -157,7 +157,7 @@ const FindRidePage = () => {
   return (
     <div className="app-scroll-screen app-bottom-nav-safe bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 pt-12 pb-6 px-4">
+      <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 app-header-top-safe pb-6 px-4">
         <div className="flex items-center gap-4 mb-4">
           <button
             onClick={handleBackToHome}

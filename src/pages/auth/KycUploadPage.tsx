@@ -75,7 +75,7 @@ const KycUploadPage = () => {
   return (
     <IonPage>
       <IonContent className="ion-padding bg-gray-50">
-        <div className="max-w-2xl mx-auto px-4 py-6">
+        <div className="max-w-2xl mx-auto px-4 app-top-safe pb-6">
           <header className="mb-6">
             <button
               onClick={() => history.goBack()}
