@@ -18,6 +18,7 @@ import {
   Star,
 } from 'lucide-react';
 import type { PublishedRide } from '../../types';
+import { locationService, mapsService } from '../../services';
 import { isProfileIncomplete } from '../../utils/profileCompletion';
 
 interface Location {
@@ -34,6 +35,7 @@ interface PopularRoute {
 }
 
 const profilePromptDismissKey = (userId: string) => `profile-prompt-dismissed:${userId}`;
+const currentLocationLabel = (address: string) => address.split(',')[0]?.trim() || address;
 
 const HomePage = () => {
   const { user, isAuthLoaded, logout } = useAuth();
@@ -46,6 +48,9 @@ const HomePage = () => {
   const [passengerCount, setPassengerCount] = useState<number>(1);
   const [dismissedProfilePrompt, setDismissedProfilePrompt] = useState(false);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [activeRide] = useState<PublishedRide | null>(null);
   const [userStats] = useState({
     level: user?.level ?? 1,
@@ -103,8 +108,34 @@ const HomePage = () => {
     history.push('/find-ride', { pickup, dropoff, departureTime, passengerCount });
   };
 
+  const handleDetectCurrentLocation = async () => {
+    if (isDetectingLocation) return;
+
+    setIsDetectingLocation(true);
+    setLocationError(null);
+
+    try {
+      const coords = await locationService.getCurrentPosition();
+      if (!coords) {
+        setLocationError('Location unavailable');
+        return;
+      }
+
+      await mapsService.initialize();
+      const resolved = await mapsService.reverseGeocode(coords.lat, coords.lng);
+      const nextLocation = resolved
+        ? { address: resolved.address, lat: resolved.lat, lng: resolved.lng }
+        : { address: locationService.formatCoordinates(coords.lat, coords.lng), lat: coords.lat, lng: coords.lng };
+
+      setCurrentLocation(nextLocation);
+      setPickup(nextLocation);
+    } finally {
+      setIsDetectingLocation(false);
+    }
+  };
+
   const handlePopularRouteSelect = (route: PopularRoute) => {
-    const defaultPickup = pickup || {
+    const defaultPickup = pickup || currentLocation || {
       address: 'Mumbai, Maharashtra, India',
       lat: 19.076,
       lng: 72.8777,
@@ -166,7 +197,12 @@ const HomePage = () => {
       <div className="relative pt-10 pb-0 px-4 overflow-hidden min-h-[200px]" style={{ background: 'linear-gradient(160deg, #e8521a 0%, #f07840 40%, #f8b49a 75%, #fde8dc 100%)' }}>
         {/* Top Row: Notifications & Profile */}
         <div className="flex justify-end items-center gap-3 mb-3 relative z-10">
-          <button className="w-10 h-10 bg-white/25 backdrop-blur-sm rounded-xl flex items-center justify-center relative shadow">
+          <button
+            onClick={() => history.push('/notifications')}
+            className="w-10 h-10 bg-white/25 backdrop-blur-sm rounded-xl flex items-center justify-center relative shadow transition active:scale-95"
+            aria-label="Open notifications"
+            type="button"
+          >
             <Bell className="w-5 h-5 text-white" />
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
           </button>
@@ -187,10 +223,23 @@ const HomePage = () => {
               Hi, {user?.firstName || 'Rider'}
             </h1>
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1.5 bg-white/25 backdrop-blur-sm rounded-full px-3 py-1.5">
+              <button
+                onClick={handleDetectCurrentLocation}
+                className="flex items-center gap-1.5 bg-white/25 backdrop-blur-sm rounded-full px-3 py-1.5 transition active:scale-95 disabled:opacity-75"
+                type="button"
+                disabled={isDetectingLocation}
+                aria-label="Use current location"
+                title={locationError || currentLocation?.address || 'Use current location'}
+              >
                 <MapPin className="w-4 h-4 text-white" />
-                <span className="text-white text-sm font-medium">Mumbai, IN</span>
-              </div>
+                <span className="max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap text-white text-sm font-medium">
+                  {isDetectingLocation
+                    ? 'Detecting...'
+                    : currentLocation
+                      ? currentLocationLabel(currentLocation.address)
+                      : 'Use location'}
+                </span>
+              </button>
               <div className="flex items-center gap-1.5 bg-yellow-400/90 rounded-full px-3 py-1.5 shadow">
                 <Star className="w-4 h-4 text-white fill-white" />
                 <span className="text-white text-sm font-bold">Lvl {userStats.level}</span>
