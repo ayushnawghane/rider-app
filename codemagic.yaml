@@ -6,12 +6,9 @@ workflows:
 
     environment:
       # ── Android signing ──────────────────────────────────────────────────
-      # Upload your keystore to Codemagic (Team Settings → Code signing)
-      # and set these environment variables there (mark as secret).
-      android_signing:
-        - blinkcar_keystore          # name of the keystore you upload in Codemagic
-      groups:
-        - blinkcar_env               # group that holds CM_KEYSTORE_*, etc.
+      # If CM_KEYSTORE_* variables are configured in Codemagic, they are used.
+      # Otherwise the workflow creates a temporary CI keystore so Android builds
+      # still produce signed artifacts for testing.
       vars:
         PACKAGE_NAME: "com.blinkcar.app"
       node: 22.11.0
@@ -43,6 +40,21 @@ workflows:
         script: |
           APP_VERSION=$(node -p "require('./package.json').version")
           VERSION_CODE=${BUILD_NUMBER:-${PROJECT_BUILD_NUMBER:-1}}
+          if [ -z "$CM_KEYSTORE_PATH" ]; then
+            export CM_KEYSTORE_PATH="/tmp/blinkcar-ci-upload.jks"
+            export CM_KEYSTORE_PASSWORD="${ANDROID_KEYSTORE_PASSWORD:-temporary-ci-password}"
+            export CM_KEY_ALIAS="${ANDROID_KEY_ALIAS:-blinkcar}"
+            export CM_KEY_PASSWORD="${ANDROID_KEY_PASSWORD:-$CM_KEYSTORE_PASSWORD}"
+            keytool -genkeypair \
+              -keystore "$CM_KEYSTORE_PATH" \
+              -storepass "$CM_KEYSTORE_PASSWORD" \
+              -alias "$CM_KEY_ALIAS" \
+              -keypass "$CM_KEY_PASSWORD" \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Blinkcar, OU=CI, O=Blinkcar, L=Mumbai, S=Maharashtra, C=IN"
+          fi
           cd android
           ./gradlew bundleRelease assembleRelease \
             -PappVersionCode=$VERSION_CODE \
