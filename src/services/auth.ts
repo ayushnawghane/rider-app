@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import type {
@@ -75,6 +75,10 @@ class AuthService {
   }
 
   async signInWithEmailPassword(email: string, password: string): Promise<{ success: boolean; error?: string }> {
+    if (!isSupabaseConfigured) {
+      return { success: false, error: 'App configuration is missing. Please install the latest build.' };
+    }
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: this.normalizeEmail(email),
@@ -98,6 +102,10 @@ class AuthService {
     phone: string;
     password: string;
   }): Promise<{ success: boolean; error?: string; requiresEmailVerification?: boolean }> {
+    if (!isSupabaseConfigured) {
+      return { success: false, error: 'App configuration is missing. Please install the latest build.' };
+    }
+
     const { fullName, firstName, lastName } = this.splitFullName(params.fullName);
     const normalizedEmail = this.normalizeEmail(params.email);
     const normalizedPhone = this.normalizePhone(params.phone);
@@ -197,6 +205,10 @@ class AuthService {
   }
 
   async signInWithGoogleOAuth(): Promise<{ success: boolean; error?: string }> {
+    if (!isSupabaseConfigured) {
+      return { success: false, error: 'App configuration is missing. Please install the latest build.' };
+    }
+
     try {
       const redirectTo = Capacitor.isNativePlatform()
         ? NATIVE_AUTH_REDIRECT_URL
