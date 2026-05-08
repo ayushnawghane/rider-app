@@ -70,6 +70,7 @@ const PrivacyPolicyScreen = withIonPage(PrivacyPolicyPage);
 const AppRoutes: React.FC = () => {
   const { user, isAuthLoaded } = useAuth();
   const location = useLocation();
+  const requiresProfileCompletion = Boolean(user && isProfileIncomplete(user));
 
   const getPostAuthRedirect = () => {
     if (!user) {
@@ -164,7 +165,10 @@ const AppRoutes: React.FC = () => {
           }}
         />
       </IonRouterOutlet>
-      {user && location.pathname !== '/login' && location.pathname !== '/register' && <MobileBottomNav />}
+      {user &&
+        !requiresProfileCompletion &&
+        location.pathname !== '/login' &&
+        location.pathname !== '/register' && <MobileBottomNav />}
     </>
   );
 };

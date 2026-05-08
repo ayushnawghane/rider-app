@@ -134,6 +134,9 @@ const ProfilePage = () => {
 
       await refreshUser();
       setEditing(false);
+      if (requiresProfileCompletion) {
+        history.replace('/home');
+      }
     } catch (saveProfileError) {
       console.error('Failed to save profile:', saveProfileError);
       setSaveError('Failed to update profile. Please try again.');
@@ -226,35 +229,40 @@ const ProfilePage = () => {
   const displayEmail = isSystemGeneratedEmail(user.email) ? 'Email not added yet' : user.email;
 
   return (
-    <div className="app-scroll-screen app-bottom-nav-safe bg-slate-100">
+    <div className={`app-scroll-screen bg-slate-100 ${requiresProfileCompletion ? 'pb-6' : 'app-bottom-nav-safe'}`}>
       <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 px-4 pb-20 pt-12">
         <div className="mx-auto max-w-2xl">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <button
-                onClick={handleBack}
-                disabled={requiresProfileCompletion}
-                className="grid h-12 w-12 place-items-center rounded-2xl border border-white/35 bg-white/20 text-white backdrop-blur"
-                aria-label="Go back"
-              >
-                <ArrowLeft size={24} />
-              </button>
+              {!requiresProfileCompletion && (
+                <button
+                  onClick={handleBack}
+                  className="grid h-12 w-12 place-items-center rounded-2xl border border-white/35 bg-white/20 text-white backdrop-blur"
+                  aria-label="Go back"
+                >
+                  <ArrowLeft size={24} />
+                </button>
+              )}
               <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                Profile
+                {requiresProfileCompletion ? 'Account setup' : 'Profile'}
               </h1>
             </div>
 
-            <button
-              onClick={() => setEditing((prev) => (requiresProfileCompletion ? true : !prev))}
-              className="grid h-12 w-12 place-items-center rounded-2xl border border-white/35 bg-white/20 text-white backdrop-blur"
-              aria-label={editing ? 'Cancel editing profile' : 'Edit profile'}
-            >
-              <Pencil size={20} />
-            </button>
+            {!requiresProfileCompletion && (
+              <button
+                onClick={() => setEditing((prev) => !prev)}
+                className="grid h-12 w-12 place-items-center rounded-2xl border border-white/35 bg-white/20 text-white backdrop-blur"
+                aria-label={editing ? 'Cancel editing profile' : 'Edit profile'}
+              >
+                <Pencil size={20} />
+              </button>
+            )}
           </div>
 
           <p className="text-base text-white/90 sm:text-lg">
-            Manage your account details and ride preferences
+            {requiresProfileCompletion
+              ? 'Add the required details once, then you can use the rest of Blinkcar.'
+              : 'Manage your account details and ride preferences'}
           </p>
         </div>
       </div>
@@ -268,7 +276,7 @@ const ProfilePage = () => {
                 <div>
                   <p className="text-sm font-semibold">Complete your profile to continue</p>
                   <p className="mt-1 text-sm text-amber-800">
-                    Your Google account is signed in, but we still need your missing contact details like mobile number.
+                    Finish these required fields before using rides, rewards, support, or safety tools.
                   </p>
                 </div>
               </div>
@@ -424,8 +432,7 @@ const ProfilePage = () => {
           </section>
         )}
 
-        {/* Vehicle Details Section (always shown when editing) */}
-        {editing && (
+        {editing && !requiresProfileCompletion && (
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
               <Car size={18} className="text-orange-500" />
@@ -507,7 +514,7 @@ const ProfilePage = () => {
           </section>
         )}
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
+        {!requiresProfileCompletion && <section className="rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
           <button
             onClick={() => history.push('/profile/kyc')}
             className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left hover:bg-slate-50"
@@ -563,7 +570,7 @@ const ProfilePage = () => {
             </div>
             <ChevronRight size={20} className="text-slate-400" />
           </button>
-        </section>
+        </section>}
 
         <button
           onClick={handleLogout}
