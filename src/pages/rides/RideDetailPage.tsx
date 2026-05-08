@@ -6,6 +6,7 @@ import { rideService, mapsService } from '../../services';
 import { MapComponent } from '../../components/maps';
 import { ArrowLeft, Phone, MessageSquare, ShieldAlert, MapPin, Navigation, Calendar, Car, DollarSign, Clock, CheckCircle2, AlertTriangle, Route } from 'lucide-react';
 import type { Ride } from '../../types';
+import { hasRequiredBookingProfile } from '../../utils/profileCompletion';
 
 interface RideDetailLocationState {
   passengerCount?: number;
@@ -90,6 +91,11 @@ const RideDetailPage = () => {
   const handleJoinRide = async () => {
     if (!ride || !user) {
       setJoinError('Please log in to join this ride.');
+      return;
+    }
+
+    if (!hasRequiredBookingProfile(user)) {
+      setJoinError('Complete your name, email, and mobile number before booking a ride.');
       return;
     }
 

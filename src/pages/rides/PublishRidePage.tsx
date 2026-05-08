@@ -16,6 +16,7 @@ import {
   Bookmark,
   CheckCircle2
 } from 'lucide-react';
+import { hasRequiredBookingProfile } from '../../utils/profileCompletion';
 
 interface Location {
   address: string;
@@ -161,6 +162,11 @@ const PublishRidePage = () => {
 
     if (!user) {
       setSubmitError('User not authenticated. Please log in again.');
+      return;
+    }
+
+    if (!hasRequiredBookingProfile(user)) {
+      setSubmitError('Complete your name, email, and mobile number before publishing a ride.');
       return;
     }
 

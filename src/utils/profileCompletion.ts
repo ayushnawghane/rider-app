@@ -44,3 +44,65 @@ export const isProfileIncomplete = (user?: User | null) => {
     isProfilePhoneIncomplete(user.phone)
   );
 };
+
+export const hasRequiredBookingProfile = (user?: User | null) => {
+  if (!user) return false;
+  return !isProfileIncomplete(user);
+};
+
+export const hasRequiredPublishingProfile = (user?: User | null) => {
+  if (!hasRequiredBookingProfile(user)) return false;
+
+  const vehicle = user?.vehicleDetails;
+  return Boolean(vehicle?.vehicleNumber?.trim() && vehicle?.vehicleType?.trim());
+};
+
+export const getProfileCompletion = (user?: User | null) => {
+  if (!user) {
+    return {
+      percent: 0,
+      complete: false,
+      missing: ['Contact details', 'Ride preferences', 'Vehicle details'],
+    };
+  }
+
+  const items = [
+    {
+      complete: !isProfileNameIncomplete(user.fullName),
+      label: 'Full name',
+    },
+    {
+      complete: !isProfileEmailIncomplete(user.email),
+      label: 'Email',
+    },
+    {
+      complete: !isProfilePhoneIncomplete(user.phone),
+      label: 'Mobile number',
+    },
+    {
+      complete: Boolean(user.language),
+      label: 'Language',
+    },
+    {
+      complete: typeof user.notificationPreferences === 'boolean',
+      label: 'Notification preference',
+    },
+    {
+      complete: Boolean(user.vehicleDetails?.vehicleType?.trim()),
+      label: 'Vehicle type',
+    },
+    {
+      complete: Boolean(user.vehicleDetails?.vehicleNumber?.trim()),
+      label: 'Vehicle number',
+    },
+  ];
+
+  const completed = items.filter((item) => item.complete).length;
+  const percent = Math.round((completed / items.length) * 100);
+
+  return {
+    percent,
+    complete: percent === 100,
+    missing: items.filter((item) => !item.complete).map((item) => item.label),
+  };
+};

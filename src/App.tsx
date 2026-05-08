@@ -8,8 +8,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import LoadingOverlay from './components/LoadingOverlay';
 import SplashScreen from './components/SplashScreen';
 import MobileBottomNav from './components/navigation/MobileBottomNav';
+import ProfileCompletionBanner from './components/profile/ProfileCompletionBanner';
 import { authService, NATIVE_AUTH_REDIRECT_URL } from './services/auth';
-import { isProfileIncomplete } from './utils/profileCompletion';
 
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -70,18 +70,10 @@ const PrivacyPolicyScreen = withIonPage(PrivacyPolicyPage);
 const AppRoutes: React.FC = () => {
   const { user, isAuthLoaded } = useAuth();
   const location = useLocation();
-  const requiresProfileCompletion = Boolean(user && isProfileIncomplete(user));
 
   const getPostAuthRedirect = () => {
     if (!user) {
       return '/login';
-    }
-
-    if (isProfileIncomplete(user)) {
-      return {
-        pathname: '/profile',
-        state: { openEditor: true, requireCompletion: true },
-      };
     }
 
     return '/home';
@@ -102,25 +94,6 @@ const AppRoutes: React.FC = () => {
     }
     if (!user) {
       return <Redirect to="/login" />;
-    }
-
-    const pathname =
-      typeof routeProps.location === 'object' &&
-      routeProps.location !== null &&
-      'pathname' in routeProps.location &&
-      typeof (routeProps.location as { pathname?: unknown }).pathname === 'string'
-        ? (routeProps.location as { pathname: string }).pathname
-        : '';
-
-    if (isProfileIncomplete(user) && pathname !== '/profile') {
-      return (
-        <Redirect
-          to={{
-            pathname: '/profile',
-            state: { openEditor: true, requireCompletion: true },
-          }}
-        />
-      );
     }
 
     return <Component {...routeProps} />;
@@ -165,10 +138,8 @@ const AppRoutes: React.FC = () => {
           }}
         />
       </IonRouterOutlet>
-      {user &&
-        !requiresProfileCompletion &&
-        location.pathname !== '/login' &&
-        location.pathname !== '/register' && <MobileBottomNav />}
+      {user && <ProfileCompletionBanner />}
+      {user && location.pathname !== '/login' && location.pathname !== '/register' && <MobileBottomNav />}
     </>
   );
 };

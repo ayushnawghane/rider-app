@@ -32,6 +32,7 @@ interface ProfilePageLocationState {
 const PLACEHOLDER_PROFILE_EMAIL_REGEX = /^phone-[^@]+@riderapp\.local$/i;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^\+?[1-9]\d{7,14}$/;
+const SETUP_STEPS = ['Contact', 'Preferences', 'Vehicle'];
 
 const isSystemGeneratedEmail = (value?: string | null) => {
   const email = value?.trim().toLowerCase() || '';
@@ -53,6 +54,7 @@ const ProfilePage = () => {
   const [language, setLanguage] = useState(user?.language || 'en');
   const [notifications, setNotifications] = useState<boolean>(user?.notificationPreferences || true);
   const [saveError, setSaveError] = useState('');
+  const [setupStep, setSetupStep] = useState(0);
   const history = useHistory();
 
   // Vehicle state
@@ -94,45 +96,66 @@ const ProfilePage = () => {
     }
   }, [requiresProfileCompletion]);
 
+  const validateRequiredProfileFields = () => {
+    const normalizedFullName = fullName.trim();
+    const normalizedEmail = email.trim();
+    const normalizedPhone = phone.trim().replace(/[\s-]/g, '');
+
+    if (!normalizedFullName) {
+      setSaveError('Full name is required.');
+      return null;
+    }
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      setSaveError('Enter a valid email address.');
+      return null;
+    }
+    if (!PHONE_REGEX.test(normalizedPhone)) {
+      setSaveError('Enter a valid mobile number.');
+      return null;
+    }
+
+    return {
+      fullName: normalizedFullName,
+      email: normalizedEmail,
+      phone: phone.trim(),
+    };
+  };
+
+  const saveProfileDetails = async () => {
+    if (!user) return false;
+
+    const validatedProfile = validateRequiredProfileFields();
+    if (!validatedProfile) return false;
+
+    const updateResult = await authService.updateProfile(
+      {
+        email: validatedProfile.email,
+        fullName: validatedProfile.fullName,
+        phone: validatedProfile.phone,
+        language,
+        notificationPreferences: notifications,
+      },
+      user.id,
+    );
+
+    if (!updateResult.success) {
+      setSaveError(updateResult.error || 'Failed to update profile.');
+      return false;
+    }
+
+    await refreshUser();
+    return true;
+  };
+
   const handleSave = async () => {
     if (!user) return;
 
     try {
       setSaveError('');
       setLoading(true);
-      const normalizedFullName = fullName.trim();
-      const normalizedEmail = email.trim();
+      const saved = await saveProfileDetails();
+      if (!saved) return;
 
-      if (!normalizedFullName) {
-        setSaveError('Full name is required.');
-        return;
-      }
-      if (!EMAIL_REGEX.test(normalizedEmail)) {
-        setSaveError('Enter a valid email address.');
-        return;
-      }
-      if (!PHONE_REGEX.test(phone.trim().replace(/[\s-]/g, ''))) {
-        setSaveError('Enter a valid mobile number.');
-        return;
-      }
-
-      const updateResult = await authService.updateProfile(
-        {
-          email: normalizedEmail,
-          fullName: normalizedFullName,
-          phone: phone.trim(),
-          language,
-          notificationPreferences: notifications,
-        },
-        user.id,
-      );
-
-      if (!updateResult.success) {
-        setSaveError(updateResult.error || 'Failed to update profile.');
-        return;
-      }
-
-      await refreshUser();
       setEditing(false);
       if (requiresProfileCompletion) {
         history.replace('/home');
@@ -140,6 +163,51 @@ const ProfilePage = () => {
     } catch (saveProfileError) {
       console.error('Failed to save profile:', saveProfileError);
       setSaveError('Failed to update profile. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSetupNext = () => {
+    setSaveError('');
+    if (setupStep === 0 && !validateRequiredProfileFields()) {
+      return;
+    }
+    setSetupStep((step) => Math.min(step + 1, SETUP_STEPS.length - 1));
+  };
+
+  const handleCompleteSetup = async () => {
+    if (!user) return;
+
+    try {
+      setSaveError('');
+      setLoading(true);
+      const saved = await saveProfileDetails();
+      if (!saved) return;
+
+      const hasVehicleDetails = [
+        vehicleMake,
+        vehicleModel,
+        vehicleNumber,
+        vehicleType,
+        vehicleColor,
+      ].some((value) => value.trim());
+
+      if (hasVehicleDetails) {
+        await vehicleService.saveVehicleDetails(user.id, {
+          make: vehicleMake.trim() || undefined,
+          model: vehicleModel.trim() || undefined,
+          vehicleNumber: vehicleNumber.trim().toUpperCase() || undefined,
+          vehicleType: vehicleType.trim() || undefined,
+          color: vehicleColor.trim() || undefined,
+        });
+      }
+
+      await refreshUser();
+      history.replace('/home');
+    } catch (setupError) {
+      console.error('Failed to complete setup:', setupError);
+      setSaveError('Failed to finish setup. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -227,6 +295,253 @@ const ProfilePage = () => {
 
   const initials = user.fullName?.charAt(0)?.toUpperCase() || 'R';
   const displayEmail = isSystemGeneratedEmail(user.email) ? 'Email not added yet' : user.email;
+
+  if (requiresProfileCompletion) {
+    const currentStepLabel = SETUP_STEPS[setupStep];
+
+    return (
+      <div className="app-scroll-screen bg-slate-100 pb-6">
+        <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 px-4 pb-20 pt-12">
+          <div className="mx-auto max-w-2xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/80">
+              Profile setup
+            </p>
+            <h1 className="mt-2 text-4xl font-bold tracking-tight text-white sm:text-5xl">
+              Complete your profile
+            </h1>
+            <p className="mt-3 text-base text-white/90 sm:text-lg">
+              Finish the required details to book rides. Add vehicle details if you want to publish rides.
+            </p>
+          </div>
+        </div>
+
+        <div className="mx-auto -mt-12 max-w-2xl space-y-4 px-4">
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-5">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-sm font-semibold text-slate-600">
+                  Step {setupStep + 1} of {SETUP_STEPS.length}
+                </p>
+                <p className="text-sm font-semibold text-orange-600">{currentStepLabel}</p>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {SETUP_STEPS.map((step, index) => (
+                  <div
+                    key={step}
+                    className={`h-2 rounded-full ${index <= setupStep ? 'bg-orange-500' : 'bg-slate-200'}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {setupStep === 0 && (
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle size={18} className="mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold">Required to book rides</p>
+                      <p className="mt-1 text-sm text-amber-800">
+                        We need your real name, email, and mobile number before ride bookings are allowed.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-600">Full name</span>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(event) => setFullName(event.target.value)}
+                    placeholder="Your full name"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-600">Email address</span>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-600">Mobile number</span>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    placeholder="+91 9876543210"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                  />
+                </label>
+              </div>
+            )}
+
+            {setupStep === 1 && (
+              <div className="space-y-4">
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-600">Language</span>
+                  <select
+                    value={language}
+                    onChange={(event) => setLanguage(event.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                  >
+                    <option value="en">English</option>
+                    <option value="hi">Hindi</option>
+                  </select>
+                </label>
+
+                <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">Push notifications</p>
+                    <p className="text-xs text-slate-500">Ride, booking, and safety updates.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNotifications((prev) => !prev)}
+                    className={`relative h-7 w-12 rounded-full transition ${notifications ? 'bg-orange-500' : 'bg-slate-300'}`}
+                    aria-label="Toggle notifications"
+                  >
+                    <span
+                      className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${notifications ? 'left-[22px]' : 'left-0.5'}`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {setupStep === 2 && (
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-orange-900">
+                  <p className="text-sm font-semibold">Required only to publish rides</p>
+                  <p className="mt-1 text-sm text-orange-800">
+                    You can skip this for now and add it later from Profile before sharing a ride.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="block">
+                    <span className="text-xs font-medium text-slate-600">Make</span>
+                    <input
+                      type="text"
+                      value={vehicleMake}
+                      onChange={(event) => setVehicleMake(event.target.value)}
+                      placeholder="Toyota"
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-xs font-medium text-slate-600">Model</span>
+                    <input
+                      type="text"
+                      value={vehicleModel}
+                      onChange={(event) => setVehicleModel(event.target.value)}
+                      placeholder="Camry"
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                    />
+                  </label>
+                </div>
+
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-600">Vehicle number</span>
+                  <input
+                    type="text"
+                    value={vehicleNumber}
+                    onChange={(event) => setVehicleNumber(event.target.value.toUpperCase())}
+                    placeholder="MH01AB1234"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                  />
+                </label>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="block">
+                    <span className="text-xs font-medium text-slate-600">Type</span>
+                    <select
+                      value={vehicleType}
+                      onChange={(event) => setVehicleType(event.target.value)}
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                    >
+                      <option value="">Select type</option>
+                      <option value="Sedan">Sedan</option>
+                      <option value="SUV">SUV</option>
+                      <option value="Hatchback">Hatchback</option>
+                      <option value="Bike">Bike</option>
+                      <option value="Auto">Auto</option>
+                      <option value="Luxury">Luxury</option>
+                    </select>
+                  </label>
+                  <label className="block">
+                    <span className="text-xs font-medium text-slate-600">Color</span>
+                    <input
+                      type="text"
+                      value={vehicleColor}
+                      onChange={(event) => setVehicleColor(event.target.value)}
+                      placeholder="White"
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {saveError && (
+              <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                {saveError}
+              </p>
+            )}
+
+            <div className="mt-5 flex gap-3">
+              {setupStep > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSaveError('');
+                    setSetupStep((step) => Math.max(step - 1, 0));
+                  }}
+                  className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700"
+                >
+                  Back
+                </button>
+              )}
+
+              {setupStep < SETUP_STEPS.length - 1 ? (
+                <button
+                  type="button"
+                  onClick={handleSetupNext}
+                  className="flex-[2] rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+                >
+                  Continue
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleCompleteSetup}
+                  disabled={loading}
+                  className="flex-[2] rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {loading ? 'Finishing...' : 'Finish setup'}
+                </button>
+              )}
+            </div>
+          </section>
+
+          <button
+            onClick={handleLogout}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600 transition hover:bg-rose-100"
+          >
+            <LogOut size={18} />
+            Sign out
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`app-scroll-screen bg-slate-100 ${requiresProfileCompletion ? 'pb-6' : 'app-bottom-nav-safe'}`}>

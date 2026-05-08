@@ -1,5 +1,8 @@
 import {
   isProfileEmailIncomplete,
+  getProfileCompletion,
+  hasRequiredBookingProfile,
+  hasRequiredPublishingProfile,
   isProfileIncomplete,
   isProfileNameIncomplete,
   isProfilePhoneIncomplete,
@@ -57,5 +60,36 @@ describe('profile completion checks', () => {
     expect(isProfileIncomplete({ ...completeUser, fullName: 'User' })).toBe(true);
     expect(isProfileIncomplete({ ...completeUser, email: 'phone-user-1@riderapp.local' })).toBe(true);
     expect(isProfileIncomplete({ ...completeUser, phone: 'phone-user-1' })).toBe(true);
+  });
+
+  it('allows booking with contact details but requires vehicle details for publishing', () => {
+    expect(hasRequiredBookingProfile(completeUser)).toBe(true);
+    expect(hasRequiredPublishingProfile(completeUser)).toBe(false);
+    expect(hasRequiredPublishingProfile({
+      ...completeUser,
+      vehicleDetails: {
+        vehicleType: 'Sedan',
+        vehicleNumber: 'MH01AB1234',
+      },
+    })).toBe(true);
+  });
+
+  it('calculates profile completion percentage from contact, preferences, and vehicle details', () => {
+    expect(getProfileCompletion(completeUser)).toMatchObject({
+      percent: 71,
+      complete: false,
+      missing: ['Vehicle type', 'Vehicle number'],
+    });
+    expect(getProfileCompletion({
+      ...completeUser,
+      vehicleDetails: {
+        vehicleType: 'Sedan',
+        vehicleNumber: 'MH01AB1234',
+      },
+    })).toMatchObject({
+      percent: 100,
+      complete: true,
+      missing: [],
+    });
   });
 });
