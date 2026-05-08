@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import {
-  ArrowLeft,
   Award,
   Star,
   Trophy,
@@ -16,6 +14,7 @@ import {
   Gift,
 } from 'lucide-react';
 import type { Reward, Achievement, UserStats } from '../../types';
+import { AppCard, PageHeader, PageLoader } from '../../components/ui';
 
 type RewardAction = Reward['action'];
 
@@ -147,7 +146,6 @@ const formatRewardsLoadError = (message: string) => {
 
 const RewardsPage = () => {
   const { user, isAuthLoaded } = useAuth();
-  const history = useHistory();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'history'>('overview');
   const [userStats, setUserStats] = useState<UserStats>(DEFAULT_STATS);
@@ -155,14 +153,6 @@ const RewardsPage = () => {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loadingRewards, setLoadingRewards] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-
-  const handleBackToHome = () => {
-    if (history.length > 1) {
-      history.goBack();
-      return;
-    }
-    history.replace('/home');
-  };
 
   useEffect(() => {
     if (!isAuthLoaded) return;
@@ -321,26 +311,12 @@ const RewardsPage = () => {
   };
 
   if (!isAuthLoaded) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (
     <div className="app-scroll-screen app-bottom-nav-safe bg-gray-50">
-      <div className={`bg-gradient-to-br ${getTierColor(userStats.level)} app-header-top-safe pb-8 px-4`}>
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={handleBackToHome}
-            className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center"
-          >
-            <ArrowLeft className="w-5 h-5 text-white" />
-          </button>
-          <h1 className="text-2xl font-bold text-white">Rewards</h1>
-        </div>
-
+      <PageHeader title="Rewards" variant="gradient" gradientClassName={getTierColor(userStats.level)} className="pb-8">
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -379,11 +355,11 @@ const RewardsPage = () => {
             </div>
           </div>
         </div>
-      </div>
+      </PageHeader>
 
       <div className="px-4 -mt-4 mb-6">
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-xl shadow-lg p-4">
+          <AppCard className="rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Car className="w-4 h-4 text-blue-600" />
@@ -391,8 +367,8 @@ const RewardsPage = () => {
               <span className="text-xs text-gray-500">Rides Published</span>
             </div>
             <p className="text-2xl font-bold text-gray-900">{userStats.ridesPublished}</p>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-4">
+          </AppCard>
+          <AppCard className="rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                 <Users className="w-4 h-4 text-green-600" />
@@ -400,7 +376,7 @@ const RewardsPage = () => {
               <span className="text-xs text-gray-500">Rides Taken</span>
             </div>
             <p className="text-2xl font-bold text-gray-900">{userStats.ridesTaken}</p>
-          </div>
+          </AppCard>
         </div>
       </div>
 

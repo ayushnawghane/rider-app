@@ -6,7 +6,6 @@ import {
   MapPin,
   Clock,
   Users,
-  ArrowLeft,
   Search,
   Star,
   Car,
@@ -15,6 +14,8 @@ import {
   Navigation
 } from 'lucide-react';
 import type { PublishedRide } from '../../types';
+import Button from '../../components/Button';
+import { AppCard, EmptyState, PageHeader, PageLoader } from '../../components/ui';
 
 interface SearchLocation {
   address: string;
@@ -42,14 +43,6 @@ const FindRidePage = () => {
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<'price' | 'time' | 'rating'>('time');
-
-  const handleBackToHome = () => {
-    if (history.length > 1) {
-      history.goBack();
-      return;
-    }
-    history.replace('/home');
-  };
 
   // Get params from navigation state
   useEffect(() => {
@@ -147,27 +140,12 @@ const FindRidePage = () => {
   };
 
   if (!isAuthLoaded) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (
     <div className="app-scroll-screen app-bottom-nav-safe bg-gray-50">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 app-header-top-safe pb-6 px-4">
-        <div className="flex items-center gap-4 mb-4">
-          <button
-            onClick={handleBackToHome}
-            className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center"
-          >
-            <ArrowLeft className="w-5 h-5 text-white" />
-          </button>
-          <h1 className="text-2xl font-bold text-white">Find a Ride</h1>
-        </div>
-
+      <PageHeader title="Find a Ride" variant="gradient">
         {/* Search Summary */}
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
           <div className="flex items-center gap-2 text-white mb-2">
@@ -189,11 +167,11 @@ const FindRidePage = () => {
             </span>
           </div>
         </div>
-      </div>
+      </PageHeader>
 
       {/* Search Form */}
       <div className="px-4 -mt-4 mb-4">
-        <div className="bg-white rounded-2xl shadow-lg p-4">
+        <AppCard className="p-4">
           {/* Pickup */}
           <button
             onClick={() => history.push('/select-location', {
@@ -255,24 +233,15 @@ const FindRidePage = () => {
             </div>
           </div>
 
-          <button
+          <Button
             onClick={handleSearch}
-            disabled={loading}
-            className="w-full py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 text-white font-semibold rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2"
+            loading={loading}
+            expand="block"
+            icon={<Search className="w-5 h-5" />}
           >
-            {loading ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
-                Searching...
-              </>
-            ) : (
-              <>
-                <Search className="w-5 h-5" />
-                Search Rides
-              </>
-            )}
-          </button>
-        </div>
+            {loading ? 'Searching...' : 'Search Rides'}
+          </Button>
+        </AppCard>
       </div>
 
       {/* Results */}
@@ -313,9 +282,9 @@ const FindRidePage = () => {
           {/* Ride Cards */}
           <div className="space-y-4 pb-24">
             {availableRides.map((ride) => (
-              <div
+              <AppCard
                 key={ride.id}
-                className="bg-white rounded-2xl shadow-lg p-5"
+                className="p-5"
               >
                 {/* Driver Info */}
                 <div className="flex items-start gap-4 mb-4">
@@ -393,14 +362,14 @@ const FindRidePage = () => {
                 )}
 
                 {/* Book Button */}
-                <button
+                <Button
                   onClick={() => handleBookRide(ride)}
-                  className="w-full py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2"
+                  expand="block"
                 >
                   Book {passengerCount} Seat{passengerCount > 1 ? 's' : ''}
                   <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
+                </Button>
+              </AppCard>
             ))}
           </div>
         </div>
@@ -409,21 +378,16 @@ const FindRidePage = () => {
       {/* Empty State */}
       {!loading && availableRides.length === 0 && (pickupLocation || dropoffLocation) && (
         <div className="px-4 mt-8">
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <EmptyState
+            icon={
+              <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center">
               <Car className="w-10 h-10 text-primary-600" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No rides found</h3>
-            <p className="text-gray-500 text-sm mb-4">
-              We couldn't find any rides for your route. Try adjusting your search or publish your own ride!
-            </p>
-            <button
-              onClick={handlePublishFromSearch}
-              className="px-6 py-3 bg-primary-500 text-white font-semibold rounded-xl"
-            >
-              Publish a Ride
-            </button>
-          </div>
+            }
+            title="No rides found"
+            message="We couldn't find any rides for your route. Try adjusting your search or publish your own ride!"
+            action={<Button onClick={handlePublishFromSearch}>Publish a Ride</Button>}
+          />
         </div>
       )}
     </div>

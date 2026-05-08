@@ -4,7 +4,6 @@ import { useAuth } from '../../context/AuthContext';
 import { authService, vehicleService } from '../../services';
 import type { VehicleDetails } from '../../types';
 import {
-  ArrowLeft,
   Bell,
   Camera,
   Car,
@@ -23,6 +22,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { isProfileIncomplete } from '../../utils/profileCompletion';
+import { BackButton } from '../../components/ui';
 
 interface ProfilePageLocationState {
   openEditor?: boolean;
@@ -550,13 +550,7 @@ const ProfilePage = () => {
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {!requiresProfileCompletion && (
-                <button
-                  onClick={handleBack}
-                  className="grid h-12 w-12 place-items-center rounded-2xl border border-white/35 bg-white/20 text-white backdrop-blur"
-                  aria-label="Go back"
-                >
-                  <ArrowLeft size={24} />
-                </button>
+                <BackButton variant="light" onClick={handleBack} className="h-12 w-12 rounded-2xl border border-white/35" />
               )}
               <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
                 {requiresProfileCompletion ? 'Account setup' : 'Profile'}

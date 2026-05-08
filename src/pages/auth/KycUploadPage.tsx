@@ -2,15 +2,16 @@ import { IonContent, IonPage } from '@ionic/react';
 import { useState } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { Upload, ArrowLeft, CheckCircle2, AlertCircle, Clock2, XCircle, File, CheckCircle } from 'lucide-react';
+import { Upload, CheckCircle2, AlertCircle, Clock2, XCircle, File, CheckCircle } from 'lucide-react';
+import { AppCard, PageHeader } from '../../components/ui';
 
 const KycUploadPage = () => {
+  const history = useHistory();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const { user, refreshUser } = useAuth();
-  const history = useHistory();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -76,17 +77,7 @@ const KycUploadPage = () => {
     <IonPage>
       <IonContent className="ion-padding bg-gray-50">
         <div className="max-w-2xl mx-auto px-4 app-top-safe pb-6">
-          <header className="mb-6">
-            <button
-              onClick={() => history.goBack()}
-              className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Back
-            </button>
-            <h1 className="text-2xl font-bold text-gray-900">KYC Verification</h1>
-            <p className="text-gray-500 mt-1">Upload your government-issued ID</p>
-          </header>
+          <PageHeader title="KYC Verification" subtitle="Upload your government-issued ID" />
 
           <div className="space-y-6 pb-8">
             {kycStatus && !success && (
@@ -107,7 +98,7 @@ const KycUploadPage = () => {
 
             {!success ? (
               <>
-                <div className="card p-6">
+                <AppCard className="p-6">
                   <div className="mb-6">
                     <h2 className="font-semibold text-gray-900 mb-4">Upload Document</h2>
                     <p className="text-gray-500 text-sm">
@@ -149,9 +140,9 @@ const KycUploadPage = () => {
                       <p className="text-sm text-danger-900">{error}</p>
                     </div>
                   )}
-                </div>
+                </AppCard>
 
-                <div className="card p-6">
+                <AppCard className="p-6">
                   <h2 className="font-semibold text-gray-900 mb-4">Requirements</h2>
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
@@ -175,7 +166,7 @@ const KycUploadPage = () => {
                       <p className="text-sm text-gray-700">Format: JPEG, PNG, or PDF</p>
                     </div>
                   </div>
-                </div>
+                </AppCard>
 
                 {user.kycStatus !== 'approved' && (
                   <button
@@ -188,7 +179,7 @@ const KycUploadPage = () => {
                 )}
               </>
             ) : (
-              <div className="card p-8 text-center animate-fade-in">
+              <AppCard className="p-8 text-center animate-fade-in">
                 <div className="w-20 h-20 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 className="w-10 h-10 text-success-600" />
                 </div>
@@ -211,7 +202,7 @@ const KycUploadPage = () => {
                 >
                   Go to Profile
                 </button>
-              </div>
+              </AppCard>
             )}
           </div>
         </div>

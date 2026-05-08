@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useHistory, useLocation } from 'react-router';
-import { ArrowLeft, CheckCircle2, MapPin, Navigation as NavigationIcon, Target } from 'lucide-react';
+import { CheckCircle2, MapPin, Navigation as NavigationIcon, Target } from 'lucide-react';
 import { useJsApiLoader } from '@react-google-maps/api';
 import { useAuth } from '../../context/AuthContext';
+import Button from '../../components/Button';
+import { AppCard, PageHeader, PageLoader } from '../../components/ui';
 import { LocationSearch } from '../../components/maps';
 import { googleMapsLoaderOptions } from '../../lib/googleMapsLoader';
 import { mapsService, locationService } from '../../services';
@@ -123,33 +125,15 @@ const SelectLocationPage = () => {
   };
 
   if (!isAuthLoaded) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (
     <div className="min-h-screen bg-gray-50 app-bottom-nav-safe">
-      <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 app-header-top-safe pb-6 px-4">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => history.goBack()}
-            className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"
-            type="button"
-          >
-            <ArrowLeft className="w-5 h-5 text-white" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-white">{title}</h1>
-            <p className="text-primary-100 text-sm">Choose a location to continue</p>
-          </div>
-        </div>
-      </div>
+      <PageHeader title={title} subtitle="Choose a location to continue" variant="gradient" />
 
       <div className="px-4 -mt-4 pb-6">
-        <div className="bg-white rounded-2xl shadow-lg p-4 space-y-4">
+        <AppCard className="p-4 space-y-4">
           {!loadError ? (
             <LocationSearch
               placeholder={placeholder}
@@ -175,15 +159,16 @@ const SelectLocationPage = () => {
             </div>
           )}
 
-          <button
+          <Button
             onClick={handleUseCurrentLocation}
             type="button"
             disabled={isResolvingCurrent || !isLoaded}
-            className="w-full py-3 border-2 border-primary-200 text-primary-700 font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
+            variant="outline"
+            className="w-full"
           >
             <Target className="w-4 h-4" />
             {isResolvingCurrent ? 'Detecting current location...' : 'Use Current Location'}
-          </button>
+          </Button>
 
           {selectedLocation && (
             <div className="p-3 rounded-xl border border-green-200 bg-green-50">
@@ -207,15 +192,15 @@ const SelectLocationPage = () => {
             </p>
           )}
 
-          <button
+          <Button
             onClick={handleConfirm}
             type="button"
-            className="w-full py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl flex items-center justify-center gap-2"
+            className="w-full"
           >
             <CheckCircle2 className="w-4 h-4" />
             Confirm Location
-          </button>
-        </div>
+          </Button>
+        </AppCard>
       </div>
     </div>
   );

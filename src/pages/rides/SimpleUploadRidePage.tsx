@@ -8,7 +8,8 @@ import { useState } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { rideService } from '../../services';
-import { ArrowLeft, MapPin, Calendar, Car, Navigation, CheckCircle2, AlertCircle } from 'lucide-react';
+import { MapPin, Calendar, Car, Navigation, CheckCircle2, AlertCircle } from 'lucide-react';
+import { AppCard, PageHeader } from '../../components/ui';
 
 const SimpleUploadRidePage = () => {
   const { user } = useAuth();
@@ -64,7 +65,7 @@ const SimpleUploadRidePage = () => {
       <IonPage>
         <IonContent className="ion-padding bg-gray-50">
           <div className="max-w-2xl mx-auto px-4 app-top-safe pb-6">
-            <div className="card p-8 text-center animate-fade-in">
+            <AppCard className="p-8 text-center animate-fade-in">
               <div className="w-20 h-20 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="w-10 h-10 text-success-600" />
               </div>
@@ -84,7 +85,7 @@ const SimpleUploadRidePage = () => {
                   Create Another Ride
                 </button>
               </div>
-            </div>
+            </AppCard>
           </div>
         </IonContent>
       </IonPage>
@@ -95,19 +96,9 @@ const SimpleUploadRidePage = () => {
     <IonPage>
       <IonContent className="ion-padding bg-gray-50">
         <div className="max-w-2xl mx-auto px-4 app-top-safe pb-6">
-          <header className="mb-6">
-            <button
-              onClick={() => history.goBack()}
-              className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Back
-            </button>
-            <h1 className="text-2xl font-bold text-gray-900">Upload Ride</h1>
-            <p className="text-gray-500 mt-1">Add a new ride to your history</p>
-          </header>
+          <PageHeader title="Upload Ride" subtitle="Add a new ride to your history" />
 
-          <div className="card p-6 space-y-6 animate-fade-in">
+          <AppCard className="p-6 space-y-6 animate-fade-in">
             {/* Date & Time */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Date & Time</label>
@@ -226,7 +217,7 @@ const SimpleUploadRidePage = () => {
             >
               {loading ? 'Creating Ride...' : 'Upload Ride'}
             </button>
-          </div>
+          </AppCard>
         </div>
       </IonContent>
     </IonPage>

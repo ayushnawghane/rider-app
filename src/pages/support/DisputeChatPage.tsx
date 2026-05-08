@@ -3,7 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useHistory, useParams } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { messageService } from '../../services';
-import { ArrowLeft, Send, User, MessageCircle, Clock } from 'lucide-react';
+import { Send, User, MessageCircle, Clock } from 'lucide-react';
+import { BackButton, EmptyState } from '../../components/ui';
 import type { Message } from '../../types';
 
 const DisputeChatPage = () => {
@@ -131,13 +132,7 @@ const DisputeChatPage = () => {
       <IonContent className="ion-padding bg-gray-50" fullscreen>
         <div className="max-w-3xl mx-auto px-4 app-top-safe pb-6 min-h-full flex flex-col">
           <header className="mb-4 flex-shrink-0">
-            <button
-              onClick={handleBack}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Back
-            </button>
+            <BackButton label="Back" onClick={handleBack} fallbackPath="/support" />
           </header>
 
           {error && (
@@ -148,11 +143,11 @@ const DisputeChatPage = () => {
 
           <div className="flex-1 overflow-y-auto pb-4">
             {messages.length === 0 ? (
-              <div className="empty-state">
-                <MessageCircle className="empty-icon" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Messages Yet</h3>
-                <p className="empty-text">Start a conversation with our support team</p>
-              </div>
+              <EmptyState
+                icon={<MessageCircle className="empty-icon" />}
+                title="No Messages Yet"
+                message="Start a conversation with our support team"
+              />
             ) : (
               <div className="space-y-4">
                 {messages.map((message) => (

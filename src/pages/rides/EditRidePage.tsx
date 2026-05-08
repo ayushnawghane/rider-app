@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { useHistory, useParams } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { rideService } from '../../services';
+import Button from '../../components/Button';
+import { AppCard, EmptyState, PageHeader, PageLoader } from '../../components/ui';
 import {
     MapPin,
     Clock,
     Users,
     Car,
-    ArrowLeft,
     Plus,
     Minus,
     IndianRupee,
@@ -150,25 +151,18 @@ const EditRidePage = () => {
     ];
 
     if (!isAuthLoaded || loading) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
-            </div>
-        );
+        return <PageLoader />;
     }
 
     if (submitError && !startLocation) {
         return (
             <div className="h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
-                <AlertTriangle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h2 className="text-xl font-bold text-gray-900 mb-2">Notice</h2>
-                <p className="text-gray-500 mb-6">{submitError}</p>
-                <button
-                    onClick={handleBack}
-                    className="px-6 py-3 bg-white text-gray-700 font-semibold rounded-xl shadow-sm border border-gray-200"
-                >
-                    Go Back
-                </button>
+                <EmptyState
+                    icon={<AlertTriangle className="h-16 w-16 text-gray-300" />}
+                    title="Notice"
+                    message={submitError}
+                    action={<Button variant="outline" onClick={handleBack}>Go Back</Button>}
+                />
             </div>
         );
     }
@@ -178,23 +172,16 @@ const EditRidePage = () => {
             className="h-screen overflow-y-auto bg-gray-50 pb-24 publish-ride-light"
             style={{ WebkitOverflowScrolling: 'touch', colorScheme: 'light' }}
         >
-            {/* Header */}
-            <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 app-header-top-safe pb-6 px-4">
-                <div className="flex items-center gap-4 mb-4">
-                    <button
-                        onClick={handleBack}
-                        className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center"
-                    >
-                        <ArrowLeft className="w-5 h-5 text-white" />
-                    </button>
-                    <h1 className="text-2xl font-bold text-white">Edit Ride Details</h1>
-                </div>
-                <p className="text-primary-100">Make tweaks before you start your ride</p>
-            </div>
+            <PageHeader
+                title="Edit Ride Details"
+                subtitle="Make tweaks before you start your ride"
+                variant="gradient"
+                onBack={handleBack}
+            />
 
             {/* Form */}
             <div className="px-4 -mt-4">
-                <div className="bg-white rounded-2xl shadow-lg p-5">
+                <AppCard className="p-5">
                     {Object.keys(fieldErrors).length > 0 && (
                         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                             Please complete all required fields highlighted below.
@@ -377,10 +364,10 @@ const EditRidePage = () => {
                     </div>
 
                     {/* Save Button */}
-                    <button
+                    <Button
                         onClick={handleSave}
                         disabled={isSubmitting}
-                        className="w-full py-4 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/30 transition-all active:scale-95 flex items-center justify-center gap-2"
+                        className="w-full"
                     >
                         {isSubmitting ? (
                             <>
@@ -393,8 +380,8 @@ const EditRidePage = () => {
                                 <ChevronRight className="w-5 h-5" />
                             </>
                         )}
-                    </button>
-                </div>
+                    </Button>
+                </AppCard>
             </div>
         </div>
     );

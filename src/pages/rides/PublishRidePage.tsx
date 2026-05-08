@@ -7,7 +7,6 @@ import {
   Clock,
   Users,
   Car,
-  ArrowLeft,
   Plus,
   Minus,
   IndianRupee,
@@ -17,6 +16,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { hasRequiredBookingProfile } from '../../utils/profileCompletion';
+import { AppCard, PageHeader, PageLoader } from '../../components/ui';
 
 interface Location {
   address: string;
@@ -60,14 +60,6 @@ const PublishRidePage = () => {
   const [vehicleSaved, setVehicleSaved] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<PublishRideFieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-
-  const handleBackToHome = () => {
-    if (history.length > 1) {
-      history.goBack();
-      return;
-    }
-    history.replace('/home');
-  };
 
   useEffect(() => {
     const now = new Date();
@@ -210,11 +202,7 @@ const PublishRidePage = () => {
   ];
 
   if (!isAuthLoaded) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (
@@ -222,23 +210,11 @@ const PublishRidePage = () => {
       className="app-scroll-screen app-bottom-nav-safe bg-gray-50 publish-ride-light"
       style={{ colorScheme: 'light' }}
     >
-      {/* Header */}
-      <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 app-header-top-safe pb-6 px-4">
-        <div className="flex items-center gap-4 mb-4">
-          <button
-            onClick={handleBackToHome}
-            className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center"
-          >
-            <ArrowLeft className="w-5 h-5 text-white" />
-          </button>
-          <h1 className="text-2xl font-bold text-white">Publish Ride</h1>
-        </div>
-        <p className="text-primary-100">Share your journey and earn points</p>
-      </div>
+      <PageHeader title="Publish Ride" subtitle="Share your journey and earn points" variant="gradient" />
 
       {/* Form */}
       <div className="px-4 -mt-4">
-        <div className="bg-white rounded-2xl shadow-lg p-5">
+        <AppCard className="p-5">
           {Object.keys(fieldErrors).length > 0 && (
             <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               Please complete all required fields highlighted below.
@@ -497,7 +473,7 @@ const PublishRidePage = () => {
               </>
             )}
           </button>
-        </div>
+        </AppCard>
       </div>
     </div>
   );

@@ -4,9 +4,12 @@ import { useParams, useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { rideService, mapsService } from '../../services';
 import { MapComponent } from '../../components/maps';
-import { ArrowLeft, Phone, MessageSquare, ShieldAlert, MapPin, Navigation, Calendar, Car, DollarSign, Clock, CheckCircle2, AlertTriangle, Route } from 'lucide-react';
+import { Phone, MessageSquare, ShieldAlert, MapPin, Navigation, Calendar, Car, DollarSign, Clock, CheckCircle2, AlertTriangle, Route } from 'lucide-react';
 import type { Ride } from '../../types';
 import { hasRequiredBookingProfile } from '../../utils/profileCompletion';
+import Button from '../../components/Button';
+import { AppCard, BackButton, EmptyState, StatusBadge } from '../../components/ui';
+import { Skeleton, SkeletonCard } from '../../components/Skeleton';
 
 interface RideDetailLocationState {
   passengerCount?: number;
@@ -124,10 +127,10 @@ const RideDetailPage = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      active: { icon: CheckCircle2, color: 'status-active', label: 'Active' },
-      pending: { icon: AlertTriangle, color: 'status-pending', label: 'Pending' },
-      completed: { icon: CheckCircle2, color: 'status-completed', label: 'Completed' },
-      cancelled: { icon: CheckCircle2, color: 'status-cancelled', label: 'Cancelled' },
+      active: { icon: CheckCircle2, tone: 'active', label: 'Active' },
+      pending: { icon: AlertTriangle, tone: 'pending', label: 'Pending' },
+      completed: { icon: CheckCircle2, tone: 'completed', label: 'Completed' },
+      cancelled: { icon: CheckCircle2, tone: 'cancelled', label: 'Cancelled' },
     };
     return statusMap[status as keyof typeof statusMap] || statusMap.pending;
   };
@@ -153,14 +156,8 @@ const RideDetailPage = () => {
         <IonContent className="ion-padding bg-gray-50">
           <div className="max-w-2xl mx-auto px-4 app-top-safe pb-6">
             <div className="space-y-4">
-              <div className="h-8 bg-gray-200 rounded-lg animate-pulse w-3/4" />
-              <div className="card p-6 space-y-4">
-                <div className="h-48 bg-gray-200 rounded-xl animate-pulse" />
-                <div className="space-y-3">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" />
-                </div>
-              </div>
+              <Skeleton variant="rounded" height="32px" width="75%" />
+              <SkeletonCard hasImage lines={2} />
             </div>
           </div>
         </IonContent>
@@ -173,20 +170,12 @@ const RideDetailPage = () => {
       <IonPage>
         <IonContent className="ion-padding bg-gray-50">
           <div className="max-w-2xl mx-auto px-4 app-top-safe pb-6">
-            <header className="mb-6">
-              <button
-                onClick={() => history.goBack()}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                Back
-              </button>
-            </header>
-            <div className="card p-8 text-center">
-              <AlertTriangle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Ride Not Found</h2>
-              <p className="text-gray-500">The ride you're looking for doesn't exist or has been deleted.</p>
-            </div>
+            <BackButton label="Back" className="mb-6" />
+            <EmptyState
+              icon={<AlertTriangle className="w-16 h-16" />}
+              title="Ride Not Found"
+              message="The ride you're looking for doesn't exist or has been deleted."
+            />
           </div>
         </IonContent>
       </IonPage>
@@ -201,20 +190,12 @@ const RideDetailPage = () => {
     <IonPage>
       <IonContent className="ion-padding bg-gray-50">
         <div className="max-w-2xl mx-auto px-4 app-top-safe pb-6">
-          <header className="mb-6">
-            <button
-              onClick={() => history.goBack()}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Back
-            </button>
-          </header>
+          <BackButton label="Back" className="mb-6" />
 
           <div className="space-y-6 app-bottom-nav-safe">
             {/* Map Section */}
             {hasMapData && (
-              <div className="card overflow-hidden">
+              <AppCard className="overflow-hidden">
                 <div className="h-64">
                   <MapComponent
                     center={mapCenter}
@@ -229,10 +210,10 @@ const RideDetailPage = () => {
                     <span>Route snapshot • {ride.distance ? `${ride.distance} km` : 'Distance unavailable'}</span>
                   </div>
                 </div>
-              </div>
+              </AppCard>
             )}
 
-            <div className="card p-6 animate-fade-in">
+            <AppCard className="p-6 animate-fade-in">
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
@@ -240,10 +221,10 @@ const RideDetailPage = () => {
                   </div>
                   <div>
                     <h1 className="text-xl font-bold text-gray-900">Ride Details</h1>
-                    <span className={`badge ${status.color} flex items-center gap-1.5 mt-1`}>
+                    <StatusBadge tone={status.tone as 'active' | 'pending' | 'completed' | 'cancelled'} className="mt-1">
                       <status.icon className="w-3.5 h-3.5" />
                       {status.label}
-                    </span>
+                    </StatusBadge>
                   </div>
                 </div>
               </div>
@@ -326,47 +307,49 @@ const RideDetailPage = () => {
                   </div>
                 )}
               </div>
-            </div>
+            </AppCard>
 
             {canJoinRide && (
-              <div className="card p-4">
-                <button
+              <AppCard className="p-4">
+                <Button
                   onClick={handleJoinRide}
                   disabled={isJoining || isJoined}
-                  className={`w-full py-3 rounded-xl font-semibold transition-colors ${isJoined
-                      ? 'bg-green-100 text-green-700 cursor-default'
-                      : 'bg-primary-500 text-white hover:bg-primary-600'
-                    } disabled:opacity-80 disabled:cursor-not-allowed`}
+                  loading={isJoining}
+                  expand="block"
+                  variant={isJoined ? 'secondary' : 'primary'}
                 >
                   {isJoined
                     ? 'Joined Ride'
                     : isJoining
                       ? 'Joining Ride...'
                       : `Join Ride (${passengerCount} Seat${passengerCount > 1 ? 's' : ''})`}
-                </button>
+                </Button>
                 <p className="text-xs text-gray-500 mt-2">Earn +30 points when you join this ride.</p>
                 {joinError && <p className="text-xs text-red-600 mt-1">{joinError}</p>}
                 {joinSuccessMessage && <p className="text-xs text-green-600 mt-1">{joinSuccessMessage}</p>}
-              </div>
+              </AppCard>
             )}
 
             {user?.id === ride.userId && (
               <div className="grid gap-3">
                 {ride.status === 'pending' && (
-                  <button
-                    onClick={() => history.push(`/rides/edit/${ride.id}`)}
-                    className="w-full py-4 bg-white border-2 border-primary-200 text-primary-700 font-semibold rounded-xl hover:bg-primary-50 transition-colors flex items-center justify-center gap-2"
-                  >
-                    Edit Ride Details
-                  </button>
+                <Button
+                  onClick={() => history.push(`/rides/edit/${ride.id}`)}
+                  variant="outline"
+                  expand="block"
+                  size="lg"
+                >
+                  Edit Ride Details
+                </Button>
                 )}
                 {['pending', 'active'].includes(ride.status) && (
-                  <button
+                  <Button
                     onClick={() => history.push(`/rides/active/${ride.id}`)}
-                    className="w-full py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/30 transition-all flex items-center justify-center gap-2"
+                    expand="block"
+                    size="lg"
                   >
                     {ride.status === 'pending' ? 'Go to Start Console' : 'Go to Tracking Console'}
-                  </button>
+                  </Button>
                 )}
               </div>
             )}
@@ -375,7 +358,7 @@ const RideDetailPage = () => {
               <button
                 onClick={handleContactDriver}
                 disabled={!ride.driverContact}
-                className="card p-4 hover:shadow-medium transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-2xl bg-white p-4 text-left shadow-lg transition-all hover:shadow-medium disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Phone className="w-6 h-6 text-primary-600 mb-2" />
                 <p className="font-medium text-gray-900">Contact Driver</p>
@@ -384,7 +367,7 @@ const RideDetailPage = () => {
 
               <button
                 onClick={handleRaiseDispute}
-                className="card p-4 hover:shadow-medium transition-all text-left"
+                className="rounded-2xl bg-white p-4 text-left shadow-lg transition-all hover:shadow-medium"
               >
                 <MessageSquare className="w-6 h-6 text-warning-600 mb-2" />
                 <p className="font-medium text-gray-900">Raise Dispute</p>

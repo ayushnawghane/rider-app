@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { disputeService } from '../../services';
-import { ArrowLeft, MessageSquare, CheckCircle2, AlertCircle, Car, FileText, HelpCircle } from 'lucide-react';
+import { MessageSquare, CheckCircle2, AlertCircle, Car, FileText, HelpCircle } from 'lucide-react';
+import { AppCard, PageHeader } from '../../components/ui';
 
 const NewDisputePage = () => {
   const { user } = useAuth();
@@ -78,20 +79,10 @@ const NewDisputePage = () => {
     <IonPage>
       <IonContent className="ion-padding bg-gray-50">
         <div className="max-w-2xl mx-auto px-4 app-top-safe pb-6">
-          <header className="mb-6">
-            <button
-              onClick={handleBack}
-              className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Back
-            </button>
-            <h1 className="text-2xl font-bold text-gray-900">Raise Dispute</h1>
-            <p className="text-gray-500 mt-1">Describe your issue in detail</p>
-          </header>
+          <PageHeader title="Raise Dispute" subtitle="Describe your issue in detail" onBack={handleBack} />
 
           {!success ? (
-            <div className="card p-6 space-y-6 animate-fade-in">
+            <AppCard className="p-6 space-y-6 animate-fade-in">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Dispute Type</label>
                 <div className="grid grid-cols-3 gap-3">
@@ -189,9 +180,9 @@ const NewDisputePage = () => {
               >
                 {loading ? 'Submitting...' : 'Submit Dispute'}
               </button>
-            </div>
+            </AppCard>
           ) : (
-            <div className="card p-8 text-center animate-fade-in">
+            <AppCard className="p-8 text-center animate-fade-in">
               <div className="w-20 h-20 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="w-10 h-10 text-success-600" />
               </div>
@@ -214,7 +205,7 @@ const NewDisputePage = () => {
               >
                 View My Disputes
               </button>
-            </div>
+            </AppCard>
           )}
         </div>
       </IonContent>

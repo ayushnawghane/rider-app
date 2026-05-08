@@ -1,5 +1,6 @@
 import { IonContent, IonPage, IonButton, IonToast } from '@ionic/react';
 import LoadingOverlay from '../../components/LoadingOverlay';
+import { PageHeader } from '../../components/ui';
 import { useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
@@ -17,7 +18,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   Target,
-  ChevronLeft,
   MoreVertical
 } from 'lucide-react';
 import type { Ride } from '../../types';
@@ -298,24 +298,18 @@ const ActiveRidePage = () => {
     <IonPage>
       <IonContent className="bg-gray-50">
         <div className="app-scroll-screen flex flex-col bg-gray-50">
-          {/* Header */}
-          <header className="bg-white px-4 app-toolbar-top-safe pb-3 shadow-sm z-10">
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => history.goBack()}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <ChevronLeft className="w-6 h-6 text-gray-700" />
-              </button>
-              <div className="text-center">
-                <h1 className="font-semibold text-gray-900">Active Ride</h1>
-                <p className="text-sm text-gray-500">{ride.vehicleType} • {ride.vehicleNumber}</p>
-              </div>
-              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <PageHeader
+            title="Active Ride"
+            subtitle={`${ride.vehicleType} • ${ride.vehicleNumber}`}
+            variant="toolbar"
+            onBack={() => history.goBack()}
+            className="z-10"
+            rightAction={
+              <button type="button" className="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Ride actions">
                 <MoreVertical className="w-6 h-6 text-gray-700" />
               </button>
-            </div>
-          </header>
+            }
+          />
 
           {/* Map Section */}
           <div className="flex-1 relative">
