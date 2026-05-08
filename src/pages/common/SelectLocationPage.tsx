@@ -28,7 +28,7 @@ const SelectLocationPage = () => {
   const [isResolvingCurrent, setIsResolvingCurrent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const navState = (location.state || {}) as SelectLocationState;
+  const navState = useMemo(() => (location.state || {}) as SelectLocationState, [location.state]);
   const type = navState.type || 'pickup';
   const returnTo = navState.returnTo || '/home';
 
@@ -52,7 +52,7 @@ const SelectLocationPage = () => {
       setManualAddress('');
     }
     setError(null);
-  }, [type, location.state]);
+  }, [navState, type]);
 
   const title = useMemo(() => {
     if (type === 'dropoff' || type === 'end') return 'Select Drop Location';

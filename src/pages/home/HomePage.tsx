@@ -16,9 +16,8 @@ import {
   Map,
   Bell,
   Star,
-  Navigation
 } from 'lucide-react';
-import type { PublishedRide, UserStats } from '../../types';
+import type { PublishedRide } from '../../types';
 import { isProfileIncomplete } from '../../utils/profileCompletion';
 
 interface Location {

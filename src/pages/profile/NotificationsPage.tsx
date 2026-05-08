@@ -1,5 +1,5 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonList, IonItem, IonLabel, IonBadge, IonCard, IonCardContent, IonLoading, IonRefresher, IonRefresherContent } from '@ionic/react';
-import { useEffect, useState } from 'react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonList, IonItem, IonLabel, IonBadge, IonLoading, IonRefresher, IonRefresherContent } from '@ionic/react';
+import { useCallback, useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { notificationService } from '../../services';
@@ -10,10 +10,9 @@ const NotificationsPage: React.FC = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const history = useHistory();
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!user) return;
     
     const result = await notificationService.getNotifications(user.id);
@@ -21,16 +20,15 @@ const NotificationsPage: React.FC = () => {
       setNotifications(result.notifications);
     }
     setLoading(false);
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchNotifications();
-  }, [user]);
+  }, [fetchNotifications]);
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
+  const handleRefresh = async (event: CustomEvent) => {
     await fetchNotifications();
-    setRefreshing(false);
+    event.detail.complete();
   };
 
   const markAsRead = async (notificationId: string) => {

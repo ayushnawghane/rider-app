@@ -3,6 +3,8 @@
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom/extend-expect';
+import { cleanup } from '@testing-library/react';
+import { afterEach, vi } from 'vitest';
 
 const storage = new Map<string, string>();
 
@@ -25,6 +27,12 @@ Object.defineProperty(window, 'localStorage', {
 Object.defineProperty(globalThis, 'localStorage', {
   value: localStorageMock,
   writable: true,
+});
+
+afterEach(() => {
+  cleanup();
+  storage.clear();
+  vi.clearAllMocks();
 });
 
 // Mock matchmedia

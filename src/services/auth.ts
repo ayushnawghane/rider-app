@@ -3,18 +3,7 @@ import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import type {
   User,
-  Ride,
-  Dispute,
-  Message,
-  Notification,
-  SosAlert,
-  Notice,
-  Faq,
   KycUploadParams,
-  RideCreateParams,
-  DisputeCreateParams,
-  MessageCreateParams,
-  SosCreateParams,
   ProfileUpdateParams,
   VehicleDetails,
 } from '../types';

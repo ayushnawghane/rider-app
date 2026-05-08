@@ -2,7 +2,7 @@ import { IonContent, IonPage } from '@ionic/react';
 import { useState } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { Upload, FileText, ArrowLeft, CheckCircle2, AlertCircle, Clock2, XCircle, FileImage, File, CheckCircle } from 'lucide-react';
+import { Upload, ArrowLeft, CheckCircle2, AlertCircle, Clock2, XCircle, File, CheckCircle } from 'lucide-react';
 
 const KycUploadPage = () => {
   const [file, setFile] = useState<File | null>(null);

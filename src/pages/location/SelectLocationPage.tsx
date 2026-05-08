@@ -20,7 +20,6 @@ const SelectLocationPage = () => {
   const state = location.state as LocationState | undefined;
   
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
-  const [isReady, setIsReady] = useState(false);
 
   const { isLoaded, loadError } = useJsApiLoader({
     ...googleMapsLoaderOptions,
@@ -32,7 +31,6 @@ const SelectLocationPage = () => {
         console.log('Google Maps loaded, initializing service...');
         const initialized = await mapsService.initialize();
         console.log('Maps service initialized:', initialized);
-        setIsReady(true);
       }
     };
     initMaps();

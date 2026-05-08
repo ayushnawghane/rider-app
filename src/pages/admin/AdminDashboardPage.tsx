@@ -1,11 +1,10 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonList, IonItem, IonLabel, IonBadge, IonCard, IonCardContent } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonList, IonItem, IonLabel, IonCard, IonCardContent } from '@ionic/react';
 import LoadingOverlay from '../../components/LoadingOverlay';
 import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { peopleOutline, carOutline, alertCircleOutline, statsChartOutline, chevronForwardOutline, settingsOutline, logOutOutline } from 'ionicons/icons';
-import type { User, Ride, Dispute } from '../../types';
+import { peopleOutline, carOutline, alertCircleOutline, statsChartOutline, chevronForwardOutline, settingsOutline } from 'ionicons/icons';
 
 const AdminDashboardPage: React.FC = () => {
   const { user } = useAuth();

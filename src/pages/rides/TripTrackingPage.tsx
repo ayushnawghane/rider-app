@@ -1,12 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useHistory } from 'react-router';
-import { useAuth } from '../../context/AuthContext';
 import { rideService, locationService, mapsService } from '../../services';
 import { MapComponent } from '../../components/maps';
 import {
     ChevronLeft,
-    MapPin,
-    Navigation,
     Clock,
     Target,
     AlertTriangle,
@@ -46,7 +43,6 @@ const getMarkerIcon = (type: 'pickup' | 'drop' | 'driver' | 'user'): google.maps
 
 const TripTrackingPage = () => {
     const { id } = useParams<{ id: string }>();
-    const { user } = useAuth();
     const history = useHistory();
 
     const [ride, setRide] = useState<Ride | null>(null);
