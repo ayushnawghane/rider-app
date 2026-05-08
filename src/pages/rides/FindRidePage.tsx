@@ -26,7 +26,6 @@ interface SearchLocation {
 interface FindRideLocationState {
   pickup?: SearchLocation;
   dropoff?: SearchLocation;
-  departureTime?: string;
   passengerCount?: number;
 }
 
@@ -37,7 +36,6 @@ const FindRidePage = () => {
 
   const [pickupLocation, setPickupLocation] = useState<SearchLocation | null>(null);
   const [dropoffLocation, setDropoffLocation] = useState<SearchLocation | null>(null);
-  const [departureTime, setDepartureTime] = useState<string>('');
   const [passengerCount, setPassengerCount] = useState<number>(1);
   const [availableRides, setAvailableRides] = useState<PublishedRide[]>([]);
   const [loading, setLoading] = useState(false);
@@ -50,17 +48,8 @@ const FindRidePage = () => {
     if (state) {
       if (state.pickup) setPickupLocation(state.pickup);
       if (state.dropoff) setDropoffLocation(state.dropoff);
-      if (state.departureTime) setDepartureTime(state.departureTime);
       if (state.passengerCount) setPassengerCount(state.passengerCount);
     }
-
-    // Set default time
-    if (!departureTime) {
-      const now = new Date();
-      now.setMinutes(now.getMinutes() + 30);
-      setDepartureTime(now.toISOString().slice(0, 16));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
   const handleSearch = async () => {
@@ -72,7 +61,7 @@ const FindRidePage = () => {
       const result = await rideService.searchRides({
         startLocation: startQuery,
         endLocation: endQuery,
-        departureTime: departureTime || undefined,
+        departureTime: new Date().toISOString(),
       });
 
       if (!result.success || !result.rides) {
@@ -124,7 +113,6 @@ const FindRidePage = () => {
     history.push('/publish-ride', {
       start: pickupLocation || undefined,
       end: dropoffLocation || undefined,
-      departureTime: departureTime || undefined,
     });
   };
 
@@ -157,10 +145,6 @@ const FindRidePage = () => {
             <span className="text-sm">{dropoffLocation?.address || 'Select destination'}</span>
           </div>
           <div className="flex items-center gap-4 mt-3 text-white/70 text-xs">
-            <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {departureTime ? new Date(departureTime).toLocaleDateString() : 'Any time'}
-            </span>
             <span className="flex items-center gap-1">
               <Users className="w-3 h-3" />
               {passengerCount} passenger{passengerCount > 1 ? 's' : ''}
@@ -208,17 +192,8 @@ const FindRidePage = () => {
             </div>
           </button>
 
-          {/* Time & Passengers */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
-              <Clock className="w-4 h-4 text-primary-500" />
-              <input
-                type="datetime-local"
-                value={departureTime}
-                onChange={(e) => setDepartureTime(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-gray-700 focus:outline-none"
-              />
-            </div>
+          {/* Passengers */}
+          <div className="mb-4">
             <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
               <Users className="w-4 h-4 text-primary-500" />
               <select

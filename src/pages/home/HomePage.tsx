@@ -44,7 +44,6 @@ const HomePage = () => {
 
   const [pickup, setPickup] = useState<Location | null>(null);
   const [dropoff, setDropoff] = useState<Location | null>(null);
-  const [departureTime, setDepartureTime] = useState<string>('');
   const [passengerCount, setPassengerCount] = useState<number>(1);
   const [dismissedProfilePrompt, setDismissedProfilePrompt] = useState(false);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
@@ -59,13 +58,6 @@ const HomePage = () => {
     ridesPublished: user?.ridesPublished ?? 0,
     rating: user?.ratingAsDriver ?? 0,
   });
-
-  useEffect(() => {
-    // Set default time to current time + 30 minutes
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 30);
-    setDepartureTime(now.toISOString().slice(0, 16));
-  }, []);
 
   useEffect(() => {
     const state = location.state;
@@ -105,7 +97,7 @@ const HomePage = () => {
   };
 
   const handleFindDrivers = () => {
-    history.push('/find-ride', { pickup, dropoff, departureTime, passengerCount });
+    history.push('/find-ride', { pickup, dropoff, passengerCount });
   };
 
   const handleDetectCurrentLocation = async () => {
@@ -144,7 +136,6 @@ const HomePage = () => {
     history.push('/find-ride', {
       pickup: defaultPickup,
       dropoff: route.location,
-      departureTime,
       passengerCount,
     });
   };
@@ -326,17 +317,8 @@ const HomePage = () => {
             </div>
           </div>
 
-          {/* Time & Passengers */}
+          {/* Passengers */}
           <div className="space-y-3 mb-4">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-              <Clock className="w-5 h-5 text-primary-500" />
-              <input
-                type="datetime-local"
-                value={departureTime}
-                onChange={(e) => setDepartureTime(e.target.value)}
-                className="flex-1 bg-transparent text-gray-700 focus:outline-none"
-              />
-            </div>
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
               <Users className="w-5 h-5 text-primary-500" />
               <div className="flex items-center gap-4 flex-1">
