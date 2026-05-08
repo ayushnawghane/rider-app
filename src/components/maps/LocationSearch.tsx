@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { mapsService } from '../../services';
 import { Location } from '../../types/maps';
 
@@ -40,6 +40,12 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
   };
 
   const iconConfig = getIconConfig();
+
+  useEffect(() => {
+    setInputValue(value);
+    setPredictions([]);
+    setShowPredictions(false);
+  }, [value]);
 
   const fetchPredictions = useCallback(async (input: string) => {
     if (input.length < 2) {
