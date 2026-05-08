@@ -12,7 +12,7 @@ workflows:
       vars:
         PACKAGE_NAME: "com.blinkcar.app"
         VITE_SUPABASE_URL: "https://ndlczqehttpranitnrac.supabase.co"
-        VITE_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Im5kbGN6cWVodHRwcmFuaXRucmFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4ODg3MzksImV4cCI6MjA4MzQ2NDczOX0.tB-DgvR3CRE574d9uxrPj_PCvH6qCqvyiM4fcyPuv8Y"
+        VITE_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kbGN6cWVodHRwcmFuaXRucmFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4ODg3MzksImV4cCI6MjA4MzQ2NDczOX0.tB-DgvR3CRE574d9uxrPj_PCvH6qCqvyiM4fcyPuv8Y"
         VITE_APP_NAME: "RiderApp"
         VITE_APP_VERSION: "1.0.0"
         VITE_GOOGLE_MAPS_API_KEY: "AIzaSyA02Wa6Ozs1KrYJWSyURFoyMtjaC9wx02U"
@@ -112,7 +112,7 @@ workflows:
         XCODE_SCHEME: "App"
         BUNDLE_ID: "com.blinkcar.app"
         VITE_SUPABASE_URL: "https://ndlczqehttpranitnrac.supabase.co"
-        VITE_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Im5kbGN6cWVodHRwcmFuaXRucmFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4ODg3MzksImV4cCI6MjA4MzQ2NDczOX0.tB-DgvR3CRE574d9uxrPj_PCvH6qCqvyiM4fcyPuv8Y"
+        VITE_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kbGN6cWVodHRwcmFuaXRucmFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4ODg3MzksImV4cCI6MjA4MzQ2NDczOX0.tB-DgvR3CRE574d9uxrPj_PCvH6qCqvyiM4fcyPuv8Y"
         VITE_APP_NAME: "RiderApp"
         VITE_APP_VERSION: "1.0.0"
         VITE_GOOGLE_MAPS_API_KEY: "AIzaSyA02Wa6Ozs1KrYJWSyURFoyMtjaC9wx02U"
