@@ -10,7 +10,6 @@
 
 # production
 /dist
-/android
 /migrations
 
 # misc
@@ -35,7 +34,6 @@ yarn-error.log*
 # Ionic/Capacitor
 .ion
 .capacitor
-capacitor.config.ts
 resources/
 
 # Supabase

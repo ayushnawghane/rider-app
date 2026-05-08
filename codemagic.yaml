@@ -15,9 +15,7 @@ workflows:
       vars:
         PACKAGE_NAME: "com.blinkcar.app"
       node: 22.11.0
-      java: 17
-
-    # Manual-only until the Capacitor Android project is generated and committed.
+      java: 21
 
     scripts:
       # 1. Install JS dependencies
@@ -134,16 +132,17 @@ workflows:
           keychain add-certificates
           xcode-project use-profiles
 
-      # 6. Increment build number using Codemagic numeric build counter
+      # 6. Increment build number above existing App Store Connect builds
       - name: Increment build number
         script: |
           if [ -n "$BUILD_NUMBER" ]; then
-            IOS_BUILD_NUMBER="$BUILD_NUMBER"
+            CI_BUILD_NUMBER="$BUILD_NUMBER"
           elif [ -n "$PROJECT_BUILD_NUMBER" ]; then
-            IOS_BUILD_NUMBER="$PROJECT_BUILD_NUMBER"
+            CI_BUILD_NUMBER="$PROJECT_BUILD_NUMBER"
           else
-            IOS_BUILD_NUMBER=$(date +%s)
+            CI_BUILD_NUMBER=$(date +%s)
           fi
+          IOS_BUILD_NUMBER=$((100 + CI_BUILD_NUMBER))
           cd ios/App
           sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = $IOS_BUILD_NUMBER;/g" App.xcodeproj/project.pbxproj
           agvtool new-version -all "$IOS_BUILD_NUMBER"
