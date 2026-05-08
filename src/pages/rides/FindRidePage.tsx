@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { rideService } from '../../services';
+import { locationService, rideService } from '../../services';
 import {
   MapPin,
   Clock,
@@ -122,9 +122,23 @@ const FindRidePage = () => {
   };
 
   const formatDuration = (minutes: number) => {
+    if (!minutes || minutes <= 0) return 'Unknown';
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours}h ${mins}m`;
+  };
+
+  const getRideDistance = (ride: PublishedRide) => {
+    if (ride.distance > 0) return Math.round(ride.distance * 10) / 10;
+    if (!ride.startLat || !ride.startLng || !ride.endLat || !ride.endLng) return 0;
+    return Math.round(locationService.calculateDistance(ride.startLat, ride.startLng, ride.endLat, ride.endLng) * 10) / 10;
+  };
+
+  const getRideDuration = (ride: PublishedRide) => {
+    if (ride.duration > 0) return ride.duration;
+    const distanceKm = getRideDistance(ride);
+    if (!distanceKm) return 0;
+    return Math.max(1, Math.round((distanceKm / 45) * 60));
   };
 
   if (!isAuthLoaded) {
@@ -308,7 +322,7 @@ const FindRidePage = () => {
                   <div className="flex-1 text-right">
                     <p className="text-gray-500 text-xs mb-0.5">Arrival</p>
                     <p className="font-semibold text-gray-900">
-                      {formatTime(new Date(new Date(ride.departureTime).getTime() + ride.duration * 60000).toISOString())}
+                      {formatTime(new Date(new Date(ride.departureTime).getTime() + getRideDuration(ride) * 60000).toISOString())}
                     </p>
                   </div>
                 </div>
@@ -317,11 +331,11 @@ const FindRidePage = () => {
                 <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                   <span className="flex items-center gap-1">
                     <Navigation className="w-3 h-3" />
-                    {ride.distance} km
+                    {getRideDistance(ride) ? `${getRideDistance(ride)} km` : 'Distance unknown'}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    {formatDuration(ride.duration)}
+                    {formatDuration(getRideDuration(ride))}
                   </span>
                   <span className="flex items-center gap-1">
                     <Users className="w-3 h-3" />

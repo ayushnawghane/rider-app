@@ -2,7 +2,7 @@ import { IonContent, IonPage } from '@ionic/react';
 import { useEffect, useState } from 'react';
 import { useParams, useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { rideService, mapsService } from '../../services';
+import { locationService, rideService, mapsService } from '../../services';
 import { MapComponent } from '../../components/maps';
 import { Phone, MessageSquare, ShieldAlert, MapPin, Navigation, Calendar, Car, DollarSign, Clock, CheckCircle2, AlertTriangle, Route } from 'lucide-react';
 import type { Ride } from '../../types';
@@ -28,6 +28,7 @@ const RideDetailPage = () => {
   const history = useHistory();
   const location = useLocation<RideDetailLocationState>();
   const passengerCount = Math.max(1, location.state?.passengerCount ?? 1);
+  const [routeMeta, setRouteMeta] = useState<{ distanceKm: number; durationMinutes: number } | null>(null);
 
   useEffect(() => {
     const fetchRide = async () => {
@@ -48,6 +49,21 @@ const RideDetailPage = () => {
           if (route) {
             const decodedPath = mapsService.decodePolyline(route.polyline);
             setRoutePath(decodedPath);
+            setRouteMeta({
+              distanceKm: Math.round((route.distanceValue / 1000) * 10) / 10,
+              durationMinutes: Math.max(1, Math.round(route.durationValue / 60)),
+            });
+          } else {
+            const fallbackDistance = locationService.calculateDistance(
+              result.ride.startLocationCoords.lat,
+              result.ride.startLocationCoords.lng,
+              result.ride.endLocationCoords.lat,
+              result.ride.endLocationCoords.lng,
+            );
+            setRouteMeta({
+              distanceKm: Math.round(fallbackDistance * 10) / 10,
+              durationMinutes: Math.max(1, Math.round((fallbackDistance / 45) * 60)),
+            });
           }
         }
 
@@ -207,7 +223,11 @@ const RideDetailPage = () => {
                 <div className="p-4 border-t border-gray-100">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Route className="w-4 h-4" />
-                    <span>Route snapshot • {ride.distance ? `${ride.distance} km` : 'Distance unavailable'}</span>
+                    <span>
+                      Route snapshot • {routeMeta?.distanceKm || ride.distance
+                        ? `${routeMeta?.distanceKm || ride.distance} km`
+                        : 'Distance unavailable'}
+                    </span>
                   </div>
                 </div>
               </AppCard>
@@ -281,7 +301,7 @@ const RideDetailPage = () => {
                   </div>
                 </div>
 
-                {(ride.fare || ride.duration || ride.distance) && (
+                {(ride.fare || routeMeta?.durationMinutes || ride.duration || routeMeta?.distanceKm || ride.distance) && (
                   <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-100">
                     {ride.fare && (
                       <div className="text-center">
@@ -290,17 +310,17 @@ const RideDetailPage = () => {
                         <p className="text-xs text-gray-500">Fare</p>
                       </div>
                     )}
-                    {ride.duration && (
+                    {(routeMeta?.durationMinutes || ride.duration) && (
                       <div className="text-center">
                         <Clock className="w-4 h-4 text-primary-500 mx-auto mb-1" />
-                        <p className="text-lg font-bold text-gray-900">{ride.duration}m</p>
+                        <p className="text-lg font-bold text-gray-900">{routeMeta?.durationMinutes || ride.duration}m</p>
                         <p className="text-xs text-gray-500">Duration</p>
                       </div>
                     )}
-                    {ride.distance && (
+                    {(routeMeta?.distanceKm || ride.distance) && (
                       <div className="text-center">
                         <Navigation className="w-4 h-4 text-blue-500 mx-auto mb-1" />
-                        <p className="text-lg font-bold text-gray-900">{ride.distance}km</p>
+                        <p className="text-lg font-bold text-gray-900">{routeMeta?.distanceKm || ride.distance}km</p>
                         <p className="text-xs text-gray-500">Distance</p>
                       </div>
                     )}

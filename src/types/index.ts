@@ -287,6 +287,8 @@ export interface RideCreateParams {
   referenceId: string;
   availableSeats?: number;
   pricePerSeat?: number;
+  duration?: number;
+  distance?: number;
   notes?: string;
 }
 

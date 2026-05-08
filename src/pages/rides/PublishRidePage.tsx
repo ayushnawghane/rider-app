@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { rideService, vehicleService } from '../../services';
+import { mapsService, rideService, vehicleService } from '../../services';
 import {
   MapPin,
   Clock,
@@ -61,6 +61,7 @@ const PublishRidePage = () => {
   const [vehicleSaved, setVehicleSaved] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<PublishRideFieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [routeMeta, setRouteMeta] = useState<{ distanceKm: number; durationMinutes: number } | null>(null);
 
   useEffect(() => {
     const now = new Date();
@@ -104,6 +105,40 @@ const PublishRidePage = () => {
       return next;
     });
   }, [endLocation]);
+
+  useEffect(() => {
+    let active = true;
+
+    const calculateRouteMeta = async () => {
+      if (!startLocation || !endLocation) {
+        setRouteMeta(null);
+        return;
+      }
+
+      const route = await mapsService.calculateRoute(
+        { lat: startLocation.lat, lng: startLocation.lng },
+        { lat: endLocation.lat, lng: endLocation.lng },
+      );
+
+      if (!active) return;
+
+      if (route && route.distanceValue > 0 && route.durationValue > 0) {
+        setRouteMeta({
+          distanceKm: Math.round((route.distanceValue / 1000) * 10) / 10,
+          durationMinutes: Math.max(1, Math.round(route.durationValue / 60)),
+        });
+        return;
+      }
+
+      setRouteMeta(null);
+    };
+
+    void calculateRouteMeta();
+
+    return () => {
+      active = false;
+    };
+  }, [startLocation, endLocation]);
 
   const handleSaveVehicle = async () => {
     if (!user || !vehicleNumber.trim()) return;
@@ -179,6 +214,8 @@ const PublishRidePage = () => {
         referenceId: buildReferenceId(),
         availableSeats,
         pricePerSeat,
+        duration: routeMeta?.durationMinutes,
+        distance: routeMeta?.distanceKm,
         notes: notes.trim() || undefined,
       });
 
@@ -359,7 +396,11 @@ const PublishRidePage = () => {
                 placeholder="0"
               />
             </div>
-            <p className="text-xs text-gray-500 mt-2">Suggested: ₹{Math.round((startLocation && endLocation ? 150 : 150))} based on distance</p>
+            <p className="text-xs text-gray-500 mt-2">
+              {routeMeta
+                ? `Route estimate: ${routeMeta.distanceKm} km • ${routeMeta.durationMinutes} min`
+                : 'Route estimate appears after both locations are selected'}
+            </p>
           </div>
 
           {/* Vehicle Details */}

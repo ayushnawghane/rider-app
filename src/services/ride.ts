@@ -26,6 +26,8 @@ class RideService {
           reference_id: params.referenceId,
           available_seats: params.availableSeats ?? 3,
           price_per_seat: params.pricePerSeat ?? 0,
+          duration: params.duration,
+          distance: params.distance,
           notes: params.notes,
           status: 'pending',
         })
