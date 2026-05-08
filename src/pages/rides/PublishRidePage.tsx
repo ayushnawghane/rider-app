@@ -16,6 +16,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { hasRequiredBookingProfile } from '../../utils/profileCompletion';
+import { displayPositiveIntegerInput, normalizePositiveIntegerInput } from '../../utils/numberInput';
 import { AppCard, PageHeader, PageLoader } from '../../components/ui';
 
 interface Location {
@@ -349,9 +350,11 @@ const PublishRidePage = () => {
             <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
               <IndianRupee className="w-5 h-5 text-primary-500" />
               <input
-                type="number"
-                value={pricePerSeat}
-                onChange={(e) => setPricePerSeat(Number(e.target.value))}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={displayPositiveIntegerInput(pricePerSeat)}
+                onChange={(e) => setPricePerSeat(normalizePositiveIntegerInput(e.target.value))}
                 className={`flex-1 bg-transparent text-2xl font-bold text-gray-900 focus:outline-none ${lightFieldClass}`}
                 placeholder="0"
               />
