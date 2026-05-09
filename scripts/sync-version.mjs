@@ -8,9 +8,14 @@ const iosProjectPath = path.join(projectRoot, 'ios', 'App', 'App.xcodeproj', 'pr
 
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 const appVersion = packageJson.version;
+const iosMarketingVersion = process.env.IOS_MARKETING_VERSION || packageJson.iosMarketingVersion || appVersion;
 
 if (!/^\d+\.\d+\.\d+$/.test(appVersion)) {
   throw new Error(`package.json version "${appVersion}" is not valid semantic versioning (expected MAJOR.MINOR.PATCH).`);
+}
+
+if (!/^\d+\.\d+(?:\.\d+)?$/.test(iosMarketingVersion)) {
+  throw new Error(`iOS marketing version "${iosMarketingVersion}" is not valid (expected MAJOR.MINOR or MAJOR.MINOR.PATCH).`);
 }
 
 if (fs.existsSync(androidGradlePath)) {
@@ -38,13 +43,13 @@ if (fs.existsSync(iosProjectPath)) {
     throw new Error('Could not find iOS MARKETING_VERSION in project.pbxproj.');
   }
 
-  if (iosMatches.some((match) => match[1] !== appVersion)) {
+  if (iosMatches.some((match) => match[1] !== iosMarketingVersion)) {
     const nextIosProject = iosProject.replace(
       /MARKETING_VERSION = [^;]+;/g,
-      `MARKETING_VERSION = ${appVersion};`
+      `MARKETING_VERSION = ${iosMarketingVersion};`
     );
     fs.writeFileSync(iosProjectPath, nextIosProject);
   }
 }
 
-console.log(`Synced semantic app version ${appVersion} to Android and iOS.`);
+console.log(`Synced Android version ${appVersion} and iOS marketing version ${iosMarketingVersion}.`);
