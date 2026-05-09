@@ -80,7 +80,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - builds@blinkcar.app          # replace with your email
+          - omkarmohite9834@gmail.com        # replace with your email
         notify:
           success: true
           failure: true
@@ -188,7 +188,7 @@ workflows:
     publishing:
       email:
         recipients:
-          -          # replace with your email
+          -  omkarmohite9834@gmail.com        # replace with your email
         notify:
           success: true
           failure: true
