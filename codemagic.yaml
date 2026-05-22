@@ -9,6 +9,8 @@ workflows:
       # If CM_KEYSTORE_* variables are configured in Codemagic, they are used.
       # Otherwise the workflow creates a temporary CI keystore so Android builds
       # still produce signed artifacts for testing.
+      groups:
+        - google_play_credentials
       vars:
         PACKAGE_NAME: "com.blinkcar.app"
         VITE_SUPABASE_URL: "https://ndlczqehttpranitnrac.supabase.co"
@@ -84,11 +86,10 @@ workflows:
         notify:
           success: true
           failure: true
-      # Uncomment and configure to publish directly to Google Play:
-      # google_play:
-      #   credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-      #   track: internal
-      #   submit_as_draft: true
+      google_play:
+        credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
 
   # ════════════════════════════════════════════════════════════════════════
   ios-release:

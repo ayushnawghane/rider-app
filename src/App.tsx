@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { IonApp, IonPage, IonRouterOutlet } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { App as CapacitorApp } from '@capacitor/app';
 import { Redirect, Route } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -9,7 +8,6 @@ import LoadingOverlay from './components/LoadingOverlay';
 import SplashScreen from './components/SplashScreen';
 import MobileBottomNav from './components/navigation/MobileBottomNav';
 import ProfileCompletionBanner from './components/profile/ProfileCompletionBanner';
-import { authService, NATIVE_AUTH_REDIRECT_URL } from './services/auth';
 
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -28,6 +26,7 @@ import DisputeChatPage from './pages/support/DisputeChatPage';
 import SafetyPage from './pages/safety/SafetyPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import NotificationsPage from './pages/profile/NotificationsPage';
+import SettingsPage from './pages/profile/SettingsPage';
 import RewardsPage from './pages/rewards/RewardsPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminListPage from './pages/admin/AdminListPage';
@@ -63,6 +62,7 @@ const EditRideScreen = withIonPage(EditRidePage);
 const RewardsScreen = withIonPage(RewardsPage);
 const SafetyScreen = withIonPage(SafetyPage);
 const ProfileScreen = withIonPage(ProfilePage);
+const SettingsScreen = withIonPage(SettingsPage);
 const TripTrackingScreen = withIonPage(TripTrackingPage);
 const DeleteAccountScreen = withIonPage(DeleteAccountPage);
 const PrivacyPolicyScreen = withIonPage(PrivacyPolicyPage);
@@ -123,6 +123,7 @@ const AppRoutes: React.FC = () => {
         <Route exact path="/safety" render={renderPrivate(SafetyScreen)} />
         <Route exact path="/safety/sos" render={renderPrivate(SafetyScreen)} />
         <Route exact path="/profile" render={renderPrivate(ProfileScreen)} />
+        <Route exact path="/profile/settings" render={renderPrivate(SettingsScreen)} />
         <Route exact path="/profile/kyc" render={renderPrivate(KycUploadPage)} />
         <Route exact path="/notifications" render={renderPrivate(NotificationsPage)} />
         <Route exact path="/delete-account" render={renderPrivate(DeleteAccountScreen)} />
@@ -145,23 +146,6 @@ const AppRoutes: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  useEffect(() => {
-    const listener = CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
-      if (!url.startsWith(NATIVE_AUTH_REDIRECT_URL)) {
-        return;
-      }
-
-      const result = await authService.handleOAuthCallback(url);
-      if (!result.success) {
-        console.error('Google OAuth callback failed:', result.error);
-      }
-    });
-
-    return () => {
-      listener.then((handle) => handle.remove()).catch(() => undefined);
-    };
-  }, []);
-
   return (
     <AuthProvider>
       <IonReactRouter>

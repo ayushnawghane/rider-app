@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { locationService, rideService } from '../../services';
@@ -39,8 +39,11 @@ const FindRidePage = () => {
   const [passengerCount, setPassengerCount] = useState<number>(1);
   const [availableRides, setAvailableRides] = useState<PublishedRide[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<'price' | 'time' | 'rating'>('time');
+  const autoSearchKeyRef = useRef<string | null>(null);
+  const searchRequestIdRef = useRef(0);
 
   // Get params from navigation state
   useEffect(() => {
@@ -52,8 +55,11 @@ const FindRidePage = () => {
     }
   }, [location.state]);
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
+    const requestId = searchRequestIdRef.current + 1;
+    searchRequestIdRef.current = requestId;
     setLoading(true);
+    setHasSearched(true);
     const startQuery = pickupLocation?.address?.split(',')[0]?.trim();
     const endQuery = dropoffLocation?.address?.split(',')[0]?.trim();
 
@@ -63,6 +69,10 @@ const FindRidePage = () => {
         endLocation: endQuery,
         departureTime: new Date().toISOString(),
       });
+
+      if (requestId !== searchRequestIdRef.current) {
+        return;
+      }
 
       if (!result.success || !result.rides) {
         setAvailableRides([]);
@@ -101,9 +111,21 @@ const FindRidePage = () => {
 
       setAvailableRides(rides);
     } finally {
-      setLoading(false);
+      if (requestId === searchRequestIdRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, [dropoffLocation, pickupLocation, user?.id]);
+
+  useEffect(() => {
+    if (!pickupLocation || !dropoffLocation) return;
+
+    const searchKey = `${pickupLocation.address}|${dropoffLocation.address}|${passengerCount}`;
+    if (autoSearchKeyRef.current === searchKey) return;
+
+    autoSearchKeyRef.current = searchKey;
+    void handleSearch();
+  }, [dropoffLocation, handleSearch, passengerCount, pickupLocation]);
 
   const handleBookRide = (ride: PublishedRide) => {
     history.push(`/rides/detail/${ride.id}`, { ride, passengerCount });
@@ -365,7 +387,7 @@ const FindRidePage = () => {
       )}
 
       {/* Empty State */}
-      {!loading && availableRides.length === 0 && (pickupLocation || dropoffLocation) && (
+      {!loading && hasSearched && availableRides.length === 0 && (pickupLocation || dropoffLocation) && (
         <div className="px-4 mt-8">
           <EmptyState
             icon={

@@ -77,30 +77,42 @@ const TripTrackingPage = () => {
         [],
     );
 
-    // Fetch ride + route
-    useEffect(() => {
-        const fetchRide = async () => {
-            const result = await rideService.getRideById(id);
-            if (result.success && result.ride) {
-                setRide(result.ride);
+    const fetchRide = useCallback(async (showLoader = false) => {
+        if (showLoader) setLoading(true);
+        const result = await rideService.getRideById(id);
+        if (result.success && result.ride) {
+            setRide(result.ride);
 
-                if (result.ride.startLocationCoords && result.ride.endLocationCoords) {
-                    const route = await mapsService.calculateRoute(
-                        { lat: result.ride.startLocationCoords.lat, lng: result.ride.startLocationCoords.lng },
-                        { lat: result.ride.endLocationCoords.lat, lng: result.ride.endLocationCoords.lng },
-                    );
-                    if (route) {
-                        const decoded = mapsService.decodePolyline(route.polyline);
-                        setRoutePath(decoded);
-                        setEta(route.duration);
-                    }
+            if (result.ride.startLocationCoords && result.ride.endLocationCoords) {
+                const route = await mapsService.calculateRoute(
+                    { lat: result.ride.startLocationCoords.lat, lng: result.ride.startLocationCoords.lng },
+                    { lat: result.ride.endLocationCoords.lat, lng: result.ride.endLocationCoords.lng },
+                );
+                if (route) {
+                    const decoded = mapsService.decodePolyline(route.polyline);
+                    setRoutePath(decoded);
+                    setEta(route.duration);
                 }
             }
-            setLoading(false);
-        };
-
-        fetchRide();
+        }
+        setLoading(false);
     }, [id]);
+
+    // Fetch ride + route
+    useEffect(() => {
+        void fetchRide(true);
+    }, [fetchRide]);
+
+    // Keep scheduled ride status current while the tracking page is open.
+    useEffect(() => {
+        if (!ride || ride.status === 'completed' || ride.status === 'cancelled') return;
+
+        const interval = setInterval(() => {
+            void fetchRide(false);
+        }, 30000);
+
+        return () => clearInterval(interval);
+    }, [fetchRide, ride]);
 
     // Start live GPS tracking
     useEffect(() => {

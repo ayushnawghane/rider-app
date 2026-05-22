@@ -854,6 +854,7 @@ const ProfilePage = () => {
 
           <button
             type="button"
+            onClick={() => history.push('/profile/settings')}
             className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left hover:bg-slate-50"
           >
             <div className="grid h-11 w-11 place-items-center rounded-xl bg-slate-200 text-slate-700">

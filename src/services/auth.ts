@@ -1,14 +1,10 @@
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
-import { Browser } from '@capacitor/browser';
-import { Capacitor } from '@capacitor/core';
 import type {
   User,
   KycUploadParams,
   ProfileUpdateParams,
   VehicleDetails,
 } from '../types';
-
-export const NATIVE_AUTH_REDIRECT_URL = 'com.blinkcar.app://auth/callback';
 
 class AuthService {
   private normalizeEmail(email: string) {
@@ -137,140 +133,6 @@ class AuthService {
     } catch (error) {
       console.error('Unexpected error during email sign-up:', error);
       return { success: false, error: 'An unexpected error occurred' };
-    }
-  }
-
-  async signInWithGoogle(idToken: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { data, error } = await supabase.auth.signInWithIdToken({
-        provider: 'google',
-        token: idToken,
-      });
-
-      if (error) {
-        console.error('Error signing in with Google:', error.message);
-        return { success: false, error: error.message };
-      }
-
-      const authUser = data.user;
-      if (authUser) {
-        const email = authUser.email?.trim();
-        const fullName =
-          typeof authUser.user_metadata?.full_name === 'string'
-            ? authUser.user_metadata.full_name
-            : typeof authUser.user_metadata?.name === 'string'
-              ? authUser.user_metadata.name
-              : 'Rider';
-        const phone =
-          typeof authUser.phone === 'string' && authUser.phone.trim()
-            ? authUser.phone
-            : `phone-${authUser.id.slice(0, 12)}`;
-
-        if (email) {
-          try {
-            await this.upsertProfile({
-              userId: authUser.id,
-              email,
-              fullName,
-              phone,
-              avatarUrl:
-                typeof authUser.user_metadata?.avatar_url === 'string'
-                  ? authUser.user_metadata.avatar_url
-                  : typeof authUser.user_metadata?.picture === 'string'
-                    ? authUser.user_metadata.picture
-                    : null,
-            });
-          } catch (profileError) {
-            console.warn('Profile sync after Google sign-in failed:', profileError);
-          }
-        }
-      }
-
-      return { success: true };
-    } catch (error) {
-      console.error('Unexpected error during Google sign-in:', error);
-      return { success: false, error: 'An unexpected error occurred' };
-    }
-  }
-
-  async signInWithGoogleOAuth(): Promise<{ success: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
-      return { success: false, error: 'App configuration is missing. Please install the latest build.' };
-    }
-
-    try {
-      const redirectTo = Capacitor.isNativePlatform()
-        ? NATIVE_AUTH_REDIRECT_URL
-        : `${window.location.origin}/login`;
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo,
-          skipBrowserRedirect: Capacitor.isNativePlatform(),
-        },
-      });
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      if (Capacitor.isNativePlatform()) {
-        if (!data.url) {
-          return { success: false, error: 'Google Sign-In could not be started.' };
-        }
-
-        await Browser.open({
-          url: data.url,
-          presentationStyle: 'fullscreen',
-        });
-      }
-
-      return { success: true };
-    } catch (error) {
-      console.error('Unexpected error starting Google OAuth:', error);
-      return { success: false, error: 'Google Sign-In failed to start.' };
-    }
-  }
-
-  async handleOAuthCallback(callbackUrl: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const url = new URL(callbackUrl);
-      const code = url.searchParams.get('code');
-
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error) {
-          return { success: false, error: error.message };
-        }
-        return { success: true };
-      }
-
-      const params = new URLSearchParams(url.hash.replace(/^#/, ''));
-      const accessToken = params.get('access_token');
-      const refreshToken = params.get('refresh_token');
-
-      if (accessToken && refreshToken) {
-        const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-
-        if (error) {
-          return { success: false, error: error.message };
-        }
-
-        return { success: true };
-      }
-
-      return { success: false, error: 'Google Sign-In did not return a session.' };
-    } catch (error) {
-      console.error('Unexpected error handling Google OAuth callback:', error);
-      return { success: false, error: 'Google Sign-In callback failed.' };
-    } finally {
-      if (Capacitor.isNativePlatform()) {
-        await Browser.close().catch(() => undefined);
-      }
     }
   }
 

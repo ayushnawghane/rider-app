@@ -78,25 +78,6 @@ const RegisterPage = () => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    if (isSubmitting) return;
-
-    try {
-      setIsSubmitting(true);
-      setError(null);
-      const result = await authService.signInWithGoogleOAuth();
-
-      if (!result.success) {
-        setError(result.error || 'Google Sign-In failed');
-      }
-    } catch (err: unknown) {
-      console.error('Google Sign-In Error:', err);
-      setError(err instanceof Error ? err.message : 'Google Sign-In failed');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <div
       className="relative min-h-screen overflow-y-auto bg-gray-50 px-4 py-10 sm:px-6 lg:px-8"
@@ -126,7 +107,7 @@ const RegisterPage = () => {
             </div>
 
             <p className="mb-6 text-sm leading-relaxed text-gray-600">
-              Register with your name, email, mobile number, and password, or continue with Google.
+              Register with your name, email, mobile number, and password.
             </p>
 
             <form onSubmit={handleRegister} className="space-y-4">
@@ -190,21 +171,6 @@ const RegisterPage = () => {
                 {isSubmitting ? 'Creating account...' : 'Create account'}
               </button>
             </form>
-
-            <div className="my-6 flex items-center gap-3">
-              <div className="h-px flex-1 bg-gray-200" />
-              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">or</span>
-              <div className="h-px flex-1 bg-gray-200" />
-            </div>
-
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={isSubmitting}
-              className="flex min-h-[56px] w-full items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-gray-500 shadow-soft transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Sign up with Google
-            </button>
 
             {info && (
               <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">

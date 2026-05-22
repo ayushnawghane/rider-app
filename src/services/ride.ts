@@ -7,6 +7,7 @@ import type {
 
 const JOIN_RIDE_POINTS = 30;
 const PUBLISH_RIDE_POINTS = 50;
+const DEFAULT_RIDE_DURATION_MINUTES = 60;
 
 class RideService {
   async createRide(params: RideCreateParams): Promise<{ success: boolean; ride?: Ride; error?: string }> {
@@ -316,8 +317,10 @@ class RideService {
         return { success: false, error: passengerResult.error.message };
       }
 
-      const driverRides = (driverResult.data || []).map((ride: any) =>
-        this.mapRideToRide({ ...ride, user_role: 'driver' }),
+      const driverRides = await this.reconcileRideTimings(
+        (driverResult.data || []).map((ride: any) =>
+          this.mapRideToRide({ ...ride, user_role: 'driver' }),
+        ),
       );
       const passengerRides = (passengerResult.data || [])
         .filter((participant: any) => participant.ride)
@@ -327,9 +330,10 @@ class RideService {
             user_role: 'passenger',
           }),
         );
+      const reconciledPassengerRides = await this.reconcileRideTimings(passengerRides);
 
       const ridesById = new Map<string, Ride>();
-      [...driverRides, ...passengerRides].forEach((ride) => ridesById.set(ride.id, ride));
+      [...driverRides, ...reconciledPassengerRides].forEach((ride) => ridesById.set(ride.id, ride));
       const rides = Array.from(ridesById.values())
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, limit);
@@ -374,7 +378,11 @@ class RideService {
         return { success: false, error: error.message };
       }
 
-      return { success: true, rides: data.map((ride: any) => this.mapRideToRide(ride)) };
+      const rides = await this.reconcileRideTimings(
+        (data || []).map((ride: any) => this.mapRideToRide(ride)),
+      );
+
+      return { success: true, rides };
     } catch (error) {
       return { success: false, error: 'An unexpected error occurred' };
     }
@@ -392,7 +400,7 @@ class RideService {
         return { success: false, error: error.message };
       }
 
-      return { success: true, ride: this.mapRideToRide(data) };
+      return { success: true, ride: await this.reconcileRideTiming(this.mapRideToRide(data)) };
     } catch (error) {
       return { success: false, error: 'An unexpected error occurred' };
     }
@@ -416,7 +424,7 @@ class RideService {
         return { success: false, error: error.message };
       }
 
-      return { success: true, ride: this.mapRideToRide(data) };
+      return { success: true, ride: await this.reconcileRideTiming(this.mapRideToRide(data)) };
     } catch (error) {
       return { success: false, error: 'An unexpected error occurred' };
     }
@@ -426,7 +434,7 @@ class RideService {
     try {
       const { error } = await supabase
         .from('rides')
-        .update({ status })
+        .update({ status, updated_at: new Date().toISOString() })
         .eq('id', rideId);
 
       if (error) {
@@ -531,6 +539,94 @@ class RideService {
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     };
+  }
+
+  private async reconcileRideTimings(rides: Ride[]): Promise<Ride[]> {
+    return Promise.all(rides.map((ride) => this.reconcileRideTiming(ride)));
+  }
+
+  private getTimeAdjustedStatus(ride: Ride, now = new Date()): Ride['status'] {
+    if (ride.status === 'completed' || ride.status === 'cancelled') {
+      return ride.status;
+    }
+
+    const startTime = new Date(ride.date);
+    if (Number.isNaN(startTime.getTime())) {
+      return ride.status;
+    }
+
+    const durationMinutes =
+      typeof ride.duration === 'number' && ride.duration > 0
+        ? ride.duration
+        : DEFAULT_RIDE_DURATION_MINUTES;
+    const endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
+
+    if (ride.status === 'active' && now >= endTime) {
+      return 'completed';
+    }
+
+    if (ride.status === 'pending') {
+      if (now >= endTime) {
+        return 'completed';
+      }
+      if (now >= startTime) {
+        return 'active';
+      }
+    }
+
+    return ride.status;
+  }
+
+  private async reconcileRideTiming(ride: Ride): Promise<Ride> {
+    const status = this.getTimeAdjustedStatus(ride);
+    if (status === ride.status) {
+      return ride;
+    }
+
+    const { error } = await supabase
+      .from('rides')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', ride.id)
+      .eq('status', ride.status);
+
+    if (error) {
+      console.warn('Ride timing status update failed:', error.message);
+      return ride;
+    }
+
+    await this.syncBookingsForRideStatus(ride.id, status);
+    return { ...ride, status, updatedAt: new Date().toISOString() };
+  }
+
+  private async syncBookingsForRideStatus(rideId: string, status: Ride['status']) {
+    if (status !== 'active' && status !== 'completed' && status !== 'cancelled') return;
+
+    const bookingStatus =
+      status === 'active'
+        ? 'confirmed'
+        : status === 'completed'
+          ? 'completed'
+          : 'cancelled';
+    const timestampField =
+      status === 'active'
+        ? 'confirmation_time'
+        : status === 'completed'
+          ? 'completion_time'
+          : 'cancellation_time';
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        status: bookingStatus,
+        [timestampField]: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('ride_id', rideId)
+      .in('status', ['pending', 'confirmed']);
+
+    if (error) {
+      console.warn('Booking timing status update failed:', error.message);
+    }
   }
 
   private async cancelParticipant(rideId: string, userId: string) {

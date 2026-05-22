@@ -1,7 +1,7 @@
 import { IonContent, IonPage, IonButton, IonToast } from '@ionic/react';
 import LoadingOverlay from '../../components/LoadingOverlay';
 import { PageHeader } from '../../components/ui';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { rideService, locationService, mapsService } from '../../services';
@@ -74,32 +74,44 @@ const ActiveRidePage = () => {
 
   const isDriver = user?.id === ride?.userId || Boolean(ride?.driverId && user?.id === ride?.driverId);
 
-  // Fetch ride details
-  useEffect(() => {
-    const fetchRide = async () => {
-      const result = await rideService.getRideById(id);
-      if (result.success && result.ride) {
-        setRide(result.ride);
+  const fetchRide = useCallback(async (showLoader = false) => {
+    if (showLoader) setLoading(true);
+    const result = await rideService.getRideById(id);
+    if (result.success && result.ride) {
+      setRide(result.ride);
 
-        // Calculate route if coordinates are available
-        if (result.ride.startLocationCoords && result.ride.endLocationCoords) {
-          const route = await mapsService.calculateRoute(
-            { lat: result.ride.startLocationCoords.lat, lng: result.ride.startLocationCoords.lng },
-            { lat: result.ride.endLocationCoords.lat, lng: result.ride.endLocationCoords.lng }
-          );
+      // Calculate route if coordinates are available
+      if (result.ride.startLocationCoords && result.ride.endLocationCoords) {
+        const route = await mapsService.calculateRoute(
+          { lat: result.ride.startLocationCoords.lat, lng: result.ride.startLocationCoords.lng },
+          { lat: result.ride.endLocationCoords.lat, lng: result.ride.endLocationCoords.lng }
+        );
 
-          if (route) {
-            const decodedPath = mapsService.decodePolyline(route.polyline);
-            setRoutePath(decodedPath);
-            setEta(route.duration);
-          }
+        if (route) {
+          const decodedPath = mapsService.decodePolyline(route.polyline);
+          setRoutePath(decodedPath);
+          setEta(route.duration);
         }
       }
-      setLoading(false);
-    };
-
-    fetchRide();
+    }
+    setLoading(false);
   }, [id]);
+
+  // Fetch ride details
+  useEffect(() => {
+    void fetchRide(true);
+  }, [fetchRide]);
+
+  // Keep scheduled ride status current while the ride console is open.
+  useEffect(() => {
+    if (!ride || ride.status === 'completed' || ride.status === 'cancelled') return;
+
+    const interval = setInterval(() => {
+      void fetchRide(false);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [fetchRide, ride]);
 
   // Start location tracking + live_locations publishing + Realtime subscription
   useEffect(() => {

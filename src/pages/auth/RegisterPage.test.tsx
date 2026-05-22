@@ -8,7 +8,6 @@ import RegisterPage from './RegisterPage';
 const mocks = vi.hoisted(() => ({
   useAuth: vi.fn(),
   signUpWithEmailPassword: vi.fn(),
-  signInWithGoogleOAuth: vi.fn(),
 }));
 
 vi.mock('../../context/AuthContext', () => ({
@@ -18,7 +17,6 @@ vi.mock('../../context/AuthContext', () => ({
 vi.mock('../../services/auth', () => ({
   authService: {
     signUpWithEmailPassword: mocks.signUpWithEmailPassword,
-    signInWithGoogleOAuth: mocks.signInWithGoogleOAuth,
   },
 }));
 
@@ -33,17 +31,11 @@ const renderRegister = () => {
 };
 
 describe('RegisterPage', () => {
-  it('keeps Google signup as a normal tappable button', async () => {
+  it('does not show third-party signup options', async () => {
     mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true });
-    mocks.signInWithGoogleOAuth.mockResolvedValue({ success: true });
     renderRegister();
 
-    const googleButton = screen.getByRole('button', { name: /sign up with google/i });
-    expect(googleButton).toBeEnabled();
-
-    await userEvent.click(googleButton);
-
-    expect(mocks.signInWithGoogleOAuth).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('button', { name: /google/i })).not.toBeInTheDocument();
   });
 
   it('validates required profile fields before signup', async () => {

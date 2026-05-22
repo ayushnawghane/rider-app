@@ -8,7 +8,6 @@ import LoginPage from './LoginPage';
 const mocks = vi.hoisted(() => ({
   useAuth: vi.fn(),
   signInWithEmailPassword: vi.fn(),
-  signInWithGoogleOAuth: vi.fn(),
 }));
 
 vi.mock('../../context/AuthContext', () => ({
@@ -18,7 +17,6 @@ vi.mock('../../context/AuthContext', () => ({
 vi.mock('../../services/auth', () => ({
   authService: {
     signInWithEmailPassword: mocks.signInWithEmailPassword,
-    signInWithGoogleOAuth: mocks.signInWithGoogleOAuth,
   },
 }));
 
@@ -33,17 +31,11 @@ const renderLogin = () => {
 };
 
 describe('LoginPage', () => {
-  it('keeps the Google button as a normal tappable button', async () => {
+  it('does not show third-party login options', async () => {
     mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true });
-    mocks.signInWithGoogleOAuth.mockResolvedValue({ success: true });
     renderLogin();
 
-    const googleButton = screen.getByRole('button', { name: /continue with google/i });
-    expect(googleButton).toBeEnabled();
-
-    await userEvent.click(googleButton);
-
-    expect(mocks.signInWithGoogleOAuth).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('button', { name: /google/i })).not.toBeInTheDocument();
   });
 
   it('validates email and password before calling Supabase', async () => {
