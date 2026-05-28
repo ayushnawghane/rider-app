@@ -106,6 +106,7 @@ supabase secrets set MSG91_AUTH_KEY=your_msg91_auth_key
 supabase secrets set MSG91_TEMPLATE_ID=your_msg91_template_id
 supabase secrets set OTP_AUTH_PASSWORD_SECRET=your_long_random_secret
 supabase secrets set SUPABASE_ANON_KEY=your_supabase_anon_key
+supabase secrets set SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
 `MSG91_TEMPLATE_ID` should be the MSG91 OTP template that is mapped to the
