@@ -315,6 +315,7 @@ export interface SosCreateParams {
 export interface ProfileUpdateParams {
   email?: string;
   fullName?: string;
+  avatarUrl?: string;
   language?: string;
   notificationPreferences?: boolean;
   vehicleDetails?: VehicleDetails;

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { authService, vehicleService } from '../../services';
@@ -55,6 +56,9 @@ const ProfilePage = () => {
   const [notifications, setNotifications] = useState<boolean>(user?.notificationPreferences || true);
   const [saveError, setSaveError] = useState('');
   const [setupStep, setSetupStep] = useState(0);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const history = useHistory();
 
   // Vehicle state
@@ -73,6 +77,7 @@ const ProfilePage = () => {
       setPhone(user.phone?.startsWith('temp_') || user.phone?.startsWith('phone-') ? '' : user.phone || '');
       setLanguage(user.language);
       setNotifications(user.notificationPreferences);
+      setAvatarPreview(null);
       // Sync vehicle details
       if (user.vehicleDetails) {
         setVehicleMake(user.vehicleDetails.make || '');
@@ -213,6 +218,44 @@ const ProfilePage = () => {
     }
   };
 
+  const handleAvatarButtonClick = () => {
+    setSaveError('');
+    avatarInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!user) return;
+
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setSaveError('Please choose an image file for your profile picture.');
+      return;
+    }
+
+    const localPreviewUrl = URL.createObjectURL(file);
+    setAvatarPreview(localPreviewUrl);
+    setAvatarUploading(true);
+    setSaveError('');
+
+    try {
+      const result = await authService.uploadProfileAvatar({ file, userId: user.id });
+      if (!result.success) {
+        setSaveError(result.error || 'Failed to update profile picture.');
+        return;
+      }
+      setAvatarPreview(null);
+      await refreshUser();
+    } catch (avatarError) {
+      console.error('Failed to update profile picture:', avatarError);
+      setSaveError('Failed to update profile picture. Please try again.');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   const handleSaveVehicle = async () => {
     if (!user) return;
     setSavingVehicle(true);
@@ -295,6 +338,7 @@ const ProfilePage = () => {
 
   const initials = user.fullName?.charAt(0)?.toUpperCase() || 'R';
   const displayEmail = isSystemGeneratedEmail(user.email) ? 'Email not added yet' : user.email;
+  const avatarImageUrl = avatarPreview || user.avatarUrl;
 
   if (requiresProfileCompletion) {
     const currentStepLabel = SETUP_STEPS[setupStep];
@@ -594,21 +638,37 @@ const ProfilePage = () => {
 
           <div className="flex items-start gap-4">
             <div className="relative">
-              <div className="grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-4xl font-bold text-white overflow-hidden">
-                {user.avatarUrl ? (
-                  <img src={user.avatarUrl} alt={user.fullName} className="h-full w-full object-cover" />
+              <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-4xl font-bold text-white">
+                {avatarImageUrl ? (
+                  <img src={avatarImageUrl} alt={user.fullName} className="h-full w-full object-cover" />
                 ) : (
                   initials
                 )}
               </div>
               {editing && (
-                <button
-                  type="button"
-                  className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-xl bg-indigo-600 text-white shadow"
-                  aria-label="Change profile picture"
-                >
-                  <Camera size={14} />
-                </button>
+                <>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    aria-label="Choose profile picture"
+                    onChange={handleAvatarChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAvatarButtonClick}
+                    disabled={avatarUploading}
+                    className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-xl bg-indigo-600 text-white shadow disabled:cursor-not-allowed disabled:opacity-70"
+                    aria-label={avatarUploading ? 'Uploading profile picture' : 'Change profile picture'}
+                  >
+                    {avatarUploading ? (
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                    ) : (
+                      <Camera size={14} />
+                    )}
+                  </button>
+                </>
               )}
             </div>
 

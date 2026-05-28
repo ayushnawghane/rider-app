@@ -41,6 +41,10 @@
 	<string>Blinkcar uses your location during active trips to update ride progress and help riders and drivers coordinate pickup and drop-off.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Blinkcar uses your location to show nearby rides, calculate routes, and share trip progress while you use the app.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Blinkcar uses the camera so you can take a profile photo for your account.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Blinkcar uses your photo library so you can choose a profile photo for your account.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

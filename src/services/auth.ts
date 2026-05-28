@@ -228,6 +228,10 @@ class AuthService {
         profilePayload.phone = params.phone.trim();
       }
 
+      if (typeof params.avatarUrl === 'string') {
+        profilePayload.avatar_url = params.avatarUrl;
+      }
+
       // Nothing meaningful to update
       if (Object.keys(profilePayload).length === 1) {
         return { success: true };
@@ -313,6 +317,42 @@ class AuthService {
 
       return { success: true, documentUrl: publicUrl };
     } catch (error) {
+      return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
+  async uploadProfileAvatar({ file, userId }: KycUploadParams): Promise<{ success: boolean; avatarUrl?: string; error?: string }> {
+    try {
+      if (!file.type.startsWith('image/')) {
+        return { success: false, error: 'Please select an image file.' };
+      }
+
+      const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${userId}/avatar-${Date.now()}.${extension}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-avatars')
+        .upload(fileName, file, {
+          contentType: file.type,
+          upsert: true,
+        });
+
+      if (uploadError) {
+        return { success: false, error: uploadError.message };
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-avatars')
+        .getPublicUrl(fileName);
+
+      const updateResult = await this.updateProfile({ avatarUrl: publicUrl }, userId);
+      if (!updateResult.success) {
+        return { success: false, error: updateResult.error };
+      }
+
+      return { success: true, avatarUrl: publicUrl };
+    } catch (error) {
+      console.error('Unexpected error during avatar upload:', error);
       return { success: false, error: 'An unexpected error occurred' };
     }
   }
