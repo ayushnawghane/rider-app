@@ -3,16 +3,27 @@ import type { FormEvent } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/auth';
+import { phoneOtpAuthService } from '../../services/phoneOtpAuth';
 
 const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+const isValidPhone = (value: string) => /^\+?[1-9]\d{7,14}$/.test(value.trim().replace(/[\s-]/g, ''));
+const normalizePhone = (value: string) => {
+  const compact = value.trim().replace(/[\s()-]/g, '');
+  return compact.startsWith('+') ? compact : `+${compact}`;
+};
 
 const LoginPage = () => {
   const history = useHistory();
   const { user, isAuthLoaded } = useAuth();
+  const [loginMethod, setLoginMethod] = useState<'phone' | 'email'>('phone');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [isOtpSent, setIsOtpSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthLoaded && user) {
@@ -25,6 +36,7 @@ const LoginPage = () => {
     if (isSubmitting) return;
 
     setError(null);
+    setInfo(null);
 
     if (!isValidEmail(email)) {
       setError('Enter a valid email address.');
@@ -48,6 +60,58 @@ const LoginPage = () => {
       history.replace('/home');
     } catch (loginError: unknown) {
       setError(loginError instanceof Error ? loginError.message : 'Login failed.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSendOtp = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+
+    setError(null);
+    setInfo(null);
+
+    if (!isValidPhone(phone)) {
+      setError('Enter a valid mobile number with country code.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await phoneOtpAuthService.sendOtp(normalizePhone(phone));
+      setIsOtpSent(true);
+      setInfo('Verification code sent.');
+    } catch (otpError: unknown) {
+      setError(otpError instanceof Error ? otpError.message : 'Could not send verification code.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleVerifyOtp = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+
+    setError(null);
+    setInfo(null);
+
+    if (!isValidPhone(phone)) {
+      setError('Enter a valid mobile number with country code.');
+      return;
+    }
+
+    if (!/^\d{4,8}$/.test(otp.trim())) {
+      setError('Enter the verification code sent to your phone.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await phoneOtpAuthService.verifyOtp(normalizePhone(phone), otp);
+      history.replace('/home');
+    } catch (otpError: unknown) {
+      setError(otpError instanceof Error ? otpError.message : 'Verification failed.');
     } finally {
       setIsSubmitting(false);
     }
@@ -79,45 +143,169 @@ const LoginPage = () => {
             </div>
 
             <p className="mb-6 text-sm leading-relaxed text-gray-600">
-              Sign in with your email and password.
+              Sign in with your mobile number or email.
             </p>
 
-            <form onSubmit={handleEmailLogin} className="space-y-4">
-              <label className="block text-sm font-medium text-gray-700">
-                Email
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  disabled={isSubmitting}
-                  className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
-                />
-              </label>
-
-              <label className="block text-sm font-medium text-gray-700">
-                Password
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Enter your password"
-                  autoComplete="current-password"
-                  disabled={isSubmitting}
-                  className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
-                />
-              </label>
-
+            <div className="mb-5 grid grid-cols-2 rounded-xl bg-gray-100 p-1">
               <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+                type="button"
+                onClick={() => {
+                  setLoginMethod('phone');
+                  setError(null);
+                  setInfo(null);
+                }}
+                className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                  loginMethod === 'phone'
+                    ? 'bg-white text-primary-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
               >
-                {isSubmitting ? 'Signing in...' : 'Sign in with email'}
+                Mobile OTP
               </button>
-            </form>
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginMethod('email');
+                  setError(null);
+                  setInfo(null);
+                }}
+                className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                  loginMethod === 'email'
+                    ? 'bg-white text-primary-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Email
+              </button>
+            </div>
 
+            {loginMethod === 'phone' ? (
+              <form onSubmit={isOtpSent ? handleVerifyOtp : handleSendOtp} className="space-y-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Mobile
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(event) => {
+                      setPhone(event.target.value);
+                      setIsOtpSent(false);
+                      setOtp('');
+                    }}
+                    placeholder="+91 9876543210"
+                    autoComplete="tel"
+                    disabled={isSubmitting}
+                    className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                  />
+                </label>
+
+                {isOtpSent && (
+                  <label className="block text-sm font-medium text-gray-700">
+                    Verification code
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={otp}
+                      onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 8))}
+                      placeholder="123456"
+                      autoComplete="one-time-code"
+                      disabled={isSubmitting}
+                      className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                    />
+                  </label>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSubmitting ? 'Please wait...' : isOtpSent ? 'Verify code' : 'Send code'}
+                </button>
+
+                {isOtpSent && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (isSubmitting) return;
+                      setOtp('');
+                      setError(null);
+                      setInfo(null);
+                      try {
+                        setIsSubmitting(true);
+                        await phoneOtpAuthService.sendOtp(normalizePhone(phone));
+                        setInfo('Verification code sent again.');
+                      } catch (otpError: unknown) {
+                        setError(otpError instanceof Error ? otpError.message : 'Could not resend verification code.');
+                      } finally {
+                        setIsSubmitting(false);
+                      }
+                    }}
+                    disabled={isSubmitting}
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Resend code
+                  </button>
+                )}
+
+                {isOtpSent && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOtpSent(false);
+                      setOtp('');
+                      setInfo(null);
+                      setError(null);
+                    }}
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-2 text-sm font-semibold text-gray-500 transition hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Change mobile number
+                  </button>
+                )}
+              </form>
+            ) : (
+              <form onSubmit={handleEmailLogin} className="space-y-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Email
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                    disabled={isSubmitting}
+                    className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                  />
+                </label>
+
+                <label className="block text-sm font-medium text-gray-700">
+                  Password
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Enter your password"
+                    autoComplete="current-password"
+                    disabled={isSubmitting}
+                    className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                  />
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSubmitting ? 'Signing in...' : 'Sign in with email'}
+                </button>
+              </form>
+            )}
+
+            {info && (
+              <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                {info}
+              </div>
+            )}
             {error && (
               <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
                 {error}

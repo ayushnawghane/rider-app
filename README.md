@@ -104,9 +104,14 @@ Set secrets for `phone-otp-auth`:
 ```bash
 supabase secrets set MSG91_AUTH_KEY=your_msg91_auth_key
 supabase secrets set MSG91_TEMPLATE_ID=your_msg91_template_id
-supabase secrets set OTP_PASSWORD_SECRET=your_long_random_secret
+supabase secrets set OTP_AUTH_PASSWORD_SECRET=your_long_random_secret
 supabase secrets set SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
+
+`MSG91_TEMPLATE_ID` should be the MSG91 OTP template that is mapped to the
+TrueConnect/India DLT-approved OTP template. The approved template text must use
+MSG91's OTP placeholder, for example `##OTP##`, so MSG91 can generate and verify
+the code through its OTP API.
 
 Optional (local/dev):
 ```bash
