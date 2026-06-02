@@ -2,7 +2,7 @@
   "name": "rider-app",
   "private": true,
   "version": "1.0.3",
-  "iosMarketingVersion": "1.0",
+  "iosMarketingVersion": "1.0.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
