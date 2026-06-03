@@ -28,6 +28,10 @@ const SUPABASE_SERVICE_ROLE_KEY = env('SUPABASE_SERVICE_ROLE_KEY');
 const MSG91_AUTH_KEY = env('MSG91_AUTH_KEY');
 const MSG91_TEMPLATE_ID = env('MSG91_TEMPLATE_ID');
 const MSG91_OTP_EXPIRY_MINUTES = env('MSG91_OTP_EXPIRY_MINUTES') || '5';
+const MSG91_OTP_LENGTH = env('MSG91_OTP_LENGTH') || '6';
+const MSG91_SENDER_ID = env('MSG91_SENDER_ID') || 'BLICAR';
+const MSG91_OTP_MESSAGE =
+  env('MSG91_OTP_MESSAGE') || 'Your Blinkcar verification code is ##OTP##. Do not share this OTP with anyone.';
 const OTP_AUTH_PASSWORD_SECRET = env('OTP_AUTH_PASSWORD_SECRET') || env('OTP_PASSWORD_SECRET') || SUPABASE_SERVICE_ROLE_KEY;
 const ALLOW_DUMMY_OTP = env('ALLOW_DUMMY_OTP').toLowerCase() === 'true';
 const DUMMY_OTP_CODE = env('DUMMY_OTP_CODE') || '123456';
@@ -54,6 +58,14 @@ const normalizePhone = (phone: string) => {
 
 const toMsg91Mobile = (phone: string) => phone.replace(/^\+/, '');
 
+const createEmailForPhone = async (phone: string) => {
+  const encoder = new TextEncoder();
+  const digest = await crypto.subtle.digest('SHA-256', encoder.encode(phone));
+  const bytes = Array.from(new Uint8Array(digest));
+  const hash = bytes.map((byte) => byte.toString(16).padStart(2, '0')).join('').slice(0, 32);
+  return `phone-${hash}@otp.riderapp.local`;
+};
+
 const createPasswordForPhone = async (phone: string) => {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
@@ -73,7 +85,7 @@ const assertProviderConfigured = () => {
     throw new Error('Supabase OTP auth environment is not configured.');
   }
 
-  if (!ALLOW_DUMMY_OTP && (!MSG91_AUTH_KEY || !MSG91_TEMPLATE_ID)) {
+  if (!ALLOW_DUMMY_OTP && !MSG91_AUTH_KEY) {
     throw new Error('MSG91 OTP environment is not configured.');
   }
 };
@@ -130,13 +142,18 @@ const callMsg91 = async (url: URL, init?: RequestInit) => {
 };
 
 const sendMsg91Otp = async (phone: string) => {
-  const url = new URL('https://control.msg91.com/api/v5/otp');
+  const url = new URL('https://api.msg91.com/api/sendotp.php');
   url.searchParams.set('authkey', MSG91_AUTH_KEY);
-  url.searchParams.set('template_id', MSG91_TEMPLATE_ID);
   url.searchParams.set('mobile', toMsg91Mobile(phone));
+  url.searchParams.set('message', MSG91_OTP_MESSAGE);
+  url.searchParams.set('sender', MSG91_SENDER_ID);
   url.searchParams.set('otp_expiry', MSG91_OTP_EXPIRY_MINUTES);
+  url.searchParams.set('otp_length', MSG91_OTP_LENGTH);
+  if (MSG91_TEMPLATE_ID) {
+    url.searchParams.set('DLT_TE_ID', MSG91_TEMPLATE_ID);
+  }
 
-  return callMsg91(url, { method: 'POST', body: JSON.stringify({}) });
+  return callMsg91(url, { method: 'GET' });
 };
 
 const verifyMsg91Otp = async (phone: string, otp: string) => {
@@ -145,7 +162,7 @@ const verifyMsg91Otp = async (phone: string, otp: string) => {
     throw new Error('Enter the verification code sent to your phone.');
   }
 
-  const url = new URL('https://control.msg91.com/api/v5/otp/verify');
+  const url = new URL('https://api.msg91.com/api/verifyRequestOTP.php');
   url.searchParams.set('authkey', MSG91_AUTH_KEY);
   url.searchParams.set('mobile', toMsg91Mobile(phone));
   url.searchParams.set('otp', cleanedOtp);
@@ -168,14 +185,15 @@ const getProfileUserIdByPhone = async (phone: string) => {
 };
 
 const createOrUpdatePhoneUser = async (phone: string, password: string) => {
+  const email = await createEmailForPhone(phone);
   const existingUserId = await getProfileUserIdByPhone(phone);
 
   if (existingUserId) {
     const { data, error } = await getAdminClient().auth.admin.updateUserById(existingUserId, {
-      phone,
+      email,
       password,
-      phone_confirm: true,
-      user_metadata: { phone },
+      email_confirm: true,
+      user_metadata: { phone, full_name: phone },
     });
 
     if (error) throw new Error(error.message);
@@ -183,9 +201,9 @@ const createOrUpdatePhoneUser = async (phone: string, password: string) => {
   }
 
   const { data, error } = await getAdminClient().auth.admin.createUser({
-    phone,
+    email,
     password,
-    phone_confirm: true,
+    email_confirm: true,
     user_metadata: {
       phone,
       full_name: phone,
@@ -197,6 +215,7 @@ const createOrUpdatePhoneUser = async (phone: string, password: string) => {
 };
 
 const signInPhoneUser = async (phone: string) => {
+  const email = await createEmailForPhone(phone);
   const password = await createPasswordForPhone(phone);
   const user = await createOrUpdatePhoneUser(phone, password);
 
@@ -205,7 +224,7 @@ const signInPhoneUser = async (phone: string) => {
     .upsert(
       {
         id: user.id,
-        email: user.email || `user-${user.id}@otp.riderapp.local`,
+        email,
         full_name:
           typeof user.user_metadata?.full_name === 'string' && user.user_metadata.full_name.trim()
             ? user.user_metadata.full_name
@@ -227,7 +246,7 @@ const signInPhoneUser = async (phone: string) => {
   }
 
   const { data, error } = await getAnonClient().auth.signInWithPassword({
-    phone,
+    email,
     password,
   });
 

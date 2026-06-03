@@ -104,6 +104,7 @@ Set secrets for `phone-otp-auth`:
 ```bash
 supabase secrets set MSG91_AUTH_KEY=your_msg91_auth_key
 supabase secrets set MSG91_TEMPLATE_ID=your_msg91_template_id
+supabase secrets set MSG91_SENDER_ID=your_approved_sender_id
 supabase secrets set OTP_AUTH_PASSWORD_SECRET=your_long_random_secret
 supabase secrets set SUPABASE_ANON_KEY=your_supabase_anon_key
 supabase secrets set SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
@@ -113,6 +114,8 @@ supabase secrets set SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 TrueConnect/India DLT-approved OTP template. The approved template text must use
 MSG91's OTP placeholder, for example `##OTP##`, so MSG91 can generate and verify
 the code through its OTP API.
+`MSG91_SENDER_ID` must exactly match the DLT-approved sender ID mapped to that
+template and PE-TM chain in MSG91/TrueConnect.
 
 Optional (local/dev):
 ```bash
