@@ -1,8 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-const FALLBACK_SUPABASE_URL = 'https://placeholder.supabase.co';
-const FALLBACK_SUPABASE_ANON_KEY = 'placeholder-anon-key';
-
 const isPlaceholderValue = (value: string | undefined) =>
   !value || value.includes('your_supabase');
 
@@ -12,19 +9,23 @@ export const isSupabaseConfigured =
   !isPlaceholderValue(envSupabaseUrl) && !isPlaceholderValue(envSupabaseAnonKey);
 
 if (!isSupabaseConfigured) {
-  console.error(
-    [
-      '[Supabase] Missing configuration.',
-      'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in a local .env file.',
-      'Example:',
-      'VITE_SUPABASE_URL=https://your-project.supabase.co',
-      'VITE_SUPABASE_ANON_KEY=eyJ...',
-    ].join('\n'),
-  );
+  const message = [
+    '[Supabase] Missing configuration.',
+    'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in a local .env file, then restart the dev server.',
+    'Example:',
+    'VITE_SUPABASE_URL=https://your-project.supabase.co',
+    'VITE_SUPABASE_ANON_KEY=eyJ...',
+  ].join('\n');
+
+  console.error(message);
+
+  if (import.meta.env.DEV) {
+    throw new Error(message);
+  }
 }
 
-const supabaseUrl = envSupabaseUrl || FALLBACK_SUPABASE_URL;
-const supabaseAnonKey = envSupabaseAnonKey || FALLBACK_SUPABASE_ANON_KEY;
+const supabaseUrl = envSupabaseUrl!;
+const supabaseAnonKey = envSupabaseAnonKey!;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

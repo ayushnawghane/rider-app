@@ -82,6 +82,9 @@ describe('phoneOtpAuthService', () => {
         session: {
           access_token: 'existing-access',
           refresh_token: 'existing-refresh',
+          user: {
+            phone: '+919730156154',
+          },
         },
       },
     });
@@ -90,6 +93,42 @@ describe('phoneOtpAuthService', () => {
 
     expect(mocks.invoke).not.toHaveBeenCalled();
     expect(mocks.setSession).not.toHaveBeenCalled();
+  });
+
+  it('verifies OTP when the existing session belongs to a different phone', async () => {
+    mocks.getSession.mockResolvedValue({
+      data: {
+        session: {
+          access_token: 'existing-access',
+          refresh_token: 'existing-refresh',
+          user: {
+            phone: '+911111111111',
+          },
+        },
+      },
+    });
+    mocks.invoke.mockResolvedValue({
+      data: {
+        success: true,
+        access_token: 'new-access-token',
+        refresh_token: 'new-refresh-token',
+      },
+      error: null,
+    });
+
+    await phoneOtpAuthService.verifyOtp('+919730156154', '123456');
+
+    expect(mocks.invoke).toHaveBeenCalledWith('phone-otp-auth', {
+      body: {
+        action: 'verify',
+        phone: '+919730156154',
+        otp: '123456',
+      },
+    });
+    expect(mocks.setSession).toHaveBeenCalledWith({
+      access_token: 'new-access-token',
+      refresh_token: 'new-refresh-token',
+    });
   });
 
   it('throws clear errors when verification succeeds without tokens', async () => {

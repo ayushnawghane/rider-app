@@ -12,6 +12,20 @@ interface Msg91Payload {
   type?: string;
   message?: string;
   request_id?: string;
+  requestId?: string;
+  [key: string]: unknown;
+}
+
+interface OtpProfile {
+  id: string;
+  email?: string | null;
+  full_name?: string | null;
+  phone?: string | null;
+  kyc_status?: 'pending' | 'approved' | 'rejected' | null;
+  language?: string | null;
+  notification_preferences?: boolean | null;
+  is_blocked?: boolean | null;
+  role?: 'rider' | 'driver' | 'admin' | null;
 }
 
 const corsHeaders = {
@@ -29,12 +43,10 @@ const MSG91_AUTH_KEY = env('MSG91_AUTH_KEY');
 const MSG91_TEMPLATE_ID = env('MSG91_TEMPLATE_ID');
 const MSG91_OTP_EXPIRY_MINUTES = env('MSG91_OTP_EXPIRY_MINUTES') || '5';
 const MSG91_OTP_LENGTH = env('MSG91_OTP_LENGTH') || '6';
-const MSG91_SENDER_ID = env('MSG91_SENDER_ID') || 'BLICAR';
-const MSG91_OTP_MESSAGE =
-  env('MSG91_OTP_MESSAGE') || 'Your Blinkcar verification code is ##OTP##. Do not share this OTP with anyone.';
 const OTP_AUTH_PASSWORD_SECRET = env('OTP_AUTH_PASSWORD_SECRET') || env('OTP_PASSWORD_SECRET') || SUPABASE_SERVICE_ROLE_KEY;
 const ALLOW_DUMMY_OTP = env('ALLOW_DUMMY_OTP').toLowerCase() === 'true';
 const DUMMY_OTP_CODE = env('DUMMY_OTP_CODE') || '123456';
+const MSG91_OTP_BASE_URL = 'https://control.msg91.com/api/v5';
 
 let adminClient: ReturnType<typeof createClient> | null = null;
 let anonClient: ReturnType<typeof createClient> | null = null;
@@ -85,8 +97,17 @@ const assertProviderConfigured = () => {
     throw new Error('Supabase OTP auth environment is not configured.');
   }
 
-  if (!ALLOW_DUMMY_OTP && !MSG91_AUTH_KEY) {
-    throw new Error('MSG91 OTP environment is not configured.');
+  if (!ALLOW_DUMMY_OTP) {
+    const missingMsg91Secrets = [
+      ['MSG91_AUTH_KEY', MSG91_AUTH_KEY],
+      ['MSG91_TEMPLATE_ID', MSG91_TEMPLATE_ID],
+    ]
+      .filter(([, value]) => !value)
+      .map(([name]) => name);
+
+    if (missingMsg91Secrets.length > 0) {
+      throw new Error(`MSG91 OTP environment is not configured. Missing ${missingMsg91Secrets.join(', ')}.`);
+    }
   }
 };
 
@@ -120,6 +141,7 @@ const callMsg91 = async (url: URL, init?: RequestInit) => {
   const response = await fetch(url, {
     ...init,
     headers: {
+      accept: 'application/json',
       authkey: MSG91_AUTH_KEY,
       'Content-Type': 'application/json',
       ...(init?.headers || {}),
@@ -141,19 +163,26 @@ const callMsg91 = async (url: URL, init?: RequestInit) => {
   return payload;
 };
 
+const assertMsg91Success = (payload: Msg91Payload, fallbackMessage: string) => {
+  if (payload.type && payload.type.toLowerCase() !== 'success') {
+    throw new Error(payload.message || fallbackMessage);
+  }
+};
+
 const sendMsg91Otp = async (phone: string) => {
-  const url = new URL('https://api.msg91.com/api/sendotp.php');
-  url.searchParams.set('authkey', MSG91_AUTH_KEY);
+  const url = new URL(`${MSG91_OTP_BASE_URL}/otp`);
+  url.searchParams.set('template_id', MSG91_TEMPLATE_ID);
   url.searchParams.set('mobile', toMsg91Mobile(phone));
-  url.searchParams.set('message', MSG91_OTP_MESSAGE);
-  url.searchParams.set('sender', MSG91_SENDER_ID);
+  url.searchParams.set('authkey', MSG91_AUTH_KEY);
   url.searchParams.set('otp_expiry', MSG91_OTP_EXPIRY_MINUTES);
   url.searchParams.set('otp_length', MSG91_OTP_LENGTH);
-  if (MSG91_TEMPLATE_ID) {
-    url.searchParams.set('DLT_TE_ID', MSG91_TEMPLATE_ID);
-  }
 
-  return callMsg91(url, { method: 'GET' });
+  const payload = await callMsg91(url, {
+    method: 'POST',
+    body: '{}',
+  });
+  assertMsg91Success(payload, 'MSG91 failed to send OTP.');
+  return payload;
 };
 
 const verifyMsg91Otp = async (phone: string, otp: string) => {
@@ -162,18 +191,29 @@ const verifyMsg91Otp = async (phone: string, otp: string) => {
     throw new Error('Enter the verification code sent to your phone.');
   }
 
-  const url = new URL('https://api.msg91.com/api/verifyRequestOTP.php');
-  url.searchParams.set('authkey', MSG91_AUTH_KEY);
+  const url = new URL(`${MSG91_OTP_BASE_URL}/otp/verify`);
   url.searchParams.set('mobile', toMsg91Mobile(phone));
   url.searchParams.set('otp', cleanedOtp);
 
-  return callMsg91(url, { method: 'GET' });
+  const payload = await callMsg91(url, { method: 'GET' });
+  assertMsg91Success(payload, 'MSG91 OTP verification failed.');
+
+  const message = payload.message?.toLowerCase() || '';
+  if (/(invalid|expired|wrong|fail|not verified)/i.test(message)) {
+    throw new Error(payload.message || 'MSG91 OTP verification failed.');
+  }
+
+  if (!payload.type && message && !/(verified|success)/i.test(message)) {
+    throw new Error(payload.message || 'MSG91 OTP verification failed.');
+  }
+
+  return payload;
 };
 
-const getProfileUserIdByPhone = async (phone: string) => {
+const getProfileByPhone = async (phone: string) => {
   const { data, error } = await getAdminClient()
     .from('profiles')
-    .select('id')
+    .select('id, email, full_name, phone, kyc_status, language, notification_preferences, is_blocked, role')
     .eq('phone', phone)
     .maybeSingle();
 
@@ -181,19 +221,38 @@ const getProfileUserIdByPhone = async (phone: string) => {
     throw new Error(error.message);
   }
 
-  return data?.id as string | undefined;
+  return data as OtpProfile | null;
+};
+
+const getProfileById = async (id: string) => {
+  const { data, error } = await getAdminClient()
+    .from('profiles')
+    .select('id, email, full_name, phone, kyc_status, language, notification_preferences, is_blocked, role')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as OtpProfile | null;
 };
 
 const createOrUpdatePhoneUser = async (phone: string, password: string) => {
   const email = await createEmailForPhone(phone);
-  const existingUserId = await getProfileUserIdByPhone(phone);
+  const existingProfile = await getProfileByPhone(phone);
 
-  if (existingUserId) {
-    const { data, error } = await getAdminClient().auth.admin.updateUserById(existingUserId, {
+  if (existingProfile?.id) {
+    const { data, error } = await getAdminClient().auth.admin.updateUserById(existingProfile.id, {
       email,
       password,
       email_confirm: true,
-      user_metadata: { phone, full_name: phone },
+      phone,
+      phone_confirm: true,
+      user_metadata: {
+        phone,
+        full_name: existingProfile.full_name?.trim() || phone,
+      },
     });
 
     if (error) throw new Error(error.message);
@@ -204,6 +263,8 @@ const createOrUpdatePhoneUser = async (phone: string, password: string) => {
     email,
     password,
     email_confirm: true,
+    phone,
+    phone_confirm: true,
     user_metadata: {
       phone,
       full_name: phone,
@@ -218,23 +279,25 @@ const signInPhoneUser = async (phone: string) => {
   const email = await createEmailForPhone(phone);
   const password = await createPasswordForPhone(phone);
   const user = await createOrUpdatePhoneUser(phone, password);
+  const existingProfile = await getProfileById(user.id);
+  const metadataFullName =
+    typeof user.user_metadata?.full_name === 'string' && user.user_metadata.full_name.trim()
+      ? user.user_metadata.full_name.trim()
+      : '';
 
   const { data: profile, error: profileError } = await getAdminClient()
     .from('profiles')
     .upsert(
       {
         id: user.id,
-        email,
-        full_name:
-          typeof user.user_metadata?.full_name === 'string' && user.user_metadata.full_name.trim()
-            ? user.user_metadata.full_name
-            : phone,
+        email: existingProfile?.email?.trim() || email,
+        full_name: existingProfile?.full_name?.trim() || metadataFullName || phone,
         phone,
-        kyc_status: 'pending',
-        language: 'en',
-        notification_preferences: true,
-        is_blocked: false,
-        role: 'rider',
+        kyc_status: existingProfile?.kyc_status || 'pending',
+        language: existingProfile?.language || 'en',
+        notification_preferences: existingProfile?.notification_preferences ?? true,
+        is_blocked: existingProfile?.is_blocked ?? false,
+        role: existingProfile?.role || 'rider',
       },
       { onConflict: 'id' },
     )
@@ -286,7 +349,7 @@ Deno.serve(async (request) => {
       return jsonResponse(200, {
         success: true,
         message: payload.message || 'OTP sent',
-        request_id: payload.request_id,
+        request_id: payload.request_id || payload.requestId || payload.message,
         provider_type: 'sms',
       });
     }
