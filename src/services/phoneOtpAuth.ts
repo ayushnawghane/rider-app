@@ -14,6 +14,24 @@ interface OtpFunctionResponse {
 
 const PHONE_OTP_FUNCTION_NAME = import.meta.env.VITE_PHONE_OTP_FUNCTION_NAME || 'phone-otp-auth';
 
+const normalizePhoneForCompare = (phone: string | null | undefined) => {
+  if (!phone) return '';
+  const compact = phone.trim().replace(/[\s()-]/g, '');
+  return compact.startsWith('+') ? compact : `+${compact}`;
+};
+
+const getSessionPhone = (
+  session: {
+    user?: {
+      phone?: string | null;
+      user_metadata?: Record<string, unknown> | null;
+    } | null;
+  } | null,
+) => {
+  const metadataPhone = session?.user?.user_metadata?.phone;
+  return session?.user?.phone || (typeof metadataPhone === 'string' ? metadataPhone : null);
+};
+
 const parseFunctionError = async (error: unknown) => {
   const defaultMessage = 'OTP function request failed';
   if (!(error instanceof Error)) return defaultMessage;
@@ -88,7 +106,11 @@ export const phoneOtpAuthService = {
       data: { session: existingSession },
     } = await supabase.auth.getSession();
 
-    if (existingSession?.access_token && existingSession?.refresh_token) {
+    if (
+      existingSession?.access_token &&
+      existingSession?.refresh_token &&
+      normalizePhoneForCompare(getSessionPhone(existingSession)) === normalizePhoneForCompare(phone)
+    ) {
       return;
     }
 

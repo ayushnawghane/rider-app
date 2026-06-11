@@ -105,6 +105,7 @@ const toUserFromAuth = (authUser: AuthUserLite): User => {
     (typeof meta.picture === 'string' && meta.picture) ||
     (typeof meta.avatar_url === 'string' && meta.avatar_url) ||
     undefined;
+  const metadataPhone = typeof meta.phone === 'string' && meta.phone.trim() ? meta.phone.trim() : null;
 
   return {
     id: authUser.id,
@@ -113,7 +114,7 @@ const toUserFromAuth = (authUser: AuthUserLite): User => {
     firstName,
     lastName,
     avatarUrl,
-    phone: authUser.phone || toFallbackPhone(authUser.id),
+    phone: authUser.phone || metadataPhone || toFallbackPhone(authUser.id),
     kycStatus: 'pending',
     language: 'en',
     notificationPreferences: true,

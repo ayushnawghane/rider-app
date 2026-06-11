@@ -1,0 +1,2 @@
+-- Optional seed data for local development.
+-- Main schema is loaded via schema_paths in config.toml.

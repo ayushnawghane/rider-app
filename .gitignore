@@ -36,9 +36,6 @@ yarn-error.log*
 .capacitor
 resources/
 
-# Supabase
-supabase/
-
 # OS
 Thumbs.db
 .vercel
