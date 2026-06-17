@@ -149,9 +149,16 @@ workflows:
         script: npx cap sync ios
 
       # 5. Set up code signing identities & provisioning profiles
+      # Fetch/create the distribution cert + App Store profile via the App Store
+      # Connect API so the profile always reflects the App ID's current
+      # capabilities (e.g. Sign in with Apple). The API key (Integrations →
+      # App Store Connect) must have the App Manager or Admin role.
       - name: Set up code signing
         script: |
           keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
           keychain add-certificates
           xcode-project use-profiles
 
