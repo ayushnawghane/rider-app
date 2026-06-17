@@ -100,11 +100,12 @@ workflows:
       app_store_connect: Codemagic CI
 
     environment:
-      # ── iOS code signing (Automatic via App Store Connect API) ───────────
-      # The build script below fetches/creates signing files through the
-      # App Store Connect integration. Do not also configure ios_signing here,
-      # otherwise Codemagic may prefetch an old uploaded profile/certificate
-      # pair before the fresh profile is generated.
+      # ── iOS code signing ─────────────────────────────────────────────────
+      # Fetch the uploaded Apple Distribution certificate and App Store
+      # provisioning profile from Codemagic Code signing identities.
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.blinkcar.app
       vars:
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
@@ -146,18 +147,10 @@ workflows:
         script: npx cap sync ios
 
       # 5. Set up code signing identities & provisioning profiles
-      # Fetch/create the distribution cert + App Store profile via the App Store
-      # Connect API so the profile always reflects the App ID's current
-      # capabilities (e.g. Sign in with Apple). The API key (Integrations →
-      # App Store Connect) must have the App Manager or Admin role.
+      # Codemagic fetches the uploaded signing files from ios_signing above.
+      # Apply the fetched provisioning profile to the Xcode project.
       - name: Set up code signing
         script: |
-          keychain initialize
-          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision || true
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --create
-          keychain add-certificates
           security find-identity -v -p codesigning || true
           ls -la "$HOME/Library/MobileDevice/Provisioning Profiles" || true
           for profile in "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision; do
