@@ -101,13 +101,10 @@ workflows:
 
     environment:
       # ── iOS code signing (Automatic via App Store Connect API) ───────────
-      # In Codemagic → Team Settings → Code signing:
-      #   1. Upload your Distribution Certificate + private key (.p12)
-      #   2. Upload your App Store provisioning profile
-      # Then add an App Store Connect API key under Integrations.
-      ios_signing:
-        distribution_type: app_store      # or: ad_hoc | development | enterprise
-        bundle_identifier: com.blinkcar.app
+      # The build script below fetches/creates signing files through the
+      # App Store Connect integration. Do not also configure ios_signing here,
+      # otherwise Codemagic may prefetch an old uploaded profile/certificate
+      # pair before the fresh profile is generated.
       vars:
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
@@ -156,10 +153,13 @@ workflows:
       - name: Set up code signing
         script: |
           keychain initialize
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision || true
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
             --create
           keychain add-certificates
+          security find-identity -v -p codesigning || true
+          ls -la "$HOME/Library/MobileDevice/Provisioning Profiles" || true
           xcode-project use-profiles
 
       # 6. Increment build number above existing App Store Connect builds
