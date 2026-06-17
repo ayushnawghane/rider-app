@@ -110,6 +110,8 @@ workflows:
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
         BUNDLE_ID: "com.blinkcar.app"
+        IOS_TEAM_ID: "96VUL4Q6X3"
+        IOS_PROFILE_SPECIFIER: "Blinkcar Sign in Key"
         VITE_SUPABASE_URL: "https://ndlczqehttpranitnrac.supabase.co"
         VITE_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kbGN6cWVodHRwcmFuaXRucmFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4ODg3MzksImV4cCI6MjA4MzQ2NDczOX0.tB-DgvR3CRE574d9uxrPj_PCvH6qCqvyiM4fcyPuv8Y"
         VITE_APP_NAME: "BlinkCar"
@@ -167,6 +169,33 @@ workflows:
             fi
           done
           xcode-project use-profiles
+          node <<'NODE'
+          const fs = require('fs');
+          const path = 'ios/App/App.xcodeproj/project.pbxproj';
+          const teamId = process.env.IOS_TEAM_ID;
+          const profile = process.env.IOS_PROFILE_SPECIFIER;
+          let text = fs.readFileSync(path, 'utf8');
+
+          text = text.replace(/buildSettings = \{[\s\S]*?\n\t\t\t\};/g, block => {
+            if (!block.includes('PRODUCT_BUNDLE_IDENTIFIER = com.blinkcar.app;')) {
+              return block;
+            }
+
+            block = block
+              .replace(/\n\t+\t\tDEVELOPMENT_TEAM = [^;]+;/g, '')
+              .replace(/\n\t+\t\tPROVISIONING_PROFILE_SPECIFIER = [^;]+;/g, '')
+              .replace(/\n\t+\t\tCODE_SIGN_IDENTITY = [^;]+;/g, '')
+              .replace(/CODE_SIGN_STYLE = [^;]+;/, 'CODE_SIGN_STYLE = Manual;');
+
+            return block.replace(
+              /CODE_SIGN_STYLE = Manual;/,
+              `CODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = "Apple Distribution";\n\t\t\t\tDEVELOPMENT_TEAM = ${teamId};\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "${profile}";`
+            );
+          });
+
+          fs.writeFileSync(path, text);
+          NODE
+          grep -nE "CODE_SIGN_STYLE|CODE_SIGN_IDENTITY|DEVELOPMENT_TEAM|PROVISIONING_PROFILE_SPECIFIER|PRODUCT_BUNDLE_IDENTIFIER|CODE_SIGN_ENTITLEMENTS" ios/App/App.xcodeproj/project.pbxproj
 
       # 6. Increment build number above existing App Store Connect builds
       - name: Increment build number
