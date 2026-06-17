@@ -4,7 +4,7 @@ android {
     namespace = "com.blinkcar.app"
     compileSdk = rootProject.ext.compileSdkVersion
     def appVersionCode = project.findProperty("appVersionCode") ?: "1"
-    def appVersionName = project.findProperty("appVersionName") ?: "1.0.3"
+    def appVersionName = project.findProperty("appVersionName") ?: "1.0.4"
 
     defaultConfig {
         applicationId "com.blinkcar.app"
