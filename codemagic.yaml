@@ -160,6 +160,19 @@ workflows:
           keychain add-certificates
           security find-identity -v -p codesigning || true
           ls -la "$HOME/Library/MobileDevice/Provisioning Profiles" || true
+          for profile in "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision; do
+            [ -f "$profile" ] || continue
+            echo "----- Provisioning profile: $profile -----"
+            security cms -D -i "$profile" > /tmp/profile.plist
+            /usr/libexec/PlistBuddy -c "Print :Name" /tmp/profile.plist || true
+            /usr/libexec/PlistBuddy -c "Print :TeamIdentifier:0" /tmp/profile.plist || true
+            /usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" /tmp/profile.plist || true
+            /usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.developer.applesignin" /tmp/profile.plist || true
+            /usr/libexec/PlistBuddy -c "Print :DeveloperCertificates:0" /tmp/profile.plist > /tmp/profile-cert.der || true
+            if [ -s /tmp/profile-cert.der ]; then
+              openssl x509 -inform der -in /tmp/profile-cert.der -noout -subject -serial -fingerprint || true
+            fi
+          done
           xcode-project use-profiles
 
       # 6. Increment build number above existing App Store Connect builds
