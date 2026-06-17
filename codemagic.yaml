@@ -184,7 +184,19 @@ workflows:
         script: |
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" || BUILD_FAILED=1
+          if [ -n "$BUILD_FAILED" ]; then
+            echo "================= xcodebuild error excerpt ================="
+            for log in /tmp/xcodebuild_logs/*.log; do
+              [ -f "$log" ] || continue
+              echo "----- $log -----"
+              grep -nE "error:|doesn't include|No profiles|entitlement|provision|Signing for|requires a" "$log" | tail -80
+              echo "----- last 60 lines of $log -----"
+              tail -60 "$log"
+            done
+            echo "==========================================================="
+            exit 65
+          fi
 
     artifacts:
       # Signed IPA (App Store / TestFlight)
