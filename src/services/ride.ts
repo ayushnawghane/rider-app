@@ -291,7 +291,7 @@ class RideService {
     try {
       const driverRidesQuery = supabase
         .from('rides')
-        .select('*, driver:profiles!driver_id(id, full_name, avatar_url, rating_as_driver, phone)')
+        .select('*, driver:profiles!driver_id(id, full_name, avatar_url, rating_as_driver)')
         .eq('user_id', userId)
         .order('date', { ascending: false })
         .limit(limit);
@@ -355,7 +355,7 @@ class RideService {
 
       let query = supabase
         .from('rides')
-        .select('*, driver:profiles!driver_id(id, full_name, avatar_url, rating_as_driver, phone)')
+        .select('*, driver:profiles!driver_id(id, full_name, avatar_url, rating_as_driver)')
         .in('status', ['pending', 'active']);
 
       if (startLocation) {

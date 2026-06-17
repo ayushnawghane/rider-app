@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.90.1';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.108.2';
 
 type OtpAction = 'send' | 'verify';
 
@@ -35,9 +35,16 @@ const MSG91_OTP_MESSAGE =
 const OTP_AUTH_PASSWORD_SECRET = env('OTP_AUTH_PASSWORD_SECRET') || env('OTP_PASSWORD_SECRET') || SUPABASE_SERVICE_ROLE_KEY;
 const ALLOW_DUMMY_OTP = env('ALLOW_DUMMY_OTP').toLowerCase() === 'true';
 const DUMMY_OTP_CODE = env('DUMMY_OTP_CODE') || '123456';
+const APP_ENV = (env('APP_ENV') || env('ENVIRONMENT') || env('DENO_ENV') || 'development').toLowerCase();
+const OTP_RATE_LIMIT_WINDOW_MS = Number(env('OTP_RATE_LIMIT_WINDOW_MS')) || 10 * 60 * 1000;
+const OTP_SEND_LIMIT_PER_PHONE = Number(env('OTP_SEND_LIMIT_PER_PHONE')) || 3;
+const OTP_SEND_LIMIT_PER_IP = Number(env('OTP_SEND_LIMIT_PER_IP')) || 20;
+const OTP_VERIFY_LIMIT_PER_PHONE = Number(env('OTP_VERIFY_LIMIT_PER_PHONE')) || 8;
+const OTP_VERIFY_LIMIT_PER_IP = Number(env('OTP_VERIFY_LIMIT_PER_IP')) || 40;
 
 let adminClient: ReturnType<typeof createClient> | null = null;
 let anonClient: ReturnType<typeof createClient> | null = null;
+const rateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
 
 const jsonResponse = (status: number, body: Record<string, unknown>) =>
   new Response(JSON.stringify(body), {
@@ -85,9 +92,42 @@ const assertProviderConfigured = () => {
     throw new Error('Supabase OTP auth environment is not configured.');
   }
 
+  if (ALLOW_DUMMY_OTP && ['production', 'prod'].includes(APP_ENV)) {
+    throw new Error('Dummy OTP is disabled in production.');
+  }
+
   if (!ALLOW_DUMMY_OTP && !MSG91_AUTH_KEY) {
     throw new Error('MSG91 OTP environment is not configured.');
   }
+};
+
+const getClientIp = (request: Request) => {
+  const forwardedFor = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  return forwardedFor || request.headers.get('cf-connecting-ip') || request.headers.get('x-real-ip') || 'unknown';
+};
+
+const assertRateLimit = (key: string, limit: number) => {
+  const now = Date.now();
+  const bucket = rateLimitBuckets.get(key);
+
+  if (!bucket || bucket.resetAt <= now) {
+    rateLimitBuckets.set(key, { count: 1, resetAt: now + OTP_RATE_LIMIT_WINDOW_MS });
+    return;
+  }
+
+  if (bucket.count >= limit) {
+    throw new Error('Too many OTP attempts. Please try again later.');
+  }
+
+  bucket.count += 1;
+};
+
+const applyRateLimits = (action: OtpAction, phone: string, ip: string) => {
+  const phoneLimit = action === 'send' ? OTP_SEND_LIMIT_PER_PHONE : OTP_VERIFY_LIMIT_PER_PHONE;
+  const ipLimit = action === 'send' ? OTP_SEND_LIMIT_PER_IP : OTP_VERIFY_LIMIT_PER_IP;
+
+  assertRateLimit(`${action}:phone:${phone}`, phoneLimit);
+  assertRateLimit(`${action}:ip:${ip}`, ipLimit);
 };
 
 const getAdminClient = () => {
@@ -271,8 +311,11 @@ Deno.serve(async (request) => {
     const body = (await request.json()) as OtpRequestBody;
     const action = body.action;
     const phone = normalizePhone(body.phone || '');
+    const ip = getClientIp(request);
 
     if (action === 'send') {
+      applyRateLimits(action, phone, ip);
+
       if (ALLOW_DUMMY_OTP) {
         return jsonResponse(200, {
           success: true,
@@ -292,6 +335,8 @@ Deno.serve(async (request) => {
     }
 
     if (action === 'verify') {
+      applyRateLimits(action, phone, ip);
+
       if (ALLOW_DUMMY_OTP) {
         if ((body.otp || '').trim() !== DUMMY_OTP_CODE) {
           throw new Error('Enter the verification code sent to your phone.');

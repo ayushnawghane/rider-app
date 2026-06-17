@@ -292,30 +292,29 @@ class AuthService {
 
   async uploadKycDocument({ file, userId }: KycUploadParams): Promise<{ success: boolean; documentUrl?: string; error?: string }> {
     try {
-      const fileName = `${userId}/kyc-${Date.now()}`;
+      const extension = file.name.split('.').pop()?.toLowerCase() || (file.type === 'application/pdf' ? 'pdf' : 'jpg');
+      const fileName = `${userId}/kyc-${Date.now()}.${extension}`;
 
       const { error: uploadError } = await supabase.storage
         .from('kyc-documents')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          contentType: file.type,
+          upsert: false,
+        });
 
       if (uploadError) {
         return { success: false, error: uploadError.message };
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('kyc-documents')
-        .getPublicUrl(fileName);
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ kyc_document_url: publicUrl, kyc_status: 'pending' })
-        .eq('id', userId);
+      const { error: updateError } = await supabase.rpc('submit_kyc_document', {
+        document_path: fileName,
+      });
 
       if (updateError) {
         return { success: false, error: updateError.message };
       }
 
-      return { success: true, documentUrl: publicUrl };
+      return { success: true, documentUrl: fileName };
     } catch (error) {
       return { success: false, error: 'An unexpected error occurred' };
     }
@@ -354,37 +353,6 @@ class AuthService {
     } catch (error) {
       console.error('Unexpected error during avatar upload:', error);
       return { success: false, error: 'An unexpected error occurred' };
-    }
-  }
-
-  async syncClerkUserToSupabase(clerkUser: any): Promise<void> {
-    try {
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', clerkUser.id)
-        .single();
-
-      const profileData = {
-        id: clerkUser.id,
-        email: clerkUser.primaryEmailAddress?.emailAddress || '',
-        full_name: clerkUser.fullName || clerkUser.firstName || 'User',
-        phone: clerkUser.phoneNumbers?.[0]?.phoneNumber || '',
-        avatar_url: clerkUser.imageUrl || null,
-      };
-
-      if (existingProfile) {
-        await supabase
-          .from('profiles')
-          .update(profileData)
-          .eq('id', clerkUser.id);
-      } else {
-        await supabase
-          .from('profiles')
-          .insert(profileData);
-      }
-    } catch (error) {
-      console.error('Error syncing Clerk user to Supabase:', error);
     }
   }
 

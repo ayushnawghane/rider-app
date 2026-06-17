@@ -7,25 +7,30 @@ import LoginPage from './LoginPage';
 
 const mocks = vi.hoisted(() => ({
   useAuth: vi.fn(),
-  signInWithEmailPassword: vi.fn(),
   sendOtp: vi.fn(),
   verifyOtp: vi.fn(),
+  signInWithGoogle: vi.fn(),
+  signInWithApple: vi.fn(),
 }));
 
 vi.mock('../../context/AuthContext', () => ({
   useAuth: mocks.useAuth,
 }));
 
-vi.mock('../../services/auth', () => ({
-  authService: {
-    signInWithEmailPassword: mocks.signInWithEmailPassword,
-  },
-}));
-
+// Phone OTP is hidden in the UI for now but the module is still imported.
 vi.mock('../../services/phoneOtpAuth', () => ({
   phoneOtpAuthService: {
     sendOtp: mocks.sendOtp,
     verifyOtp: mocks.verifyOtp,
+  },
+}));
+
+vi.mock('../../services/socialAuth', () => ({
+  isAppleSignInAvailable: true,
+  isGoogleSignInAvailable: true,
+  socialAuthService: {
+    signInWithGoogle: mocks.signInWithGoogle,
+    signInWithApple: mocks.signInWithApple,
   },
 }));
 
@@ -44,88 +49,65 @@ describe('LoginPage', () => {
     vi.clearAllMocks();
   });
 
-  it('does not show third-party login options', async () => {
+  it('shows Google and Apple sign-in options', async () => {
     mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true });
     renderLogin();
 
-    expect(screen.queryByRole('button', { name: /google/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /continue with google/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /continue with apple/i })).toBeInTheDocument();
   });
 
-  it('validates email and password before calling Supabase', async () => {
+  it('does not show email or phone login', async () => {
     mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true });
     renderLogin();
 
-    await userEvent.click(screen.getByRole('button', { name: /^email$/i }));
-    await userEvent.click(screen.getByRole('button', { name: /sign in with email/i }));
-
-    expect(await screen.findByText('Enter a valid email address.')).toBeInTheDocument();
-    expect(mocks.signInWithEmailPassword).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: /sign in with email/i })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/mobile/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^email$/i)).not.toBeInTheDocument();
   });
 
-  it('submits normalized credentials and redirects after successful login', async () => {
+  it('signs in with Google and navigates home', async () => {
     mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true });
-    mocks.signInWithEmailPassword.mockResolvedValue({ success: true });
+    mocks.signInWithGoogle.mockResolvedValue({ success: true });
     const history = renderLogin();
 
-    await userEvent.click(screen.getByRole('button', { name: /^email$/i }));
-    await userEvent.type(screen.getByLabelText(/email/i), 'Rider@Example.COM');
-    await userEvent.type(screen.getByLabelText(/password/i), 'secret123');
-    await userEvent.click(screen.getByRole('button', { name: /sign in with email/i }));
+    await userEvent.click(screen.getByRole('button', { name: /continue with google/i }));
 
+    await waitFor(() => expect(mocks.signInWithGoogle).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(history.location.pathname).toBe('/home'));
-    expect(mocks.signInWithEmailPassword).toHaveBeenCalledWith('Rider@Example.COM', 'secret123');
   });
 
-  it('shows service errors without navigating', async () => {
+  it('signs in with Apple and navigates home', async () => {
     mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true });
-    mocks.signInWithEmailPassword.mockResolvedValue({
-      success: false,
-      error: 'Invalid login credentials',
-    });
+    mocks.signInWithApple.mockResolvedValue({ success: true });
     const history = renderLogin();
 
-    await userEvent.click(screen.getByRole('button', { name: /^email$/i }));
-    await userEvent.type(screen.getByLabelText(/email/i), 'rider@example.com');
-    await userEvent.type(screen.getByLabelText(/password/i), 'wrong-password');
-    await userEvent.click(screen.getByRole('button', { name: /sign in with email/i }));
+    await userEvent.click(screen.getByRole('button', { name: /continue with apple/i }));
 
-    expect(await screen.findByText('Invalid login credentials')).toBeInTheDocument();
+    await waitFor(() => expect(mocks.signInWithApple).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(history.location.pathname).toBe('/home'));
+  });
+
+  it('surfaces social sign-in errors without navigating', async () => {
+    mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true });
+    mocks.signInWithGoogle.mockResolvedValue({ success: false, error: 'Sign-in failed.' });
+    const history = renderLogin();
+
+    await userEvent.click(screen.getByRole('button', { name: /continue with google/i }));
+
+    expect(await screen.findByText('Sign-in failed.')).toBeInTheDocument();
     expect(history.location.pathname).toBe('/login');
   });
 
-  it('sends and verifies mobile OTP before navigating home', async () => {
+  it('stays silent when the user cancels', async () => {
     mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true });
-    mocks.sendOtp.mockResolvedValue({ message: 'OTP sent' });
-    mocks.verifyOtp.mockResolvedValue(undefined);
+    mocks.signInWithGoogle.mockResolvedValue({ success: false, cancelled: true, error: '' });
     const history = renderLogin();
 
-    await userEvent.type(screen.getByLabelText(/mobile/i), '+91 9730156154');
-    await userEvent.click(screen.getByRole('button', { name: /send code/i }));
+    await userEvent.click(screen.getByRole('button', { name: /continue with google/i }));
 
-    expect(await screen.findByText('Verification code sent.')).toBeInTheDocument();
-    expect(mocks.sendOtp).toHaveBeenCalledWith('+919730156154');
-
-    await userEvent.type(screen.getByLabelText(/verification code/i), '123456');
-    await userEvent.click(screen.getByRole('button', { name: /verify code/i }));
-
-    await waitFor(() => expect(history.location.pathname).toBe('/home'));
-    expect(mocks.verifyOtp).toHaveBeenCalledWith('+919730156154', '123456');
-  });
-
-  it('resends mobile OTP without resetting the phone number', async () => {
-    mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true });
-    mocks.sendOtp.mockResolvedValue({ message: 'OTP sent' });
-    renderLogin();
-
-    await userEvent.type(screen.getByLabelText(/mobile/i), '+91 9730156154');
-    await userEvent.click(screen.getByRole('button', { name: /send code/i }));
-    await screen.findByText('Verification code sent.');
-
-    await userEvent.click(screen.getByRole('button', { name: /resend code/i }));
-
-    expect(await screen.findByText('Verification code sent again.')).toBeInTheDocument();
-    expect(mocks.sendOtp).toHaveBeenCalledTimes(2);
-    expect(mocks.sendOtp).toHaveBeenLastCalledWith('+919730156154');
-    expect(screen.getByLabelText(/mobile/i)).toHaveValue('+91 9730156154');
+    await waitFor(() => expect(mocks.signInWithGoogle).toHaveBeenCalledTimes(1));
+    expect(history.location.pathname).toBe('/login');
+    expect(screen.queryByText(/failed/i)).not.toBeInTheDocument();
   });
 });
