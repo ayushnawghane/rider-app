@@ -35,9 +35,17 @@ yarn-error.log*
 .ion
 .capacitor
 resources/
+.android-sdk/
+.downloads/
+.gradle-home/
 
 # Supabase
 supabase/
+!supabase/
+supabase/.temp/
+!supabase/functions/
+!supabase/functions/**
+!supabase/*.sql
 
 # OS
 Thumbs.db

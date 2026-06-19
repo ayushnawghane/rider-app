@@ -17,7 +17,6 @@ vi.mock('../../context/AuthContext', () => ({
   useAuth: mocks.useAuth,
 }));
 
-// Phone OTP is hidden in the UI for now but the module is still imported.
 vi.mock('../../services/phoneOtpAuth', () => ({
   phoneOtpAuthService: {
     sendOtp: mocks.sendOtp,
@@ -57,13 +56,32 @@ describe('LoginPage', () => {
     expect(screen.getByRole('button', { name: /continue with apple/i })).toBeInTheDocument();
   });
 
-  it('does not show email or phone login', async () => {
+  it('shows phone login without email login', async () => {
     mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true });
     renderLogin();
 
     expect(screen.queryByRole('button', { name: /sign in with email/i })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/mobile/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/mobile/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/^email$/i)).not.toBeInTheDocument();
+  });
+
+  it('sends and verifies a phone OTP', async () => {
+    mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true });
+    mocks.sendOtp.mockResolvedValue({ message: 'OTP sent' });
+    mocks.verifyOtp.mockResolvedValue(undefined);
+    const history = renderLogin();
+
+    await userEvent.type(screen.getByLabelText(/mobile/i), '9730156154');
+    await userEvent.click(screen.getByRole('button', { name: /send code/i }));
+
+    await waitFor(() => expect(mocks.sendOtp).toHaveBeenCalledWith('+919730156154'));
+    expect(await screen.findByText('Verification code sent.')).toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText(/verification code/i), '123456');
+    await userEvent.click(screen.getByRole('button', { name: /verify code/i }));
+
+    await waitFor(() => expect(mocks.verifyOtp).toHaveBeenCalledWith('+919730156154', '123456'));
+    await waitFor(() => expect(history.location.pathname).toBe('/home'));
   });
 
   it('signs in with Google and navigates home', async () => {

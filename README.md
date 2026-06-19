@@ -110,12 +110,10 @@ supabase secrets set SUPABASE_ANON_KEY=your_supabase_anon_key
 supabase secrets set SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
-`MSG91_TEMPLATE_ID` should be the MSG91 OTP template that is mapped to the
-TrueConnect/India DLT-approved OTP template. The approved template text must use
-MSG91's OTP placeholder, for example `##OTP##`, so MSG91 can generate and verify
-the code through its OTP API.
-`MSG91_SENDER_ID` must exactly match the DLT-approved sender ID mapped to that
-template and PE-TM chain in MSG91/TrueConnect.
+`MSG91_TEMPLATE_ID` should be the MSG91 SMS template ID. The phone OTP flow
+generates and verifies the OTP in the Supabase Edge Function, then sends the
+code through MSG91's v5 Flow/SMS API. By default the template variable is `var`;
+set `MSG91_OTP_VARIABLE_NAME` if your MSG91 template uses a different variable.
 
 Optional (local/dev):
 ```bash

@@ -5,7 +5,26 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist', 'cypress.config.ts'] },
+  {
+    ignores: [
+      'dist',
+      'cypress.config.ts',
+      '.android-sdk',
+      '.android-sdk/**',
+      '.gradle-home',
+      '.gradle-home/**',
+      '.gradle',
+      '.gradle/**',
+      'android/app/build',
+      'android/app/build/**',
+      'android/build',
+      'android/build/**',
+      'ios/App/build',
+      'ios/App/build/**',
+      'ios/DerivedData',
+      'ios/DerivedData/**',
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],

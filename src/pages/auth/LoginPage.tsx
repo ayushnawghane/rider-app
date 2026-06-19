@@ -10,12 +10,15 @@ import {
   type SocialProvider,
 } from '../../services/socialAuth';
 
-// Phone OTP is temporarily hidden — flip to `true` to bring it back.
-const SHOW_PHONE_OTP = false;
+const SHOW_PHONE_OTP = true;
 
-const isValidPhone = (value: string) => /^\+?[1-9]\d{7,14}$/.test(value.trim().replace(/[\s-]/g, ''));
+const INDIA_DIAL_CODE = '+91';
+const getPhoneDigits = (value: string) => value.replace(/\D/g, '');
+const toIndianPhoneNumber = (value: string) => `${INDIA_DIAL_CODE}${getPhoneDigits(value)}`;
+const isValidPhone = (value: string) => getPhoneDigits(value).length === 10;
 const normalizePhone = (value: string) => {
   const compact = value.trim().replace(/[\s()-]/g, '');
+  if (getPhoneDigits(compact).length === 10) return toIndianPhoneNumber(compact);
   return compact.startsWith('+') ? compact : `+${compact}`;
 };
 
@@ -76,7 +79,7 @@ const LoginPage = () => {
     setInfo(null);
 
     if (!isValidPhone(phone)) {
-      setError('Enter a valid mobile number with country code.');
+      setError('Enter a valid 10-digit mobile number.');
       return;
     }
 
@@ -100,7 +103,7 @@ const LoginPage = () => {
     setInfo(null);
 
     if (!isValidPhone(phone)) {
-      setError('Enter a valid mobile number with country code.');
+      setError('Enter a valid 10-digit mobile number.');
       return;
     }
 
@@ -155,20 +158,27 @@ const LoginPage = () => {
               <>
                 <form onSubmit={isOtpSent ? handleVerifyOtp : handleSendOtp} className="space-y-4">
                   <label className="block text-sm font-medium text-gray-700">
-                    Mobile
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(event) => {
-                        setPhone(event.target.value);
-                        setIsOtpSent(false);
-                        setOtp('');
-                      }}
-                      placeholder="+91 9876543210"
-                      autoComplete="tel"
-                      disabled={isSubmitting}
-                      className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
-                    />
+                    Mobile number
+                    <div className="mt-1 flex rounded-xl border border-gray-300 bg-white shadow-sm focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-200">
+                      <span className="flex items-center border-r border-gray-200 px-4 text-sm font-semibold text-gray-700">
+                        {INDIA_DIAL_CODE}
+                      </span>
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(event) => {
+                          setPhone(getPhoneDigits(event.target.value).slice(0, 10));
+                          setIsOtpSent(false);
+                          setOtp('');
+                        }}
+                        placeholder="9730156154"
+                        autoComplete="tel-national"
+                        inputMode="numeric"
+                        maxLength={10}
+                        disabled={isSubmitting}
+                        className="block min-w-0 flex-1 rounded-r-xl border-0 bg-white px-4 py-3 shadow-sm focus:outline-none"
+                      />
+                    </div>
                   </label>
 
                   {isOtpSent && (

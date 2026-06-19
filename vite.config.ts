@@ -14,6 +14,17 @@ export default defineConfig({
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
     },
+    watch: {
+      ignored: [
+        '**/.android-sdk/**',
+        '**/.gradle-home/**',
+        '**/.gradle/**',
+        '**/android/app/build/**',
+        '**/android/build/**',
+        '**/ios/App/build/**',
+        '**/ios/DerivedData/**',
+      ],
+    },
   },
   test: {
     globals: true,

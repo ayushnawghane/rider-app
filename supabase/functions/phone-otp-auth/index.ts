@@ -12,6 +12,7 @@ interface Msg91Payload {
   type?: string;
   message?: string;
   request_id?: string;
+  requestId?: string;
 }
 
 const corsHeaders = {
@@ -29,9 +30,7 @@ const MSG91_AUTH_KEY = env('MSG91_AUTH_KEY');
 const MSG91_TEMPLATE_ID = env('MSG91_TEMPLATE_ID');
 const MSG91_OTP_EXPIRY_MINUTES = env('MSG91_OTP_EXPIRY_MINUTES') || '5';
 const MSG91_OTP_LENGTH = env('MSG91_OTP_LENGTH') || '6';
-const MSG91_SENDER_ID = env('MSG91_SENDER_ID') || 'BLICAR';
-const MSG91_OTP_MESSAGE =
-  env('MSG91_OTP_MESSAGE') || 'Your Blinkcar verification code is ##OTP##. Do not share this OTP with anyone.';
+const MSG91_OTP_VARIABLE_NAME = env('MSG91_OTP_VARIABLE_NAME') || 'var';
 const OTP_AUTH_PASSWORD_SECRET = env('OTP_AUTH_PASSWORD_SECRET') || env('OTP_PASSWORD_SECRET') || SUPABASE_SERVICE_ROLE_KEY;
 const ALLOW_DUMMY_OTP = env('ALLOW_DUMMY_OTP').toLowerCase() === 'true';
 const DUMMY_OTP_CODE = env('DUMMY_OTP_CODE') || '123456';
@@ -41,6 +40,7 @@ const OTP_SEND_LIMIT_PER_PHONE = Number(env('OTP_SEND_LIMIT_PER_PHONE')) || 3;
 const OTP_SEND_LIMIT_PER_IP = Number(env('OTP_SEND_LIMIT_PER_IP')) || 20;
 const OTP_VERIFY_LIMIT_PER_PHONE = Number(env('OTP_VERIFY_LIMIT_PER_PHONE')) || 8;
 const OTP_VERIFY_LIMIT_PER_IP = Number(env('OTP_VERIFY_LIMIT_PER_IP')) || 40;
+const OTP_MAX_STORED_ATTEMPTS = Number(env('OTP_MAX_STORED_ATTEMPTS')) || 8;
 
 let adminClient: ReturnType<typeof createClient> | null = null;
 let anonClient: ReturnType<typeof createClient> | null = null;
@@ -65,11 +65,12 @@ const normalizePhone = (phone: string) => {
 
 const toMsg91Mobile = (phone: string) => phone.replace(/^\+/, '');
 
+const toHex = (bytes: Uint8Array) => Array.from(bytes).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+
 const createEmailForPhone = async (phone: string) => {
   const encoder = new TextEncoder();
   const digest = await crypto.subtle.digest('SHA-256', encoder.encode(phone));
-  const bytes = Array.from(new Uint8Array(digest));
-  const hash = bytes.map((byte) => byte.toString(16).padStart(2, '0')).join('').slice(0, 32);
+  const hash = toHex(new Uint8Array(digest)).slice(0, 32);
   return `phone-${hash}@otp.riderapp.local`;
 };
 
@@ -83,8 +84,28 @@ const createPasswordForPhone = async (phone: string) => {
     ['sign'],
   );
   const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(phone));
-  const bytes = Array.from(new Uint8Array(signature));
-  return `Otp-${bytes.map((byte) => byte.toString(16).padStart(2, '0')).join('')}`;
+  return `Otp-${toHex(new Uint8Array(signature))}`;
+};
+
+const hashOtp = async (phone: string, otp: string) => {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(OTP_AUTH_PASSWORD_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(`${phone}:${otp}`));
+  return toHex(new Uint8Array(signature));
+};
+
+const generateOtp = () => {
+  const length = Math.max(4, Math.min(8, Number(MSG91_OTP_LENGTH) || 6));
+  const max = 10 ** length;
+  const random = new Uint32Array(1);
+  crypto.getRandomValues(random);
+  return String(random[0] % max).padStart(length, '0');
 };
 
 const assertProviderConfigured = () => {
@@ -97,7 +118,11 @@ const assertProviderConfigured = () => {
   }
 
   if (!ALLOW_DUMMY_OTP && !MSG91_AUTH_KEY) {
-    throw new Error('MSG91 OTP environment is not configured.');
+    throw new Error('MSG91 SMS environment is not configured.');
+  }
+
+  if (!ALLOW_DUMMY_OTP && !MSG91_TEMPLATE_ID) {
+    throw new Error('MSG91 SMS template ID is not configured.');
   }
 };
 
@@ -181,33 +206,88 @@ const callMsg91 = async (url: URL, init?: RequestInit) => {
   return payload;
 };
 
-const sendMsg91Otp = async (phone: string) => {
-  const url = new URL('https://api.msg91.com/api/sendotp.php');
-  url.searchParams.set('authkey', MSG91_AUTH_KEY);
-  url.searchParams.set('mobile', toMsg91Mobile(phone));
-  url.searchParams.set('message', MSG91_OTP_MESSAGE);
-  url.searchParams.set('sender', MSG91_SENDER_ID);
-  url.searchParams.set('otp_expiry', MSG91_OTP_EXPIRY_MINUTES);
-  url.searchParams.set('otp_length', MSG91_OTP_LENGTH);
-  if (MSG91_TEMPLATE_ID) {
-    url.searchParams.set('DLT_TE_ID', MSG91_TEMPLATE_ID);
-  }
+const sendMsg91Sms = async (phone: string, otp: string) => {
+  const url = new URL('https://control.msg91.com/api/v5/flow/');
+  const recipient: Record<string, string> = {
+    mobiles: toMsg91Mobile(phone),
+    [MSG91_OTP_VARIABLE_NAME]: otp,
+    OTP: otp,
+    otp,
+    Otp: otp,
+    VAR: otp,
+    var: otp,
+    VAR1: otp,
+    var1: otp,
+    CODE: otp,
+    code: otp,
+  };
 
-  return callMsg91(url, { method: 'GET' });
+  return callMsg91(url, {
+    method: 'POST',
+    body: JSON.stringify({
+      template_id: MSG91_TEMPLATE_ID,
+      short_url: '0',
+      recipients: [recipient],
+    }),
+  });
 };
 
-const verifyMsg91Otp = async (phone: string, otp: string) => {
+const storeOtp = async (phone: string, otp: string, requestId?: string) => {
+  const expiresAt = new Date(Date.now() + Number(MSG91_OTP_EXPIRY_MINUTES) * 60 * 1000).toISOString();
+  const otpHash = await hashOtp(phone, otp);
+
+  const { error } = await getAdminClient()
+    .from('phone_otp_requests')
+    .upsert(
+      {
+        phone,
+        otp_hash: otpHash,
+        expires_at: expiresAt,
+        attempts: 0,
+        request_id: requestId || null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'phone' },
+    );
+
+  if (error) throw new Error(error.message);
+};
+
+const verifyStoredOtp = async (phone: string, otp: string) => {
   const cleanedOtp = otp.trim();
   if (!/^\d{4,8}$/.test(cleanedOtp)) {
     throw new Error('Enter the verification code sent to your phone.');
   }
 
-  const url = new URL('https://api.msg91.com/api/verifyRequestOTP.php');
-  url.searchParams.set('authkey', MSG91_AUTH_KEY);
-  url.searchParams.set('mobile', toMsg91Mobile(phone));
-  url.searchParams.set('otp', cleanedOtp);
+  const { data, error } = await getAdminClient()
+    .from('phone_otp_requests')
+    .select('otp_hash, expires_at, attempts')
+    .eq('phone', phone)
+    .maybeSingle();
 
-  return callMsg91(url, { method: 'GET' });
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error('Verification code expired. Please request a new code.');
+
+  if (new Date(data.expires_at).getTime() <= Date.now()) {
+    await getAdminClient().from('phone_otp_requests').delete().eq('phone', phone);
+    throw new Error('Verification code expired. Please request a new code.');
+  }
+
+  if ((data.attempts || 0) >= OTP_MAX_STORED_ATTEMPTS) {
+    await getAdminClient().from('phone_otp_requests').delete().eq('phone', phone);
+    throw new Error('Too many verification attempts. Please request a new code.');
+  }
+
+  const otpHash = await hashOtp(phone, cleanedOtp);
+  if (otpHash !== data.otp_hash) {
+    await getAdminClient()
+      .from('phone_otp_requests')
+      .update({ attempts: (data.attempts || 0) + 1, updated_at: new Date().toISOString() })
+      .eq('phone', phone);
+    throw new Error('Enter the verification code sent to your phone.');
+  }
+
+  await getAdminClient().from('phone_otp_requests').delete().eq('phone', phone);
 };
 
 const getProfileUserIdByPhone = async (phone: string) => {
@@ -317,6 +397,7 @@ Deno.serve(async (request) => {
       applyRateLimits(action, phone, ip);
 
       if (ALLOW_DUMMY_OTP) {
+        await storeOtp(phone, DUMMY_OTP_CODE, 'dummy-otp');
         return jsonResponse(200, {
           success: true,
           message: 'OTP sent',
@@ -325,11 +406,14 @@ Deno.serve(async (request) => {
         });
       }
 
-      const payload = await sendMsg91Otp(phone);
+      const otp = generateOtp();
+      const payload = await sendMsg91Sms(phone, otp);
+      const requestId = payload.request_id || payload.requestId || payload.message;
+      await storeOtp(phone, otp, requestId);
       return jsonResponse(200, {
         success: true,
         message: payload.message || 'OTP sent',
-        request_id: payload.request_id,
+        request_id: requestId,
         provider_type: 'sms',
       });
     }
@@ -338,11 +422,9 @@ Deno.serve(async (request) => {
       applyRateLimits(action, phone, ip);
 
       if (ALLOW_DUMMY_OTP) {
-        if ((body.otp || '').trim() !== DUMMY_OTP_CODE) {
-          throw new Error('Enter the verification code sent to your phone.');
-        }
+        await verifyStoredOtp(phone, body.otp || '');
       } else {
-        await verifyMsg91Otp(phone, body.otp || '');
+        await verifyStoredOtp(phone, body.otp || '');
       }
 
       const session = await signInPhoneUser(phone);
