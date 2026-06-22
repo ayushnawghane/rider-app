@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useHistory } from 'react-router';
+import { Zap } from 'lucide-react';
+import Aurora from '../../components/ui/Aurora';
 import { useAuth } from '../../context/AuthContext';
 import { phoneOtpAuthService } from '../../services/phoneOtpAuth';
 import {
@@ -124,43 +126,48 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gray-50 px-4 py-10 sm:px-6 lg:px-8">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-20 top-16 h-72 w-72 rounded-full bg-primary-200/50 blur-3xl" />
-          <div className="absolute -right-20 bottom-8 h-72 w-72 rounded-full bg-orange-100/70 blur-3xl" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,237,213,0.55),rgba(249,250,251,0.92)_45%,rgba(249,250,251,1))]" />
-        </div>
-
-        <div className="relative mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md items-center">
-          <div className="w-full rounded-3xl border border-primary-100/80 bg-white p-6 shadow-strong sm:p-8">
-            <div className="mb-7 flex items-center justify-between">
+    <Aurora variant="golden" grain="base" className="min-h-screen">
+      <div className="flex min-h-screen w-full items-center justify-center px-5 py-10 app-top-safe">
+        <div className="w-full max-w-md animate-rise">
+          {/* Brand + heading */}
+          <div className="mb-7">
+            <div className="mb-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img
-                  src="/logo.png"
-                  alt="Blinkcar"
-                  className="h-11 w-11 rounded-xl border border-primary-100 bg-white object-contain p-1"
-                />
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-600">Blinkcar</p>
-                  <h1 className="text-xl font-bold tracking-tight text-gray-900">Sign in</h1>
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl shadow-glow"
+                  style={{ background: 'linear-gradient(135deg, var(--fire-red), var(--fire-amber) 70%, var(--fire-gold))' }}
+                >
+                  <Zap className="h-6 w-6 text-white" fill="white" strokeWidth={2.4} />
                 </div>
+                <span className="font-display text-sm font-bold uppercase tracking-[0.26em] text-fire-orange">
+                  Blinkcar
+                </span>
               </div>
-              <span className="rounded-full bg-primary-100 px-3 py-1 text-xs font-semibold text-primary-700">Secure</span>
+              <span className="glass rounded-full px-3 py-1 text-xs font-display font-bold text-ink/70">Secure</span>
             </div>
 
-            <p className="mb-6 text-sm leading-relaxed text-gray-600">
+            <h1 className="font-display text-[3.25rem] font-extrabold leading-[0.92] tracking-tightest text-ink">
+              Welcome<br />
+              <span className="text-fire">back.</span>
+            </h1>
+            <p className="mt-3 text-base font-medium leading-relaxed text-ink/60">
               {SHOW_PHONE_OTP
                 ? 'Sign in with your mobile number or a social account.'
                 : 'Sign in with your Google or Apple account.'}
             </p>
+          </div>
 
+          {/* Card */}
+          <div className="glass rounded-3xl p-5 shadow-strong sm:p-6">
             {SHOW_PHONE_OTP && (
               <>
                 <form onSubmit={isOtpSent ? handleVerifyOtp : handleSendOtp} className="space-y-4">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Mobile number
-                    <div className="mt-1 flex rounded-xl border border-gray-300 bg-white shadow-sm focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-200">
-                      <span className="flex items-center border-r border-gray-200 px-4 text-sm font-semibold text-gray-700">
+                  <label className="block">
+                    <span className="mb-1.5 block font-display text-[11px] font-bold uppercase tracking-wide text-ink/50">
+                      Mobile number
+                    </span>
+                    <div className="flex overflow-hidden rounded-2xl border border-[color:var(--surface-border)] bg-white/70 transition focus-within:border-fire-orange focus-within:ring-2 focus-within:ring-[rgba(255,107,0,0.25)]">
+                      <span className="flex items-center border-r border-[color:var(--surface-border)] px-4 font-display text-sm font-bold text-ink">
                         {INDIA_DIAL_CODE}
                       </span>
                       <input
@@ -176,14 +183,16 @@ const LoginPage = () => {
                         inputMode="numeric"
                         maxLength={10}
                         disabled={isSubmitting}
-                        className="block min-w-0 flex-1 rounded-r-xl border-0 bg-white px-4 py-3 shadow-sm focus:outline-none"
+                        className="block min-w-0 flex-1 border-0 bg-transparent px-4 py-3.5 text-ink placeholder:text-ink/35 focus:outline-none focus:ring-0"
                       />
                     </div>
                   </label>
 
                   {isOtpSent && (
-                    <label className="block text-sm font-medium text-gray-700">
-                      Verification code
+                    <label className="block">
+                      <span className="mb-1.5 block font-display text-[11px] font-bold uppercase tracking-wide text-ink/50">
+                        Verification code
+                      </span>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -192,7 +201,7 @@ const LoginPage = () => {
                         placeholder="123456"
                         autoComplete="one-time-code"
                         disabled={isSubmitting}
-                        className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                        className="block w-full rounded-2xl border border-[color:var(--surface-border)] bg-white/70 px-4 py-3.5 font-display text-lg font-bold tracking-[0.3em] text-ink placeholder:tracking-normal placeholder:font-sans placeholder:text-ink/35 focus:border-fire-orange focus:outline-none focus:ring-2 focus:ring-[rgba(255,107,0,0.25)]"
                       />
                     </label>
                   )}
@@ -200,7 +209,8 @@ const LoginPage = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="w-full rounded-2xl py-4 font-display text-base font-bold tracking-tight text-white shadow-glow transition-all duration-200 hover:shadow-glow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                    style={{ background: 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))' }}
                   >
                     {isSubmitting ? 'Please wait...' : isOtpSent ? 'Verify code' : 'Send code'}
                   </button>
@@ -224,7 +234,7 @@ const LoginPage = () => {
                         }
                       }}
                       disabled={isSubmitting}
-                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full rounded-2xl border border-[color:var(--surface-border)] bg-white/50 py-3.5 font-display text-sm font-bold text-ink/70 transition hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Resend code
                     </button>
@@ -240,7 +250,7 @@ const LoginPage = () => {
                         setError(null);
                       }}
                       disabled={isSubmitting}
-                      className="w-full px-4 py-2 text-sm font-semibold text-gray-500 transition hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full py-2 font-display text-sm font-bold text-ink/45 transition hover:text-ink/70 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Change mobile number
                     </button>
@@ -248,9 +258,9 @@ const LoginPage = () => {
                 </form>
 
                 <div className="my-6 flex items-center gap-3">
-                  <span className="h-px flex-1 bg-gray-200" />
-                  <span className="text-xs font-medium uppercase tracking-wide text-gray-400">or continue with</span>
-                  <span className="h-px flex-1 bg-gray-200" />
+                  <span className="h-px flex-1 bg-ink/10" />
+                  <span className="font-display text-[11px] font-bold uppercase tracking-wider text-ink/40">or continue with</span>
+                  <span className="h-px flex-1 bg-ink/10" />
                 </div>
               </>
             )}
@@ -261,7 +271,7 @@ const LoginPage = () => {
                   type="button"
                   onClick={() => handleSocialLogin('google')}
                   disabled={isSubmitting || socialProvider !== null}
-                  className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl border border-[color:var(--surface-border)] bg-white/80 py-3.5 font-display text-sm font-bold text-ink transition hover:bg-white active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
@@ -278,7 +288,8 @@ const LoginPage = () => {
                   type="button"
                   onClick={() => handleSocialLogin('apple')}
                   disabled={isSubmitting || socialProvider !== null}
-                  className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-900 bg-gray-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex w-full items-center justify-center gap-3 rounded-2xl py-3.5 font-display text-sm font-bold text-white transition active:scale-[0.98] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{ background: 'var(--char)' }}
                 >
                   <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M16.36 12.78c.02 2.4 2.1 3.2 2.12 3.21-.02.06-.33 1.14-1.1 2.25-.66.96-1.35 1.92-2.43 1.94-1.06.02-1.4-.63-2.62-.63-1.21 0-1.59.61-2.6.65-1.04.04-1.84-1.04-2.51-2-1.36-1.97-2.4-5.56-1-7.99.69-1.2 1.93-1.96 3.28-1.98 1.02-.02 1.99.69 2.62.69.63 0 1.8-.85 3.04-.73.52.02 1.98.21 2.91 1.58-.07.05-1.74 1.02-1.72 3.04M14.4 5.4c.56-.68.94-1.62.84-2.56-.81.03-1.79.54-2.37 1.22-.52.6-.98 1.56-.86 2.48.9.07 1.83-.46 2.39-1.14" />
@@ -289,18 +300,30 @@ const LoginPage = () => {
             </div>
 
             {info && (
-              <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+              <div className="mt-4 rounded-2xl border border-success-200 bg-success-50 px-4 py-3 text-sm font-medium text-success-700">
                 {info}
               </div>
             )}
             {error && (
-              <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+              <div className="mt-4 rounded-2xl border border-danger-200 bg-danger-50 px-4 py-3 text-sm font-medium text-danger-700">
                 {error}
               </div>
             )}
           </div>
+
+          <p className="mt-6 text-center text-sm font-medium text-ink/55">
+            New to Blinkcar?{' '}
+            <button
+              type="button"
+              onClick={() => history.push('/register')}
+              className="font-display font-bold text-fire-orange transition hover:brightness-110"
+            >
+              Create account
+            </button>
+          </p>
         </div>
-    </div>
+      </div>
+    </Aurora>
   );
 };
 

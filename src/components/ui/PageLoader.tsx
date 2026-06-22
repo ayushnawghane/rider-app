@@ -1,18 +1,24 @@
 import React from 'react';
+import Skeleton from '../Skeleton';
 
 interface PageLoaderProps {
   message?: string;
   variant?: 'light' | 'brand';
 }
 
-const PageLoader: React.FC<PageLoaderProps> = ({ message, variant = 'brand' }) => {
-  const isLight = variant === 'light';
-
+/**
+ * Generic page-load placeholder. Renders content skeletons (no spinner) so a
+ * loading screen previews the shape of what's coming.
+ */
+const PageLoader: React.FC<PageLoaderProps> = () => {
   return (
-    <div className={`flex min-h-screen items-center justify-center ${isLight ? 'bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700' : 'bg-gray-50'}`}>
-      <div className="flex flex-col items-center gap-3">
-        <div className={`h-12 w-12 animate-spin rounded-full border-4 ${isLight ? 'border-white border-t-transparent' : 'border-primary-500 border-t-transparent'}`} />
-        {message && <p className={isLight ? 'text-sm font-medium text-white' : 'text-sm font-medium text-gray-600'}>{message}</p>}
+    <div className="min-h-screen px-5 pt-14" style={{ background: 'var(--bg)' }}>
+      <Skeleton variant="text" width="60%" height="32px" className="mb-2" />
+      <Skeleton variant="text" width="40%" height="16px" className="mb-7" />
+      <div className="space-y-4">
+        <Skeleton variant="rounded" height="120px" />
+        <Skeleton variant="rounded" height="88px" />
+        <Skeleton variant="rounded" height="88px" />
       </div>
     </div>
   );

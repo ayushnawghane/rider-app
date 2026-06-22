@@ -4,7 +4,7 @@ import { IonReactRouter } from '@ionic/react-router';
 import { Redirect, Route } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import LoadingOverlay from './components/LoadingOverlay';
+import BootSkeleton from './components/BootSkeleton';
 import SplashScreen from './components/SplashScreen';
 import MobileBottomNav from './components/navigation/MobileBottomNav';
 import ProfileCompletionBanner from './components/profile/ProfileCompletionBanner';
@@ -84,7 +84,7 @@ const AppRoutes: React.FC = () => {
   const renderPublic = (Component: RoutedComponent) => (props: unknown) => {
     const routeProps = props as Record<string, unknown>;
     if (!isAuthLoaded) {
-      return <LoadingOverlay isOpen message="Loading..." />;
+      return <BootSkeleton />;
     }
     return !user ? <Component {...routeProps} /> : <Redirect to={getPostAuthRedirect()} />;
   };
@@ -92,7 +92,7 @@ const AppRoutes: React.FC = () => {
   const renderPrivate = (Component: RoutedComponent) => (props: unknown) => {
     const routeProps = props as Record<string, unknown>;
     if (!isAuthLoaded) {
-      return <LoadingOverlay isOpen message="Loading..." />;
+      return <BootSkeleton />;
     }
     if (!user) {
       return <Redirect to="/login" />;
@@ -137,7 +137,7 @@ const AppRoutes: React.FC = () => {
         <Route
           render={() => {
             if (!isAuthLoaded) {
-              return <LoadingOverlay isOpen message="Loading..." />;
+              return <BootSkeleton />;
             }
             return <Redirect to={user ? getPostAuthRedirect() : '/login'} />;
           }}
