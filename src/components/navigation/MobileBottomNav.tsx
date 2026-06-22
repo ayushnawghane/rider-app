@@ -1,5 +1,5 @@
 import { useHistory, useLocation } from 'react-router';
-import { Award, Car, House, Search, User } from 'lucide-react';
+import { Award, Car, House, Inbox, Route } from 'lucide-react';
 
 type NavItem = {
   key: string;
@@ -17,7 +17,6 @@ const navItems: NavItem[] = [
     Icon: House,
     matches: (pathname) =>
       pathname === '/home' ||
-      pathname.startsWith('/support') ||
       pathname.startsWith('/notifications') ||
       pathname.startsWith('/safety') ||
       pathname.startsWith('/select-location'),
@@ -30,18 +29,29 @@ const navItems: NavItem[] = [
     matches: (pathname) =>
       pathname === '/publish-ride' ||
       pathname === '/upload-ride' ||
-      pathname.startsWith('/rides/history') ||
       pathname.startsWith('/rides/edit') ||
-      pathname.startsWith('/rides/active') ||
+      pathname.startsWith('/rides/active'),
+  },
+  {
+    key: 'rides',
+    label: 'Your Rides',
+    path: '/rides',
+    Icon: Route,
+    matches: (pathname) =>
+      pathname === '/rides' ||
+      pathname.startsWith('/rides/history') ||
+      pathname.startsWith('/rides/detail') ||
       pathname.startsWith('/trips/tracking'),
   },
   {
-    key: 'find',
-    label: 'Find',
-    path: '/find-ride',
-    Icon: Search,
+    key: 'inbox',
+    label: 'Inbox',
+    path: '/inbox',
+    Icon: Inbox,
     matches: (pathname) =>
-      pathname === '/find-ride' || pathname.startsWith('/rides/detail'),
+      pathname === '/inbox' ||
+      pathname.startsWith('/support') ||
+      pathname.startsWith('/messages'),
   },
   {
     key: 'rewards',
@@ -49,13 +59,6 @@ const navItems: NavItem[] = [
     path: '/rewards',
     Icon: Award,
     matches: (pathname) => pathname === '/rewards',
-  },
-  {
-    key: 'profile',
-    label: 'Profile',
-    path: '/profile',
-    Icon: User,
-    matches: (pathname) => pathname === '/profile' || pathname.startsWith('/profile/'),
   },
 ];
 

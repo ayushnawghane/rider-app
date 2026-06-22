@@ -42,6 +42,32 @@ const lightFieldClass =
   'bg-white text-gray-900 placeholder-gray-400 [color-scheme:light]';
 
 const buildReferenceId = () => `RIDE-${Date.now().toString(36).toUpperCase()}`;
+const pad2 = (value: number) => String(value).padStart(2, '0');
+const toLocalDateTimeValue = (date: Date) =>
+  `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}T${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+const snapToNextHalfHour = (date: Date) => {
+  const next = new Date(date);
+  const minutes = next.getMinutes();
+  next.setSeconds(0, 0);
+  if (minutes === 0 || minutes === 30) return next;
+  if (minutes < 30) {
+    next.setMinutes(30);
+    return next;
+  }
+  next.setHours(next.getHours() + 1, 0, 0, 0);
+  return next;
+};
+const getDatePart = (value: string) => value.split('T')[0] || '';
+const getTimePart = (value: string) => value.split('T')[1]?.slice(0, 5) || '';
+const combineLocalDateAndTime = (date: string, time: string) => `${date}T${time || '00:00'}`;
+const normalizeHalfHourTime = (value: string) => {
+  const [hourValue, minuteValue] = value.split(':').map(Number);
+  const hour = Number.isFinite(hourValue) ? hourValue : 0;
+  const minute = Number.isFinite(minuteValue) ? minuteValue : 0;
+  const normalizedMinute = minute < 15 ? 0 : minute < 45 ? 30 : 0;
+  const normalizedHour = minute < 45 ? hour : (hour + 1) % 24;
+  return `${pad2(normalizedHour)}:${pad2(normalizedMinute)}`;
+};
 
 const PublishRidePage = () => {
   const { user, isAuthLoaded, refreshUser } = useAuth();
@@ -66,7 +92,7 @@ const PublishRidePage = () => {
   useEffect(() => {
     const now = new Date();
     now.setHours(now.getHours() + 1);
-    setDepartureTime(now.toISOString().slice(0, 16));
+    setDepartureTime(toLocalDateTimeValue(snapToNextHalfHour(now)));
   }, []);
 
   useEffect(() => {
@@ -350,29 +376,53 @@ const PublishRidePage = () => {
             )}
           </div>
 
-          {/* Departure Time */}
+          {/* Departure Date and Time */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Departure Time</h2>
-            <div
-              className={`flex items-center gap-3 p-4 rounded-xl border-2 ${fieldErrors.departureTime ? 'border-red-300 bg-red-50' : 'border-transparent bg-gray-50'
-                }`}
-            >
-              <Clock className="w-5 h-5 text-primary-500" />
-              <input
-                type="datetime-local"
-                value={departureTime}
-                onChange={(e) => {
-                  setDepartureTime(e.target.value);
-                  setSubmitError(null);
-                  setFieldErrors((prev) => {
-                    if (!prev.departureTime) return prev;
-                    const next = { ...prev };
-                    delete next.departureTime;
-                    return next;
-                  });
-                }}
-                className={`flex-1 bg-transparent text-gray-700 focus:outline-none ${lightFieldClass}`}
-              />
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Departure Date and Time</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <label
+                className={`flex min-w-0 items-center gap-3 rounded-xl border-2 p-4 ${fieldErrors.departureTime ? 'border-red-300 bg-red-50' : 'border-transparent bg-gray-50'
+                  }`}
+              >
+                <Clock className="w-5 h-5 shrink-0 text-primary-500" />
+                <input
+                  type="date"
+                  value={getDatePart(departureTime)}
+                  onChange={(e) => {
+                    setDepartureTime(combineLocalDateAndTime(e.target.value, getTimePart(departureTime) || '00:00'));
+                    setSubmitError(null);
+                    setFieldErrors((prev) => {
+                      if (!prev.departureTime) return prev;
+                      const next = { ...prev };
+                      delete next.departureTime;
+                      return next;
+                    });
+                  }}
+                  className={`min-w-0 flex-1 bg-transparent text-gray-700 focus:outline-none ${lightFieldClass}`}
+                />
+              </label>
+              <label
+                className={`flex min-w-0 items-center gap-3 rounded-xl border-2 p-4 ${fieldErrors.departureTime ? 'border-red-300 bg-red-50' : 'border-transparent bg-gray-50'
+                  }`}
+              >
+                <Clock className="w-5 h-5 shrink-0 text-primary-500" />
+                <input
+                  type="time"
+                  step={1800}
+                  value={getTimePart(departureTime)}
+                  onChange={(e) => {
+                    setDepartureTime(combineLocalDateAndTime(getDatePart(departureTime), normalizeHalfHourTime(e.target.value)));
+                    setSubmitError(null);
+                    setFieldErrors((prev) => {
+                      if (!prev.departureTime) return prev;
+                      const next = { ...prev };
+                      delete next.departureTime;
+                      return next;
+                    });
+                  }}
+                  className={`min-w-0 flex-1 bg-transparent text-gray-700 focus:outline-none ${lightFieldClass}`}
+                />
+              </label>
             </div>
             {fieldErrors.departureTime && (
               <p className="mt-2 text-xs text-red-600">{fieldErrors.departureTime}</p>
@@ -414,7 +464,7 @@ const PublishRidePage = () => {
                 value={displayPositiveIntegerInput(pricePerSeat)}
                 onChange={(e) => setPricePerSeat(normalizePositiveIntegerInput(e.target.value))}
                 className={`flex-1 bg-transparent text-2xl font-bold text-gray-900 focus:outline-none ${lightFieldClass}`}
-                placeholder="0"
+                placeholder="₹0"
               />
             </div>
             <p className="text-xs text-gray-500 mt-2">

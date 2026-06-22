@@ -304,9 +304,35 @@ const getProfileUserIdByPhone = async (phone: string) => {
   return data?.id as string | undefined;
 };
 
+const getProfileUserIdByEmail = async (email: string) => {
+  const { data, error } = await getAdminClient()
+    .from('profiles')
+    .select('id, phone')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as { id: string; phone?: string | null } | null;
+};
+
 const createOrUpdatePhoneUser = async (phone: string, password: string) => {
   const email = await createEmailForPhone(phone);
-  const existingUserId = await getProfileUserIdByPhone(phone);
+  const [existingUserIdByPhone, existingProfileByEmail] = await Promise.all([
+    getProfileUserIdByPhone(phone),
+    getProfileUserIdByEmail(email),
+  ]);
+  const existingUserId = existingUserIdByPhone || existingProfileByEmail?.id;
+
+  if (
+    existingUserIdByPhone &&
+    existingProfileByEmail?.id &&
+    existingUserIdByPhone !== existingProfileByEmail.id
+  ) {
+    throw new Error('Phone login profile conflict. Please contact support.');
+  }
 
   if (existingUserId) {
     const { data, error } = await getAdminClient().auth.admin.updateUserById(existingUserId, {

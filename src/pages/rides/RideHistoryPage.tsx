@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
+import { MessageCircle, Phone, Plus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { rideService } from '../../services';
 import { SkeletonList } from '../../components/Skeleton';
-import { Navigation } from 'lucide-react';
 import type { Ride } from '../../types';
 
 const RideHistoryPage = () => {
   const { user } = useAuth();
+  const history = useHistory();
   const [rides, setRides] = useState<Ride[]>([]);
   const [loading, setLoading] = useState(true);
-  const history = useHistory();
 
   useEffect(() => {
     const fetchRides = async () => {
@@ -23,286 +23,166 @@ const RideHistoryPage = () => {
       setLoading(false);
     };
 
-    fetchRides();
+    void fetchRides();
   }, [user]);
 
-  const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { color: string; bgColor: string; icon: string; label: string }> = {
-      active: { color: '#16a34a', bgColor: '#dcfce7', icon: '✓', label: 'Active' },
-      pending: { color: '#d97706', bgColor: '#fef3c7', icon: '⏳', label: 'Pending' },
-      completed: { color: '#2563eb', bgColor: '#dbeafe', icon: '✓', label: 'Completed' },
-      cancelled: { color: '#dc2626', bgColor: '#fee2e2', icon: '✕', label: 'Cancelled' },
-    };
-    return statusMap[status] || statusMap.pending;
+  const isCurrentRide = (ride: Ride) => {
+    if (ride.status !== 'pending' && ride.status !== 'active') return false;
+
+    const rideDate = new Date(ride.date);
+    if (Number.isNaN(rideDate.getTime())) return true;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const afterTomorrow = new Date(today);
+    afterTomorrow.setDate(today.getDate() + 2);
+    return rideDate >= today && rideDate < afterTomorrow;
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
+  const getStatusLabel = (status: Ride['status']) => {
+    if (status === 'active') return 'Ride Confirmed';
+    if (status === 'pending') return 'Awaiting Departure';
+    if (status === 'completed') return 'Completed';
+    return 'Cancelled';
+  };
+
+  const getStatusClass = (status: Ride['status']) => {
+    if (status === 'active') return 'bg-green-100 text-green-700';
+    if (status === 'pending') return 'bg-orange-100 text-orange-700';
+    if (status === 'completed') return 'bg-blue-100 text-blue-700';
+    return 'bg-red-100 text-red-700';
+  };
+
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
     });
-  };
 
-  const containerStyle: React.CSSProperties = {
-    height: 'calc(100vh - var(--app-bottom-nav-height))',
-    overflow: 'auto',
-    background: '#f9fafb',
-    padding: '16px',
-    paddingBottom: 'calc(var(--app-bottom-nav-height) + 16px)',
-    WebkitOverflowScrolling: 'touch'
-  };
+  const currentRides = rides.filter(isCurrentRide);
+  const archivedRides = rides.filter((ride) => !isCurrentRide(ride));
 
-  const contentStyle: React.CSSProperties = {
-    maxWidth: '680px',
-    margin: '0 auto'
-  };
-
-  const headerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: '24px',
-    paddingTop: '8px'
-  };
-
-  const backButtonStyle: React.CSSProperties = {
-    background: 'transparent',
-    border: 'none',
-    padding: '8px',
-    cursor: 'pointer',
-    fontSize: '24px',
-    display: 'flex',
-    alignItems: 'center'
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontSize: '20px',
-    fontWeight: '600',
-    color: '#1f2937',
-    margin: 0
-  };
-
-  const subtitleStyle: React.CSSProperties = {
-    fontSize: '14px',
-    color: '#6b7280',
-    margin: '4px 0 0 0'
-  };
-
-  const addButtonStyle: React.CSSProperties = {
-    width: '44px',
-    height: '44px',
-    borderRadius: '12px',
-    background: '#6366f1',
-    border: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    fontSize: '24px',
-    color: 'white'
-  };
-
-  const cardStyle: React.CSSProperties = {
-    background: 'white',
-    borderRadius: '16px',
-    padding: '24px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-    marginBottom: '12px'
-  };
-
-  const rideItemStyle: React.CSSProperties = {
-    background: 'white',
-    borderRadius: '16px',
-    padding: '16px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-    marginBottom: '12px',
-    border: 'none',
-    width: '100%',
-    cursor: 'pointer',
-    textAlign: 'left'
-  };
-
-  const statusBadgeStyle = (status: string): React.CSSProperties => {
-    const statusInfo = getStatusBadge(status);
-    return {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '4px',
-      padding: '4px 10px',
-      borderRadius: '8px',
-      background: statusInfo.bgColor,
-      color: statusInfo.color,
-      fontSize: '12px',
-      fontWeight: '500'
-    };
-  };
-
-  const primaryButtonStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '14px 24px',
-    background: '#6366f1',
-    color: 'white',
-    borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: '600',
-    border: 'none',
-    cursor: 'pointer',
-    marginTop: '16px'
-  };
-
-  if (loading) {
-    return (
-      <div style={containerStyle}>
-        <div style={contentStyle}>
-          <div style={headerStyle}>
-            <div>
-              <h1 style={titleStyle}>Ride History</h1>
-            </div>
+  const renderRideCard = (ride: Ride, current: boolean) => (
+    <button
+      key={ride.id}
+      type="button"
+      onClick={() => history.push(`/rides/detail/${ride.id}`)}
+      className="w-full rounded-2xl bg-white p-4 text-left shadow-sm transition active:scale-[0.99]"
+    >
+      <div className="flex gap-3">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-xl">
+          🚗
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-900">
+            <span className="truncate">{ride.startLocation}</span>
+            <span className="shrink-0 text-slate-400">→</span>
+            <span className="truncate">{ride.endLocation}</span>
           </div>
-          <SkeletonList count={3} lines={3} />
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${getStatusClass(ride.status)}`}>
+              {getStatusLabel(ride.status)}
+            </span>
+            <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+              {ride.userRole === 'passenger' ? 'Passenger' : 'Driver'}
+            </span>
+            <span className="text-xs text-slate-500">{formatDate(ride.date)}</span>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+            <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-600">{ride.vehicleType}</span>
+            <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-600">{ride.vehicleNumber}</span>
+            {ride.pricePerSeat > 0 && (
+              <span className="rounded-md bg-orange-50 px-2 py-1 font-semibold text-orange-600">
+                ₹{ride.pricePerSeat}/seat
+              </span>
+            )}
+            <span className="rounded-md bg-indigo-50 px-2 py-1 text-indigo-600">
+              {Math.max(0, ride.availableSeats - ride.bookedSeats)}/{ride.availableSeats} seats
+            </span>
+          </div>
+
+          {current && (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <a
+                href={ride.driver?.phone ? `tel:${ride.driver.phone}` : undefined}
+                onClick={(event) => event.stopPropagation()}
+                className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-white ${
+                  ride.driver?.phone ? 'bg-primary-500' : 'pointer-events-none bg-slate-300'
+                }`}
+              >
+                <Phone size={16} />
+                Call
+              </a>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  history.push('/inbox', { rideId: ride.id });
+                }}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-bold text-orange-700"
+              >
+                <MessageCircle size={16} />
+                Message
+              </button>
+            </div>
+          )}
         </div>
       </div>
-    );
-  }
+    </button>
+  );
+
+  const renderSection = (title: string, items: Ride[], current = false) => (
+    <section className="space-y-3">
+      <h2 className="text-base font-bold text-slate-900">{title}</h2>
+      {items.length === 0 ? (
+        <div className="rounded-2xl bg-white p-4 text-sm text-slate-500 shadow-sm">
+          No {title.toLowerCase()}.
+        </div>
+      ) : (
+        items.map((ride) => renderRideCard(ride, current))
+      )}
+    </section>
+  );
 
   return (
-    <div style={containerStyle}>
-      <div style={contentStyle}>
-        <div style={headerStyle}>
+    <div className="app-scroll-screen app-bottom-nav-safe bg-gray-50 px-4 py-4">
+      <div className="mx-auto max-w-2xl">
+        <header className="mb-5 flex items-center justify-between">
           <div>
-            <button
-              onClick={() => history.goBack()}
-              style={backButtonStyle}
-            >
-              ←
-            </button>
-            <h1 style={titleStyle}>Ride History</h1>
-            <p style={subtitleStyle}>{rides.length} ride{rides.length !== 1 ? 's' : ''} found</p>
+            <h1 className="text-2xl font-bold text-slate-900">Your Rides</h1>
+            <p className="mt-1 text-sm text-slate-500">{rides.length} ride{rides.length === 1 ? '' : 's'} found</p>
           </div>
           <button
+            type="button"
             onClick={() => history.push('/publish-ride')}
-            style={addButtonStyle}
+            className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-500 text-white shadow-sm"
+            aria-label="Publish ride"
           >
-            +
+            <Plus size={20} />
           </button>
-        </div>
+        </header>
 
-        {rides.length === 0 ? (
-          <div style={{ ...cardStyle, textAlign: 'center', padding: '40px 24px' }}>
-            <span style={{ fontSize: '64px' }}>🚗</span>
-            <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#1f2937', margin: '16px 0 8px' }}>No Rides Yet</h2>
-            <p style={{ fontSize: '14px', color: '#6b7280', margin: '0 0 24px' }}>Publish a ride or join one from Find Ride to get started</p>
+        {loading ? (
+          <SkeletonList count={3} lines={3} />
+        ) : rides.length === 0 ? (
+          <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+            <div className="text-5xl">🚗</div>
+            <h2 className="mt-4 text-xl font-bold text-slate-900">No Rides Yet</h2>
+            <p className="mt-2 text-sm text-slate-500">Publish a ride or search from Home to get started.</p>
             <button
+              type="button"
               onClick={() => history.push('/publish-ride')}
-              style={primaryButtonStyle}
+              className="mt-5 w-full rounded-xl bg-primary-500 px-4 py-3 font-bold text-white"
             >
               Publish Ride
             </button>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {rides.map((ride) => {
-              const status = getStatusBadge(ride.status);
-              return (
-                <button
-                  key={ride.id}
-                  onClick={() => history.push(`/rides/detail/${ride.id}`)}
-                  style={rideItemStyle}
-                >
-                  <div style={{ display: 'flex', gap: '16px' }}>
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '12px',
-                      background: '#e0e7ff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '24px',
-                      flexShrink: 0
-                    }}>
-                      🚗
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '14px', color: '#9ca3af' }}>📍</span>
-                        <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {ride.startLocation}
-                        </span>
-                        <span style={{ fontSize: '14px', color: '#9ca3af' }}>→</span>
-                        <span style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {ride.endLocation}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                        <span style={statusBadgeStyle(ride.status)}>
-                          {status.icon} {status.label}
-                        </span>
-                        <span style={{
-                          fontSize: '12px',
-                          color: ride.userRole === 'passenger' ? '#047857' : '#4338ca',
-                          background: ride.userRole === 'passenger' ? '#d1fae5' : '#eef2ff',
-                          padding: '4px 8px',
-                          borderRadius: '8px',
-                          fontWeight: 600,
-                        }}>
-                          {ride.userRole === 'passenger' ? 'Passenger' : 'Driver'}
-                        </span>
-                        <span style={{ fontSize: '13px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          📅 {formatDate(ride.date)}
-                        </span>
-                      </div>
-                      <div style={{ marginTop: '8px', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                        <span style={{ fontSize: '12px', color: '#4b5563', background: '#f3f4f6', padding: '4px 8px', borderRadius: '6px' }}>
-                          {ride.vehicleType}
-                        </span>
-                        <span style={{ fontSize: '12px', color: '#4b5563', background: '#f3f4f6', padding: '4px 8px', borderRadius: '6px' }}>
-                          {ride.vehicleNumber}
-                        </span>
-                        {ride.pricePerSeat > 0 && (
-                          <span style={{ fontSize: '12px', color: '#f97316', background: '#fff7ed', padding: '4px 8px', borderRadius: '6px', fontWeight: '600' }}>
-                            ₹{ride.pricePerSeat}/seat
-                          </span>
-                        )}
-                        <span style={{ fontSize: '12px', color: '#6366f1', background: '#eef2ff', padding: '4px 8px', borderRadius: '6px' }}>
-                          {ride.availableSeats - ride.bookedSeats}/{ride.availableSeats} seats
-                        </span>
-                        {(ride.status === 'active' || ride.status === 'pending') && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              history.push(`/trips/tracking/${ride.id}`);
-                            }}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              fontSize: '12px',
-                              color: 'white',
-                              background: '#6366f1',
-                              padding: '4px 10px',
-                              borderRadius: '8px',
-                              fontWeight: '600',
-                              border: 'none',
-                              cursor: 'pointer',
-                              marginLeft: 'auto',
-                            }}
-                          >
-                            <Navigation size={12} />
-                            Track Trip
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    <span style={{ fontSize: '24px', color: '#9ca3af', alignSelf: 'center' }}>›</span>
-                  </div>
-                </button>
-              );
-            })}
+          <div className="space-y-6">
+            {renderSection('Current Rides', currentRides, true)}
+            {renderSection('Archived Rides', archivedRides)}
           </div>
         )}
       </div>

@@ -98,6 +98,79 @@ DROP POLICY IF EXISTS "Users can view own rewards" ON rewards;
 CREATE POLICY "Users can view own rewards" ON rewards
     FOR SELECT USING (auth.uid() = user_id);
 
+-- Shared capped ride reward helper.
+CREATE OR REPLACE FUNCTION public.award_capped_ride_reward(
+    reward_user_id UUID,
+    reward_ride_id UUID,
+    reward_action TEXT,
+    reward_description TEXT,
+    reward_metadata JSONB,
+    reward_event_key TEXT
+)
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    monthly_points INTEGER := 0;
+    award_points INTEGER := 0;
+    new_total_points INTEGER := 0;
+    new_level INTEGER := 1;
+BEGIN
+    SELECT COALESCE(SUM(points), 0)
+    INTO monthly_points
+    FROM rewards
+    WHERE user_id = reward_user_id
+      AND action IN ('publish_ride', 'join_ride', 'complete_ride')
+      AND created_at >= date_trunc('month', timezone('UTC', now()))
+      AND created_at < date_trunc('month', timezone('UTC', now())) + interval '1 month';
+
+    award_points := LEAST(50, GREATEST(0, 100 - monthly_points));
+    IF award_points <= 0 THEN
+        RETURN 0;
+    END IF;
+
+    INSERT INTO rewards (
+        user_id,
+        ride_id,
+        points,
+        action,
+        description,
+        metadata,
+        event_key
+    )
+    VALUES (
+        reward_user_id,
+        reward_ride_id,
+        award_points,
+        reward_action,
+        reward_description,
+        reward_metadata || jsonb_build_object(
+            'monthly_points_before_award', monthly_points,
+            'monthly_cap', 100
+        ),
+        reward_event_key
+    )
+    ON CONFLICT (event_key) DO NOTHING
+    RETURNING points INTO award_points;
+
+    IF award_points IS NULL OR award_points <= 0 THEN
+        RETURN 0;
+    END IF;
+
+    UPDATE profiles
+    SET
+        total_points = COALESCE(total_points, 0) + award_points,
+        level = GREATEST(COALESCE(level, 1), FLOOR((COALESCE(total_points, 0) + award_points) / 500) + 1),
+        updated_at = NOW()
+    WHERE id = reward_user_id
+    RETURNING total_points, level INTO new_total_points, new_level;
+
+    RETURN award_points;
+END;
+$$;
+
 -- Ensure updated_at works for ride_participants.
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -120,19 +193,9 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-    INSERT INTO rewards (
-        user_id,
-        ride_id,
-        points,
-        action,
-        description,
-        metadata,
-        event_key
-    )
-    VALUES (
+    PERFORM public.award_capped_ride_reward(
         NEW.user_id,
         NEW.id,
-        50,
         'publish_ride',
         FORMAT('Published a ride from %s to %s', NEW.start_location, NEW.end_location),
         jsonb_build_object(
@@ -140,8 +203,7 @@ BEGIN
             'status', NEW.status
         ),
         FORMAT('publish_ride:%s:%s', NEW.id, NEW.user_id)
-    )
-    ON CONFLICT (event_key) DO NOTHING;
+    );
 
     RETURN NEW;
 END;
@@ -179,19 +241,9 @@ BEGIN
         RETURN NEW;
     END IF;
 
-    INSERT INTO rewards (
-        user_id,
-        ride_id,
-        points,
-        action,
-        description,
-        metadata,
-        event_key
-    )
-    VALUES (
+    PERFORM public.award_capped_ride_reward(
         NEW.user_id,
         NEW.ride_id,
-        30,
         'join_ride',
         FORMAT('Joined a ride from %s to %s', ride_record.start_location, ride_record.end_location),
         jsonb_build_object(
@@ -199,8 +251,7 @@ BEGIN
             'seats_booked', NEW.seats_booked
         ),
         FORMAT('join_ride:%s:%s', NEW.ride_id, NEW.user_id)
-    )
-    ON CONFLICT (event_key) DO NOTHING;
+    );
 
     RETURN NEW;
 END;

@@ -67,7 +67,6 @@ const ActiveRidePage = () => {
   const [eta, setEta] = useState<string>('');
 
   // Driver Controls State
-  const [showStartConfirm, setShowStartConfirm] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -451,13 +450,9 @@ const ActiveRidePage = () => {
                 {isDriver && !['completed', 'cancelled'].includes(ride.status) && (
                   <div className="flex flex-col gap-3 mb-2">
                     {ride.status === 'pending' ? (
-                      <button
-                        onClick={() => setShowStartConfirm(true)}
-                        disabled={isUpdatingStatus}
-                        className="w-full py-3.5 bg-success-600 text-white font-semibold rounded-xl shadow-md hover:bg-success-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                      >
-                        <Navigation className="w-5 h-5" /> Start Trip
-                      </button>
+                      <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-800">
+                        Awaiting Departure
+                      </div>
                     ) : (
                       <button
                         onClick={() => setShowEndConfirm(true)}
@@ -508,22 +503,6 @@ const ActiveRidePage = () => {
         </div>
 
         {/* Custom Tailwind Confirmation Modals */}
-        {showStartConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 scale-100 transition-all">
-              <div className="w-12 h-12 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Navigation className="w-6 h-6 text-success-600" />
-              </div>
-              <h2 className="text-xl font-bold text-center text-gray-900 mb-2">Start Trip</h2>
-              <p className="text-center text-gray-500 mb-6 text-sm">Are you sure you want to start this trip? Ensure all passengers are aboard.</p>
-              <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => setShowStartConfirm(false)} className="py-3 font-semibold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">Go Back</button>
-                <button onClick={() => { setShowStartConfirm(false); handleUpdateStatus('active'); }} className="py-3 font-semibold text-white bg-success-600 rounded-xl hover:bg-success-700 transition-colors">Start Trip</button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {showEndConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 scale-100 transition-all">

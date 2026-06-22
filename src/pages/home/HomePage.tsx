@@ -9,12 +9,10 @@ import {
   Plus,
   Car,
   Award,
-  HelpCircle,
   ArrowRightLeft,
   Phone,
   MessageCircle,
   Map,
-  Bell,
   Star,
 } from 'lucide-react';
 import type { PublishedRide } from '../../types';
@@ -36,15 +34,22 @@ interface PopularRoute {
 
 const profilePromptDismissKey = (userId: string) => `profile-prompt-dismissed:${userId}`;
 const currentLocationLabel = (address: string) => address.split(',')[0]?.trim() || address;
+const toLocalDateValue = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const HomePage = () => {
-  const { user, isAuthLoaded, logout } = useAuth();
+  const { user, isAuthLoaded } = useAuth();
   const history = useHistory();
   const location = useLocation<{ pickup?: Location; dropoff?: Location }>();
 
   const [pickup, setPickup] = useState<Location | null>(null);
   const [dropoff, setDropoff] = useState<Location | null>(null);
   const [passengerCount, setPassengerCount] = useState<number>(1);
+  const [departureDate, setDepartureDate] = useState(() => toLocalDateValue(new Date()));
   const [dismissedProfilePrompt, setDismissedProfilePrompt] = useState(false);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
@@ -97,7 +102,8 @@ const HomePage = () => {
   };
 
   const handleFindDrivers = () => {
-    history.push('/find-ride', { pickup, dropoff, passengerCount });
+    const departureTime = departureDate ? new Date(`${departureDate}T00:00:00`).toISOString() : undefined;
+    history.push('/find-ride', { pickup, dropoff, passengerCount, departureTime });
   };
 
   const handleDetectCurrentLocation = async () => {
@@ -185,24 +191,22 @@ const HomePage = () => {
   return (
     <div className="app-scroll-screen app-bottom-nav-safe bg-gray-50">
       {/* Orange Header Section */}
-      <div className="relative pt-10 pb-0 px-4 overflow-hidden min-h-[200px]" style={{ background: 'linear-gradient(160deg, #e8521a 0%, #f07840 40%, #f8b49a 75%, #fde8dc 100%)' }}>
-        {/* Top Row: Notifications & Profile */}
+      <div className="relative px-4 pb-0 pt-[calc(env(safe-area-inset-top)+24px)] overflow-hidden min-h-[200px]" style={{ background: 'linear-gradient(160deg, #e8521a 0%, #f07840 40%, #f8b49a 75%, #fde8dc 100%)' }}>
+        {/* Top Row: Profile */}
         <div className="flex justify-end items-center gap-3 mb-3 relative z-10">
           <button
-            onClick={() => history.push('/notifications')}
-            className="w-10 h-10 bg-white/25 backdrop-blur-sm rounded-xl flex items-center justify-center relative shadow transition active:scale-95"
-            aria-label="Open notifications"
+            onClick={() => history.push('/profile')}
+            className="h-12 w-12 overflow-hidden rounded-full border-2 border-white/70 bg-white/25 shadow-lg backdrop-blur-sm transition active:scale-95"
+            aria-label="Open profile"
             type="button"
           >
-            <Bell className="w-5 h-5 text-white" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
-          </button>
-          <button
-            onClick={logout}
-            className="min-w-[72px] h-10 px-3 rounded-xl border-2 border-white/30 text-white text-sm font-semibold bg-white/10"
-            type="button"
-          >
-            Logout
+            {user?.avatarUrl ? (
+              <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center text-base font-bold text-white">
+                {(user?.firstName || user?.fullName || 'R').slice(0, 1).toUpperCase()}
+              </span>
+            )}
           </button>
         </div>
 
@@ -337,6 +341,17 @@ const HomePage = () => {
                 </button>
               </div>
             </div>
+            <label className="flex items-center gap-3 rounded-xl bg-gray-50 p-3">
+              <Clock className="w-5 h-5 text-primary-500" />
+              <span className="text-sm font-medium text-gray-700">Date</span>
+              <input
+                type="date"
+                value={departureDate}
+                min={toLocalDateValue(new Date())}
+                onChange={(event) => setDepartureDate(event.target.value)}
+                className="ml-auto min-w-0 bg-transparent text-right text-sm font-semibold text-gray-900 outline-none [color-scheme:light]"
+              />
+            </label>
           </div>
 
           {/* Find Drivers Button */}
@@ -347,10 +362,10 @@ const HomePage = () => {
             Find Drivers
           </button>
           <button
-            onClick={() => history.push('/rides/history')}
+            onClick={() => history.push('/rides')}
             className="mt-3 w-full py-3 border-2 border-primary-200 text-primary-700 font-semibold rounded-xl hover:border-primary-300 hover:bg-primary-50 transition-colors"
           >
-            View My Published Rides
+            View Your Rides
           </button>
         </div>
 
@@ -424,7 +439,7 @@ const HomePage = () => {
           </button>
 
           <button
-            onClick={() => history.push('/find-ride')}
+            onClick={handleFindDrivers}
             className="flex flex-col items-center gap-2"
           >
             <div className="w-14 h-14 bg-primary-100 rounded-2xl flex items-center justify-center">
@@ -447,13 +462,13 @@ const HomePage = () => {
           </button>
 
           <button
-            onClick={() => history.push('/rides/history')}
+            onClick={() => history.push('/rides')}
             className="flex flex-col items-center gap-2"
           >
             <div className="w-14 h-14 bg-primary-100 rounded-2xl flex items-center justify-center">
               <Clock className="w-7 h-7 text-primary-600" />
             </div>
-            <span className="text-xs font-medium text-gray-700 text-center leading-tight">History</span>
+            <span className="text-xs font-medium text-gray-700 text-center leading-tight">Your Rides</span>
           </button>
         </div>
 
@@ -487,7 +502,7 @@ const HomePage = () => {
 
         {/* Promotional Banner */}
         <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-5 text-white mb-6">
-          <h3 className="text-xl font-bold mb-2">Earn whilst you travel</h3>
+          <h3 className="text-xl font-bold mb-2">Earn while you travel</h3>
           <p className="text-primary-100 text-sm mb-4">
             Get 2x points on your first 3 rides this month
           </p>
@@ -499,17 +514,6 @@ const HomePage = () => {
           </button>
         </div>
       </div>
-
-      {/* Floating Help Button */}
-      <button
-        onClick={() => history.push('/support')}
-        className="fixed bottom-24 right-4 z-30 flex items-center gap-2 rounded-full bg-primary-500 px-4 py-3 text-white shadow-lg shadow-primary-500/30 transition-all active:scale-95"
-        style={{ bottom: 'calc(env(safe-area-inset-bottom) + 92px)' }}
-        type="button"
-      >
-        <HelpCircle className="h-5 w-5" />
-        <span className="text-sm font-semibold">Help</span>
-      </button>
 
       {showProfilePrompt && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-900/45 px-4 pb-8 sm:items-center sm:pb-0">

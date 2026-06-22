@@ -4,10 +4,8 @@ import type {
   RideCreateParams,
   RideParticipant,
 } from '../types';
-
-const JOIN_RIDE_POINTS = 30;
-const PUBLISH_RIDE_POINTS = 50;
-const DEFAULT_RIDE_DURATION_MINUTES = 60;
+import { RIDE_REWARD_POINTS, type RideRewardAction } from './rewards/rules';
+import { getTimeAdjustedRideStatus } from './rides/lifecycle';
 
 class RideService {
   async createRide(params: RideCreateParams): Promise<{ success: boolean; ride?: Ride; error?: string }> {
@@ -44,12 +42,10 @@ class RideService {
         this.createReward({
           userId: params.userId,
           rideId: ride.id,
-          points: PUBLISH_RIDE_POINTS,
           action: 'publish_ride',
           description: `Published a ride from ${ride.startLocation} to ${ride.endLocation}`,
         }),
         this.updateProfileStats(params.userId, {
-          pointsDelta: PUBLISH_RIDE_POINTS,
           ridesPublishedDelta: 1,
         }),
       ]);
@@ -164,12 +160,10 @@ class RideService {
         this.createReward({
           userId: params.userId,
           rideId: params.rideId,
-          points: JOIN_RIDE_POINTS,
           action: 'join_ride',
           description: `Joined a ride from ${rideRow.start_location} to ${rideRow.end_location}`,
         }),
         this.updateProfileStats(params.userId, {
-          pointsDelta: JOIN_RIDE_POINTS,
           ridesTakenDelta: 1,
         }),
         this.createNotification({
@@ -284,6 +278,35 @@ class RideService {
       return { success: true, joined: true, participant: this.mapRideParticipant(data) };
     } catch (error) {
       return { success: false, joined: false, error: 'An unexpected error occurred' };
+    }
+  }
+
+  async getJoinedRideIds(
+    rideIds: string[],
+    userId: string,
+  ): Promise<{ success: boolean; rideIds?: string[]; error?: string }> {
+    if (rideIds.length === 0) {
+      return { success: true, rideIds: [] };
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('ride_participants')
+        .select('ride_id')
+        .eq('user_id', userId)
+        .eq('status', 'joined')
+        .in('ride_id', rideIds);
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return {
+        success: true,
+        rideIds: (data || []).map((row: any) => row.ride_id).filter(Boolean),
+      };
+    } catch {
+      return { success: false, error: 'An unexpected error occurred' };
     }
   }
 
@@ -546,35 +569,7 @@ class RideService {
   }
 
   private getTimeAdjustedStatus(ride: Ride, now = new Date()): Ride['status'] {
-    if (ride.status === 'completed' || ride.status === 'cancelled') {
-      return ride.status;
-    }
-
-    const startTime = new Date(ride.date);
-    if (Number.isNaN(startTime.getTime())) {
-      return ride.status;
-    }
-
-    const durationMinutes =
-      typeof ride.duration === 'number' && ride.duration > 0
-        ? ride.duration
-        : DEFAULT_RIDE_DURATION_MINUTES;
-    const endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
-
-    if (ride.status === 'active' && now >= endTime) {
-      return 'completed';
-    }
-
-    if (ride.status === 'pending') {
-      if (now >= endTime) {
-        return 'completed';
-      }
-      if (now >= startTime) {
-        return 'active';
-      }
-    }
-
-    return ride.status;
+    return getTimeAdjustedRideStatus(ride, now);
   }
 
   private async reconcileRideTiming(ride: Ride): Promise<Ride> {
@@ -640,22 +635,24 @@ class RideService {
   private async createReward(params: {
     userId: string;
     rideId: string;
-    points: number;
-    action: 'publish_ride' | 'join_ride';
+    action: RideRewardAction;
     description: string;
   }) {
-    const { error } = await supabase
-      .from('rewards')
-      .insert({
-        user_id: params.userId,
-        ride_id: params.rideId,
-        points: params.points,
+    const { error } = await supabase.functions.invoke('ride-rewards', {
+      body: {
+        userId: params.userId,
+        rideId: params.rideId,
         action: params.action,
         description: params.description,
-      });
+        eventKey: `${params.action}:${params.rideId}:${params.userId}`,
+        metadata: {
+          expected_points: RIDE_REWARD_POINTS,
+        },
+      },
+    });
 
     if (error) {
-      console.warn('Reward write failed:', error.message);
+      console.warn('Reward endpoint failed:', error.message);
     }
   }
 

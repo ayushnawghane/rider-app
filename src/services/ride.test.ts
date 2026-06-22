@@ -2,11 +2,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   from: vi.fn(),
+  functionsInvoke: vi.fn(),
 }));
 
 vi.mock('../lib/supabase', () => ({
   supabase: {
     from: mocks.from,
+    functions: {
+      invoke: mocks.functionsInvoke,
+    },
   },
 }));
 
@@ -53,6 +57,8 @@ const rideRow = {
 describe('rideService', () => {
   beforeEach(() => {
     mocks.from.mockReset();
+    mocks.functionsInvoke.mockReset();
+    mocks.functionsInvoke.mockResolvedValue({ data: { success: true, pointsAwarded: 50 }, error: null });
   });
 
   it('creates rides with safe default carpool fields', async () => {
@@ -141,7 +147,6 @@ describe('rideService', () => {
       }),
     });
     const bookingsQuery = createQuery();
-    const rewardsQuery = createQuery();
     const profilesQuery = createQuery({
       maybeSingle: vi.fn().mockResolvedValue({
         data: {
@@ -159,7 +164,6 @@ describe('rideService', () => {
         rides: ridesQuery,
         ride_participants: participantsQuery,
         bookings: bookingsQuery,
-        rewards: rewardsQuery,
         profiles: profilesQuery,
         notifications: notificationsQuery,
       })[table] || createQuery()
@@ -190,14 +194,15 @@ describe('rideService', () => {
       total_price: 150,
       status: 'pending',
     }));
-    expect(rewardsQuery.insert).toHaveBeenCalledWith(expect.objectContaining({
-      user_id: 'passenger-1',
-      points: 30,
-      action: 'join_ride',
-      ride_id: 'ride-1',
+    expect(mocks.functionsInvoke).toHaveBeenCalledWith('ride-rewards', expect.objectContaining({
+      body: expect.objectContaining({
+        userId: 'passenger-1',
+        rideId: 'ride-1',
+        action: 'join_ride',
+      }),
     }));
     expect(profilesQuery.update).toHaveBeenCalledWith(expect.objectContaining({
-      total_points: 50,
+      total_points: 20,
       rides_taken: 3,
     }));
     expect(notificationsQuery.insert).toHaveBeenCalledTimes(2);
