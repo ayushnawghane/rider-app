@@ -15,6 +15,9 @@
     "android": "npm run android:sync && npx cap open android",
     "test.e2e": "cypress run",
     "test.unit": "vitest run",
+    "test:ride-chat-cleanup": "node scripts/test-ride-chat-cleanup.mjs",
+    "test:ride-lifecycle": "node scripts/test-ride-lifecycle.mjs",
+    "test:ride-rewards": "node scripts/test-ride-rewards.mjs",
     "lint": "eslint"
   },
   "dependencies": {

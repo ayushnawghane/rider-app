@@ -27,6 +27,7 @@ interface FindRideLocationState {
   pickup?: SearchLocation;
   dropoff?: SearchLocation;
   passengerCount?: number;
+  departureTime?: string;
 }
 
 const FindRidePage = () => {
@@ -38,6 +39,8 @@ const FindRidePage = () => {
   const [dropoffLocation, setDropoffLocation] = useState<SearchLocation | null>(null);
   const [passengerCount, setPassengerCount] = useState<number>(1);
   const [availableRides, setAvailableRides] = useState<PublishedRide[]>([]);
+  const [joinedRideIds, setJoinedRideIds] = useState<Set<string>>(new Set());
+  const [departureTime, setDepartureTime] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -52,6 +55,7 @@ const FindRidePage = () => {
       if (state.pickup) setPickupLocation(state.pickup);
       if (state.dropoff) setDropoffLocation(state.dropoff);
       if (state.passengerCount) setPassengerCount(state.passengerCount);
+      if (state.departureTime) setDepartureTime(state.departureTime);
     }
   }, [location.state]);
 
@@ -67,7 +71,7 @@ const FindRidePage = () => {
       const result = await rideService.searchRides({
         startLocation: startQuery,
         endLocation: endQuery,
-        departureTime: new Date().toISOString(),
+        departureTime: departureTime || new Date().toISOString(),
       });
 
       if (requestId !== searchRequestIdRef.current) {
@@ -110,12 +114,21 @@ const FindRidePage = () => {
       }));
 
       setAvailableRides(rides);
+
+      if (user?.id) {
+        const participation = await rideService.getJoinedRideIds(rides.map((ride) => ride.id), user.id);
+        if (requestId === searchRequestIdRef.current && participation.success) {
+          setJoinedRideIds(new Set(participation.rideIds || []));
+        }
+      } else {
+        setJoinedRideIds(new Set());
+      }
     } finally {
       if (requestId === searchRequestIdRef.current) {
         setLoading(false);
       }
     }
-  }, [dropoffLocation, pickupLocation, user?.id]);
+  }, [departureTime, dropoffLocation, pickupLocation, user?.id]);
 
   useEffect(() => {
     if (!pickupLocation || !dropoffLocation) return;
@@ -128,6 +141,7 @@ const FindRidePage = () => {
   }, [dropoffLocation, handleSearch, passengerCount, pickupLocation]);
 
   const handleBookRide = (ride: PublishedRide) => {
+    if (joinedRideIds.has(ride.id)) return;
     history.push(`/rides/detail/${ride.id}`, { ride, passengerCount });
   };
 
@@ -292,11 +306,13 @@ const FindRidePage = () => {
 
           {/* Ride Cards */}
           <div className="space-y-4 pb-24">
-            {availableRides.map((ride) => (
-              <AppCard
-                key={ride.id}
-                className="p-5"
-              >
+            {availableRides.map((ride) => {
+              const isBooked = joinedRideIds.has(ride.id);
+              return (
+                <AppCard
+                  key={ride.id}
+                  className="p-5"
+                >
                 {/* Driver Info */}
                 <div className="flex items-start gap-4 mb-4">
                   <div className="relative">
@@ -376,12 +392,14 @@ const FindRidePage = () => {
                 <Button
                   onClick={() => handleBookRide(ride)}
                   expand="block"
+                  disabled={isBooked}
                 >
-                  Book {passengerCount} Seat{passengerCount > 1 ? 's' : ''}
-                  <ChevronRight className="w-5 h-5" />
+                  {isBooked ? 'Booked' : `Book ${passengerCount} Seat${passengerCount > 1 ? 's' : ''}`}
+                  {!isBooked && <ChevronRight className="w-5 h-5" />}
                 </Button>
-              </AppCard>
-            ))}
+                </AppCard>
+              );
+            })}
           </div>
         </div>
       )}

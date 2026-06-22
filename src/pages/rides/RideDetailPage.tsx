@@ -135,7 +135,7 @@ const RideDetailPage = () => {
       }
 
       setIsJoined(true);
-      setJoinSuccessMessage('Ride joined successfully. You earned +30 reward points.');
+      setJoinSuccessMessage('Ride joined successfully. You earned +50 reward points.');
     } finally {
       setIsJoining(false);
     }
@@ -143,8 +143,8 @@ const RideDetailPage = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      active: { icon: CheckCircle2, tone: 'active', label: 'Active' },
-      pending: { icon: AlertTriangle, tone: 'pending', label: 'Pending' },
+      active: { icon: CheckCircle2, tone: 'active', label: 'Ride Confirmed' },
+      pending: { icon: AlertTriangle, tone: 'pending', label: 'Awaiting Departure' },
       completed: { icon: CheckCircle2, tone: 'completed', label: 'Completed' },
       cancelled: { icon: CheckCircle2, tone: 'cancelled', label: 'Cancelled' },
     };
@@ -344,7 +344,7 @@ const RideDetailPage = () => {
                       ? 'Joining Ride...'
                       : `Join Ride (${passengerCount} Seat${passengerCount > 1 ? 's' : ''})`}
                 </Button>
-                <p className="text-xs text-gray-500 mt-2">Earn +30 points when you join this ride.</p>
+                <p className="text-xs text-gray-500 mt-2">Earn +50 points when you join this ride.</p>
                 {joinError && <p className="text-xs text-red-600 mt-1">{joinError}</p>}
                 {joinSuccessMessage && <p className="text-xs text-green-600 mt-1">{joinSuccessMessage}</p>}
               </AppCard>

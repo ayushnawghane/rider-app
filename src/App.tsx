@@ -28,6 +28,7 @@ import ProfilePage from './pages/profile/ProfilePage';
 import NotificationsPage from './pages/profile/NotificationsPage';
 import SettingsPage from './pages/profile/SettingsPage';
 import RewardsPage from './pages/rewards/RewardsPage';
+import InboxPage from './pages/inbox/InboxPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminListPage from './pages/admin/AdminListPage';
 import SelectLocationPage from './pages/common/SelectLocationPage';
@@ -60,6 +61,7 @@ const RideHistoryScreen = withIonPage(RideHistoryPage);
 const SelectLocationScreen = withIonPage(SelectLocationPage);
 const EditRideScreen = withIonPage(EditRidePage);
 const RewardsScreen = withIonPage(RewardsPage);
+const InboxScreen = withIonPage(InboxPage);
 const SafetyScreen = withIonPage(SafetyPage);
 const ProfileScreen = withIonPage(ProfilePage);
 const SettingsScreen = withIonPage(SettingsPage);
@@ -109,6 +111,7 @@ const AppRoutes: React.FC = () => {
         <Route exact path="/upload-ride" render={renderPrivate(UploadRideScreen)} />
         <Route exact path="/publish-ride" render={renderPrivate(PublishRideScreen)} />
         <Route exact path="/find-ride" render={renderPrivate(FindRideScreen)} />
+        <Route exact path="/rides" render={renderPrivate(RideHistoryScreen)} />
         <Route exact path="/select-location" render={renderPrivate(SelectLocationScreen)} />
         <Route exact path="/rides/history" render={renderPrivate(RideHistoryScreen)} />
         <Route exact path="/rides/edit/:id" render={renderPrivate(EditRideScreen)} />
@@ -117,6 +120,7 @@ const AppRoutes: React.FC = () => {
         <Route exact path="/rides/active/:id" render={renderPrivate(ActiveRidePage)} />
         <Route exact path="/trips/tracking/:id" render={renderPrivate(TripTrackingScreen)} />
         <Route exact path="/rewards" render={renderPrivate(RewardsScreen)} />
+        <Route exact path="/inbox" render={renderPrivate(InboxScreen)} />
         <Route exact path="/support" render={renderPrivate(SupportPage)} />
         <Route exact path="/support/dispute/new" render={renderPrivate(NewDisputePage)} />
         <Route exact path="/support/dispute/:id([0-9a-fA-F-]{36})" render={renderPrivate(DisputeChatPage)} />
