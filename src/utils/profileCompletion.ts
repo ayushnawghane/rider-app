@@ -62,7 +62,7 @@ export const getProfileCompletion = (user?: User | null) => {
     return {
       percent: 0,
       complete: false,
-      missing: ['Contact details', 'Ride preferences', 'Vehicle details'],
+      missing: ['Contact details', 'Ride preferences'],
     };
   }
 
@@ -86,14 +86,6 @@ export const getProfileCompletion = (user?: User | null) => {
     {
       complete: typeof user.notificationPreferences === 'boolean',
       label: 'Notification preference',
-    },
-    {
-      complete: Boolean(user.vehicleDetails?.vehicleType?.trim()),
-      label: 'Vehicle type',
-    },
-    {
-      complete: Boolean(user.vehicleDetails?.vehicleNumber?.trim()),
-      label: 'Vehicle number',
     },
   ];
 

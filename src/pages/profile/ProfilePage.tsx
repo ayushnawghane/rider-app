@@ -33,7 +33,7 @@ interface ProfilePageLocationState {
 const PLACEHOLDER_PROFILE_EMAIL_REGEX = /^phone-[^@]+@riderapp\.local$/i;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^\+?[1-9]\d{7,14}$/;
-const SETUP_STEPS = ['Contact', 'Preferences', 'Vehicle'];
+const SETUP_STEPS = ['Contact', 'Preferences'];
 
 const isSystemGeneratedEmail = (value?: string | null) => {
   const email = value?.trim().toLowerCase() || '';
@@ -181,42 +181,7 @@ const ProfilePage = () => {
     setSetupStep((step) => Math.min(step + 1, SETUP_STEPS.length - 1));
   };
 
-  const handleCompleteSetup = async () => {
-    if (!user) return;
-
-    try {
-      setSaveError('');
-      setLoading(true);
-      const saved = await saveProfileDetails();
-      if (!saved) return;
-
-      const hasVehicleDetails = [
-        vehicleMake,
-        vehicleModel,
-        vehicleNumber,
-        vehicleType,
-        vehicleColor,
-      ].some((value) => value.trim());
-
-      if (hasVehicleDetails) {
-        await vehicleService.saveVehicleDetails(user.id, {
-          make: vehicleMake.trim() || undefined,
-          model: vehicleModel.trim() || undefined,
-          vehicleNumber: vehicleNumber.trim().toUpperCase() || undefined,
-          vehicleType: vehicleType.trim() || undefined,
-          color: vehicleColor.trim() || undefined,
-        });
-      }
-
-      await refreshUser();
-      history.replace('/home');
-    } catch (setupError) {
-      console.error('Failed to complete setup:', setupError);
-      setSaveError('Failed to finish setup. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleCompleteSetup = handleSave;
 
   const handleAvatarButtonClick = () => {
     setSaveError('');
@@ -354,7 +319,7 @@ const ProfilePage = () => {
               Complete your profile
             </h1>
             <p className="mt-3 text-base text-white/90 sm:text-lg">
-              Finish the required details to book rides. Add vehicle details if you want to publish rides.
+              Finish the required details to book rides. Vehicle details are added when you publish your first ride.
             </p>
           </div>
         </div>
@@ -368,7 +333,7 @@ const ProfilePage = () => {
                 </p>
                 <p className="text-sm font-semibold text-orange-600">{currentStepLabel}</p>
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {SETUP_STEPS.map((step, index) => (
                   <div
                     key={step}
@@ -456,80 +421,6 @@ const ProfilePage = () => {
                       className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${notifications ? 'left-[22px]' : 'left-0.5'}`}
                     />
                   </button>
-                </div>
-              </div>
-            )}
-
-            {setupStep === 2 && (
-              <div className="space-y-4">
-                <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-orange-900">
-                  <p className="text-sm font-semibold">Required only to publish rides</p>
-                  <p className="mt-1 text-sm text-orange-800">
-                    You can skip this for now and add it later from Profile before sharing a ride.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="block">
-                    <span className="text-xs font-medium text-slate-600">Make</span>
-                    <input
-                      type="text"
-                      value={vehicleMake}
-                      onChange={(event) => setVehicleMake(event.target.value)}
-                      placeholder="Toyota"
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="text-xs font-medium text-slate-600">Model</span>
-                    <input
-                      type="text"
-                      value={vehicleModel}
-                      onChange={(event) => setVehicleModel(event.target.value)}
-                      placeholder="Camry"
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                    />
-                  </label>
-                </div>
-
-                <label className="block">
-                  <span className="text-sm font-medium text-slate-600">Vehicle number</span>
-                  <input
-                    type="text"
-                    value={vehicleNumber}
-                    onChange={(event) => setVehicleNumber(event.target.value.toUpperCase())}
-                    placeholder="MH01AB1234"
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                  />
-                </label>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="block">
-                    <span className="text-xs font-medium text-slate-600">Type</span>
-                    <select
-                      value={vehicleType}
-                      onChange={(event) => setVehicleType(event.target.value)}
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                    >
-                      <option value="">Select type</option>
-                      <option value="Sedan">Sedan</option>
-                      <option value="SUV">SUV</option>
-                      <option value="Hatchback">Hatchback</option>
-                      <option value="Bike">Bike</option>
-                      <option value="Auto">Auto</option>
-                      <option value="Luxury">Luxury</option>
-                    </select>
-                  </label>
-                  <label className="block">
-                    <span className="text-xs font-medium text-slate-600">Color</span>
-                    <input
-                      type="text"
-                      value={vehicleColor}
-                      onChange={(event) => setVehicleColor(event.target.value)}
-                      placeholder="White"
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                    />
-                  </label>
                 </div>
               </div>
             )}

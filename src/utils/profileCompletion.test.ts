@@ -74,11 +74,11 @@ describe('profile completion checks', () => {
     })).toBe(true);
   });
 
-  it('calculates profile completion percentage from contact, preferences, and vehicle details', () => {
+  it('calculates profile completion from contact details and preferences only', () => {
     expect(getProfileCompletion(completeUser)).toMatchObject({
-      percent: 71,
-      complete: false,
-      missing: ['Vehicle type', 'Vehicle number'],
+      percent: 100,
+      complete: true,
+      missing: [],
     });
     expect(getProfileCompletion({
       ...completeUser,

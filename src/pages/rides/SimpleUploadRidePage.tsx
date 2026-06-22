@@ -4,15 +4,15 @@
  */
 
 import { IonContent, IonPage } from '@ionic/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { rideService } from '../../services';
+import { rideService, vehicleService } from '../../services';
 import { MapPin, Calendar, Car, Navigation, CheckCircle2, AlertCircle } from 'lucide-react';
 import { AppCard, PageHeader } from '../../components/ui';
 
 const SimpleUploadRidePage = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const history = useHistory();
   
   const [loading, setLoading] = useState(false);
@@ -23,9 +23,15 @@ const SimpleUploadRidePage = () => {
   const [startTime, setStartTime] = useState('');
   const [startLocation, setStartLocation] = useState('');
   const [endLocation, setEndLocation] = useState('');
-  const [vehicleType, setVehicleType] = useState('economy');
-  const [vehicleNumber, setVehicleNumber] = useState('');
+  const [vehicleType, setVehicleType] = useState(user?.vehicleDetails?.vehicleType || 'economy');
+  const [vehicleNumber, setVehicleNumber] = useState(user?.vehicleDetails?.vehicleNumber || '');
   const [referenceId, setReferenceId] = useState('');
+
+  useEffect(() => {
+    if (!user?.vehicleDetails) return;
+    if (user.vehicleDetails.vehicleType) setVehicleType(user.vehicleDetails.vehicleType);
+    if (user.vehicleDetails.vehicleNumber) setVehicleNumber(user.vehicleDetails.vehicleNumber);
+  }, [user?.vehicleDetails]);
 
   const handleSubmit = async () => {
     if (!startLocation || !endLocation) {
@@ -38,8 +44,28 @@ const SimpleUploadRidePage = () => {
       return;
     }
 
+    const normalizedVehicleNumber = vehicleNumber.trim().toUpperCase();
+    if (!normalizedVehicleNumber) {
+      setError('Please enter your vehicle number');
+      return;
+    }
+
     setLoading(true);
     setError('');
+
+    const vehicleResult = await vehicleService.saveVehicleDetails(user.id, {
+      ...user.vehicleDetails,
+      vehicleType,
+      vehicleNumber: normalizedVehicleNumber,
+    });
+
+    if (!vehicleResult.success) {
+      setError(vehicleResult.error || 'Failed to save vehicle details');
+      setLoading(false);
+      return;
+    }
+
+    await refreshUser();
 
     const result = await rideService.createRide({
       userId: user.id,
@@ -47,7 +73,7 @@ const SimpleUploadRidePage = () => {
       startLocation,
       endLocation,
       vehicleType,
-      vehicleNumber: vehicleNumber || 'UNKNOWN',
+      vehicleNumber: normalizedVehicleNumber,
       referenceId: referenceId || 'N/A',
     });
 
@@ -175,14 +201,14 @@ const SimpleUploadRidePage = () => {
             {/* Vehicle Number */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Vehicle Number <span className="text-gray-400">(Optional)</span>
+                Vehicle Number
               </label>
               <div className="relative">
                 <Car className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
                   value={vehicleNumber}
-                  onChange={(e) => setVehicleNumber(e.target.value)}
+                  onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
                   placeholder="e.g., ABC 1234"
                   className="w-full input pl-10"
                 />

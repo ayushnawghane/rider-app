@@ -44,7 +44,7 @@ const lightFieldClass =
 const buildReferenceId = () => `RIDE-${Date.now().toString(36).toUpperCase()}`;
 
 const PublishRidePage = () => {
-  const { user, isAuthLoaded } = useAuth();
+  const { user, isAuthLoaded, refreshUser } = useAuth();
   const history = useHistory();
   const location = useLocation<PublishRideLocationState>();
 
@@ -202,6 +202,27 @@ const PublishRidePage = () => {
     setIsSubmitting(true);
 
     try {
+      const normalizedVehicleNumber = trimmedVehicleNumber.toUpperCase();
+      const savedVehicle = user.vehicleDetails;
+      const vehicleChanged =
+        savedVehicle?.vehicleType !== vehicleType ||
+        savedVehicle?.vehicleNumber !== normalizedVehicleNumber;
+
+      if (vehicleChanged) {
+        const vehicleResult = await vehicleService.saveVehicleDetails(user.id, {
+          ...savedVehicle,
+          vehicleType,
+          vehicleNumber: normalizedVehicleNumber,
+        });
+
+        if (!vehicleResult.success) {
+          setSubmitError(vehicleResult.error || 'Failed to save vehicle details. Please try again.');
+          return;
+        }
+
+        await refreshUser();
+      }
+
       const result = await rideService.createRide({
         userId: user.id,
         date: parsedDate.toISOString(),
@@ -210,7 +231,7 @@ const PublishRidePage = () => {
         startLocationCoords: { lat: selectedStart.lat, lng: selectedStart.lng },
         endLocationCoords: { lat: selectedEnd.lat, lng: selectedEnd.lng },
         vehicleType,
-        vehicleNumber: vehicleNumber.trim().toUpperCase(),
+        vehicleNumber: normalizedVehicleNumber,
         referenceId: buildReferenceId(),
         availableSeats,
         pricePerSeat,
