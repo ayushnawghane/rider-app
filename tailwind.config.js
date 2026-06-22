@@ -52,7 +52,7 @@ export default {
         },
       },
       fontFamily: {
-        display: ['"Clash Display"', '"Archivo"', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        display: ['var(--font-display)'],
         sans: ['"Inter"', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
       letterSpacing: {
