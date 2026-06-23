@@ -1,20 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import {
-  Search,
-  MapPin,
-  Clock,
-  Users,
-  Plus,
-  Car,
-  Award,
-  ArrowRightLeft,
-  Phone,
-  MessageCircle,
-  Map,
-  Star,
-} from 'lucide-react';
+import { Phone, MessageCircle, Map, Star } from 'lucide-react';
+import AppIcon, { type AppIconName } from '../../components/icons/AppIcon';
 import type { PublishedRide } from '../../types';
 import { locationService, mapsService } from '../../services';
 import { isProfileIncomplete, isProfileNameIncomplete } from '../../utils/profileCompletion';
@@ -251,7 +239,7 @@ const HomePage = () => {
                   aria-label="Use current location"
                   title={locationError || currentLocation?.address || 'Use current location'}
                 >
-                  <MapPin className="h-4 w-4 text-fire-orange" />
+                  <AppIcon name="map-pin" className="h-4 w-4" />
                   <span className="max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap font-display text-sm font-bold text-ink">
                     {isDetectingLocation
                       ? 'Detecting...'
@@ -289,7 +277,7 @@ const HomePage = () => {
               className="relative mb-4 flex w-full items-center rounded-2xl border border-black/10 bg-paper py-3.5 pl-11 pr-4 text-left text-ink/40 transition focus:outline-none focus:ring-2 focus:ring-primary-500 active:scale-[0.99]"
               aria-label="Search destinations"
             >
-              <Search className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-fire-orange" />
+              <AppIcon name="search" className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2" />
               <span className="block truncate font-medium">{dropoff?.address || 'Search destinations...'}</span>
             </button>
 
@@ -315,11 +303,10 @@ const HomePage = () => {
 
               <button
                 onClick={handleSwapLocations}
-                className="mt-5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-glow transition-transform active:scale-90"
-                style={{ background: FIRE }}
+                className="mt-5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-primary-100 bg-white shadow-soft transition-transform active:scale-90"
                 aria-label="Swap locations"
               >
-                <ArrowRightLeft className="h-5 w-5 text-white" />
+                <AppIcon name="swap" className="h-5 w-5" />
               </button>
 
               <div className="min-w-0">
@@ -344,8 +331,8 @@ const HomePage = () => {
             {/* Passengers + Date */}
             <div className="mb-4 space-y-3">
               <div className="flex items-center gap-3 rounded-2xl border border-black/5 bg-paper p-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100">
-                  <Users className="h-5 w-5 text-primary-600" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary-100 bg-white">
+                  <AppIcon name="users" className="h-5 w-5" />
                 </div>
                 <span className="font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">Seats</span>
                 <div className="flex flex-1 items-center justify-end gap-4">
@@ -365,8 +352,8 @@ const HomePage = () => {
                 </div>
               </div>
               <label className="flex items-center gap-3 rounded-2xl border border-black/5 bg-paper p-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100">
-                  <Clock className="h-5 w-5 text-primary-600" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary-100 bg-white">
+                  <AppIcon name="clock" className="h-5 w-5" />
                 </div>
                 <span className="font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">Date</span>
                 <input
@@ -447,15 +434,15 @@ const HomePage = () => {
 
           {/* Quick Actions Grid */}
           <div className="mb-7 grid grid-cols-4 gap-3">
-            {[
-              { onClick: () => history.push('/publish-ride'), label: 'Publish Ride', icon: (<div className="relative"><Car className="h-7 w-7 text-white" /><Plus className="absolute -right-1.5 -top-1.5 h-4 w-4 text-white" /></div>) },
-              { onClick: handleFindDrivers, label: 'Find Ride', icon: (<div className="relative"><Car className="h-7 w-7 text-white" /><MapPin className="absolute -right-1.5 -top-1.5 h-4 w-4 text-white" /></div>) },
-              { onClick: () => history.push('/rewards'), label: 'Rewards', icon: (<Award className="h-7 w-7 text-white" />) },
-              { onClick: () => history.push('/rides'), label: 'Your Rides', icon: (<Clock className="h-7 w-7 text-white" />) },
-            ].map((action) => (
+            {([
+              { onClick: () => history.push('/publish-ride'), label: 'Publish Ride', name: 'car' },
+              { onClick: handleFindDrivers, label: 'Find Ride', name: 'search' },
+              { onClick: () => history.push('/rewards'), label: 'Rewards', name: 'award' },
+              { onClick: () => history.push('/rides'), label: 'Your Rides', name: 'route' },
+            ] as { onClick: () => void; label: string; name: AppIconName }[]).map((action) => (
               <button key={action.label} onClick={action.onClick} className="flex flex-col items-center gap-2 transition active:scale-95">
-                <div className="grain grain-strong relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-[20px] shadow-glow" style={{ background: FIRE }}>
-                  {action.icon}
+                <div className="flex h-14 w-14 items-center justify-center rounded-[20px] border border-primary-100 bg-white shadow-soft">
+                  <AppIcon name={action.name} className="h-8 w-8" />
                 </div>
                 <span className="text-center font-display text-[11px] font-bold leading-tight text-ink/70">{action.label}</span>
               </button>
