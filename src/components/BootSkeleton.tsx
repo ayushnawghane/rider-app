@@ -1,59 +1,41 @@
 import React from 'react';
+import Aurora from './ui/Aurora';
 import Skeleton from './Skeleton';
 
 /**
- * App-shaped skeleton shown while the session/auth bootstraps — replaces the
- * old full-screen spinner. Mimics the home chrome so the app feels like it's
- * assembling rather than blocking.
+ * Branded loading screen shown while the session/auth bootstraps. Mirrors the
+ * login aesthetic — grainy orange aura on white, the Blinkcar mark, and a
+ * glassy card with skeleton placeholders (no spinner).
  */
 const BootSkeleton: React.FC = () => {
   return (
-    <div className="fixed inset-0 z-[60] overflow-hidden" style={{ background: 'var(--bg)' }}>
-      {/* Header band */}
-      <div className="aurora-golden grain relative h-[210px] rounded-b-[36px] px-5 pt-14">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <Skeleton variant="text" width="90px" height="12px" />
-            <Skeleton variant="text" width="150px" height="30px" />
-          </div>
-          <Skeleton variant="circular" width="44px" height="44px" />
-        </div>
-      </div>
-
-      {/* Floating search card */}
-      <div className="-mt-6 px-5">
-        <div className="glass rounded-3xl p-4 shadow-soft">
-          <Skeleton variant="rounded" height="48px" className="mb-4" />
-          <div className="grid grid-cols-2 gap-3">
-            <Skeleton variant="rounded" height="56px" />
-            <Skeleton variant="rounded" height="56px" />
-          </div>
-          <Skeleton variant="rounded" height="52px" className="mt-4" />
-        </div>
-      </div>
-
-      {/* Quick actions */}
-      <div className="mt-6 grid grid-cols-4 gap-3 px-5">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="flex flex-col items-center gap-2">
-            <Skeleton variant="rounded" width="56px" height="56px" />
-            <Skeleton variant="text" width="70%" height="10px" />
-          </div>
-        ))}
-      </div>
-
-      {/* Row of cards */}
-      <div className="mt-7 px-5">
-        <Skeleton variant="text" width="140px" height="22px" className="mb-3" />
-        <div className="flex gap-4 overflow-hidden">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="w-40 shrink-0">
-              <Skeleton variant="rounded" height="112px" className="mb-2" />
-              <Skeleton variant="text" width="60%" height="14px" />
+    <div className="fixed inset-0 z-[60]">
+      <Aurora variant="sunrise" grain="strong" className="min-h-screen">
+        <div className="flex min-h-screen w-full items-center justify-center px-5 py-10 app-top-safe">
+          <div className="w-full max-w-sm rounded-[32px] border border-white/60 bg-white/35 p-6 shadow-strong backdrop-blur-sm sm:p-7">
+            {/* Brand */}
+            <div className="mb-7 flex flex-col items-center text-center">
+              <img
+                src="/logo-mark.png"
+                alt="Blinkcar"
+                className="mb-3 h-14 w-14 animate-pulse rounded-[20px] object-cover shadow-glow"
+              />
+              <span className="font-display text-sm font-extrabold lowercase tracking-tight text-fire-orange">
+                blinkcar
+              </span>
             </div>
-          ))}
+
+            {/* Form placeholders */}
+            <div className="space-y-4">
+              <Skeleton variant="rounded" height="58px" />
+              <Skeleton variant="rounded" height="58px" />
+              <div className="my-5 h-px bg-black/10" />
+              <Skeleton variant="rounded" height="52px" />
+              <Skeleton variant="rounded" height="52px" />
+            </div>
+          </div>
         </div>
-      </div>
+      </Aurora>
     </div>
   );
 };
