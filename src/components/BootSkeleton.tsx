@@ -20,7 +20,7 @@ const BootSkeleton: React.FC = () => {
                 alt="Blinkcar"
                 className="mb-3 h-14 w-14 animate-pulse rounded-[20px] object-cover shadow-glow"
               />
-              <span className="font-display text-sm font-extrabold lowercase tracking-tight text-fire-orange">
+              <span className="font-display text-[11px] font-extrabold lowercase tracking-tight text-fire-orange">
                 blinkcar
               </span>
             </div>

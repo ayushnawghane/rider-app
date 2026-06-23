@@ -72,13 +72,13 @@ const Aurora: React.FC<AuroraProps> = ({
       { c: 'var(--hot-pink)', pos: 'bottom-[2%] left-[2%] h-[58%] w-[58%]', a: drift3, o: 0.5 },
       { c: 'var(--fire-red)', pos: 'top-[38%] left-[40%] h-[34%] w-[34%]', a: drift2, o: 0.4 },
     ],
-    // A big, bold warm orange/red/yellow orb on white — no pink (ref aura).
+    // A big, bold warm orange/amber/gold orb on white — no pink, no salmon.
     sunrise: [
       { c: 'var(--fire-orange)', pos: 'top-[14%] left-[6%] h-[88%] w-[90%]', a: drift, o: 1 },
-      { c: 'var(--fire-amber)', pos: 'top-[30%] left-[20%] h-[72%] w-[72%]', a: drift2, o: 0.9 },
+      { c: 'var(--fire-amber)', pos: 'top-[30%] left-[20%] h-[72%] w-[72%]', a: drift2, o: 0.92 },
       { c: 'var(--fire-yellow)', pos: 'top-[8%] left-[28%] h-[54%] w-[66%]', a: drift3, o: 0.95 },
-      { c: 'var(--fire-red)', pos: 'top-[28%] left-[-2%] h-[54%] w-[54%]', a: drift, o: 0.88 },
-      { c: 'var(--fire-glow)', pos: 'top-[20%] left-[18%] h-[74%] w-[74%]', a: drift2, o: 0.7 },
+      { c: 'var(--fire-orange)', pos: 'top-[28%] left-[-2%] h-[54%] w-[54%]', a: drift, o: 0.9 },
+      { c: 'var(--fire-gold)', pos: 'top-[20%] left-[18%] h-[74%] w-[74%]', a: drift2, o: 0.7 },
     ],
   };
   const blooms = bloomsByVariant[variant];
