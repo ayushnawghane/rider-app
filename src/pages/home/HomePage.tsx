@@ -488,22 +488,20 @@ const HomePage = () => {
           </div>
 
           {/* Promotional Banner */}
-          <div
-            className="grain grain-strong relative mb-6 overflow-hidden rounded-[28px] p-5 text-white shadow-glow"
-            style={{ background: 'linear-gradient(135deg, #FF3D00 0%, #FF6B00 55%, #FFB300 115%)' }}
-          >
-            <div className="relative z-10 flex items-center gap-4">
+          <div className="relative mb-6 overflow-hidden rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
+            <div className="flex items-center gap-4">
               <div className="flex-1">
-                <h3 className="mb-1.5 font-display text-2xl font-extrabold leading-[0.95] tracking-tight">Earn while<br />you travel</h3>
-                <p className="mb-4 text-sm font-medium text-white/85">Get 2x points on your first 3 rides this month</p>
+                <h3 className="mb-1.5 font-display text-2xl font-extrabold leading-[0.95] tracking-tight text-ink">Earn while<br />you travel</h3>
+                <p className="mb-4 text-sm font-medium text-ink/55">Get 2x points on your first 3 rides this month</p>
                 <button
                   onClick={() => history.push('/rewards')}
-                  className="rounded-2xl bg-white px-5 py-2.5 font-display text-sm font-bold text-primary-600 transition hover:bg-paper active:scale-95"
+                  className="rounded-2xl px-5 py-2.5 font-display text-sm font-bold text-white shadow-glow transition hover:brightness-105 active:scale-95"
+                  style={{ background: FIRE }}
                 >
                   See Rewards
                 </button>
               </div>
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white/90 shadow-lg">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
                 <img src="/icons/award.png" alt="" aria-hidden className="h-12 w-12" />
               </div>
             </div>

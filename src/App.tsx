@@ -5,6 +5,7 @@ import { Redirect, Route } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import BootSkeleton from './components/BootSkeleton';
+import HomeSkeleton from './components/HomeSkeleton';
 import SplashScreen from './components/SplashScreen';
 import MobileBottomNav from './components/navigation/MobileBottomNav';
 import ProfileCompletionBanner from './components/profile/ProfileCompletionBanner';
@@ -73,6 +74,10 @@ const AppRoutes: React.FC = () => {
   const { user, isAuthLoaded } = useAuth();
   const location = useLocation();
 
+  // Route-aware loading: a home-shaped skeleton for /home, brand loader elsewhere.
+  const isHomePath = location.pathname === '/home' || location.pathname === '/';
+  const privateLoading = isHomePath ? <HomeSkeleton /> : <BootSkeleton />;
+
   const getPostAuthRedirect = () => {
     if (!user) {
       return '/login';
@@ -92,7 +97,7 @@ const AppRoutes: React.FC = () => {
   const renderPrivate = (Component: RoutedComponent) => (props: unknown) => {
     const routeProps = props as Record<string, unknown>;
     if (!isAuthLoaded) {
-      return <BootSkeleton />;
+      return privateLoading;
     }
     if (!user) {
       return <Redirect to="/login" />;
@@ -137,7 +142,7 @@ const AppRoutes: React.FC = () => {
         <Route
           render={() => {
             if (!isAuthLoaded) {
-              return <BootSkeleton />;
+              return privateLoading;
             }
             return <Redirect to={user ? getPostAuthRedirect() : '/login'} />;
           }}
