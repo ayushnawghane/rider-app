@@ -433,44 +433,54 @@ const HomePage = () => {
           )}
 
           {/* Quick Actions Grid */}
-          <div className="mb-7 grid grid-cols-4 gap-3">
-            {([
-              { onClick: () => history.push('/publish-ride'), label: 'Publish Ride', name: 'car' },
-              { onClick: handleFindDrivers, label: 'Find Ride', name: 'search' },
-              { onClick: () => history.push('/rewards'), label: 'Rewards', name: 'award' },
-              { onClick: () => history.push('/rides'), label: 'Your Rides', name: 'route' },
-            ] as { onClick: () => void; label: string; name: AppIconName }[]).map((action) => (
-              <button key={action.label} onClick={action.onClick} className="flex flex-col items-center gap-2 transition active:scale-95">
-                <div className="flex h-14 w-14 items-center justify-center rounded-[20px] border border-primary-100 bg-white shadow-soft">
-                  <AppIcon name={action.name} className="h-8 w-8" />
-                </div>
-                <span className="text-center font-display text-[11px] font-bold leading-tight text-ink/70">{action.label}</span>
-              </button>
-            ))}
+          <div className="mb-7">
+            <h2 className="mb-3 font-display text-lg font-extrabold tracking-tight text-ink">Quick actions</h2>
+            <div className="grid grid-cols-4 gap-3">
+              {([
+                { onClick: () => history.push('/publish-ride'), label: 'Publish Ride', name: 'car' },
+                { onClick: handleFindDrivers, label: 'Find Ride', name: 'search' },
+                { onClick: () => history.push('/rewards'), label: 'Rewards', name: 'award' },
+                { onClick: () => history.push('/rides'), label: 'Your Rides', name: 'route' },
+              ] as { onClick: () => void; label: string; name: AppIconName }[]).map((action) => (
+                <button key={action.label} onClick={action.onClick} className="flex flex-col items-center gap-2 transition active:scale-95">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-[22px] border border-primary-100/80 bg-gradient-to-br from-primary-50 to-white shadow-soft">
+                    <AppIcon name={action.name} className="h-9 w-9" />
+                  </div>
+                  <span className="text-center font-display text-[11px] font-bold leading-tight text-ink/70">{action.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Main Routes Section */}
+          {/* Popular Routes Section */}
           <div className="mb-7">
-            <h2 className="mb-1 font-display text-2xl font-extrabold tracking-tight text-ink">Main Routes</h2>
-            <p className="mb-4 text-sm font-medium text-ink/50">Select the best way to travel</p>
+            <h2 className="mb-1 font-display text-2xl font-extrabold tracking-tight text-ink">Popular routes</h2>
+            <p className="mb-4 text-sm font-medium text-ink/50">Top picks for your next trip</p>
 
             <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 scrollbar-hide">
               {popularRoutes.map((route) => (
                 <button
                   key={route.city}
                   type="button"
-                  className="w-40 flex-shrink-0 rounded-[24px] text-left transition active:scale-95"
+                  className="w-44 flex-shrink-0 overflow-hidden rounded-[26px] border border-black/5 bg-white text-left shadow-soft transition active:scale-95"
                   onClick={() => handlePopularRouteSelect(route)}
                   aria-label={`Find rides to ${route.city}`}
                 >
-                  <div className="relative mb-2 h-28 w-full overflow-hidden rounded-[24px] shadow-soft">
+                  <div className="relative h-32 w-full overflow-hidden">
                     <img src={route.image} alt={route.city} className="h-full w-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent" />
-                    <h3 className="absolute bottom-2 left-3 font-display text-lg font-bold text-white drop-shadow">{route.city}</h3>
+                    <div className="absolute inset-0 bg-gradient-to-t from-ink/65 via-transparent to-transparent" />
+                    <div className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-white/85 py-1 pl-1.5 pr-2.5 backdrop-blur-sm">
+                      <AppIcon name="map-pin" className="h-3.5 w-3.5" />
+                      <span className="font-display text-[11px] font-bold text-ink">{route.city}</span>
+                    </div>
                   </div>
-                  <p className="px-1 text-xs font-semibold text-ink/50">
-                    Starting at <span className="font-bold text-primary-600">₹{route.startingPrice}</span>
-                  </p>
+                  <div className="flex items-center justify-between px-3.5 py-3">
+                    <div>
+                      <p className="font-display text-[10px] font-bold uppercase tracking-wide text-ink/40">Starting at</p>
+                      <p className="font-display text-xl font-extrabold leading-none text-ink">₹{route.startingPrice}</p>
+                    </div>
+                    <span className="font-display text-xl font-extrabold text-primary-500">→</span>
+                  </div>
                 </button>
               ))}
             </div>
@@ -479,16 +489,23 @@ const HomePage = () => {
           {/* Promotional Banner */}
           <div
             className="grain grain-strong relative mb-6 overflow-hidden rounded-[28px] p-5 text-white shadow-glow"
-            style={{ background: 'linear-gradient(135deg, #FF3D00 0%, #FF6B00 55%, #FF9100 100%)' }}
+            style={{ background: 'linear-gradient(135deg, #FF3D00 0%, #FF6B00 55%, #FFB300 115%)' }}
           >
-            <h3 className="mb-2 font-display text-2xl font-extrabold tracking-tight">Earn while you travel</h3>
-            <p className="mb-4 text-sm font-medium text-white/85">Get 2x points on your first 3 rides this month</p>
-            <button
-              onClick={() => history.push('/rewards')}
-              className="rounded-2xl bg-white px-5 py-2.5 font-display text-sm font-bold text-primary-600 transition hover:bg-paper active:scale-95"
-            >
-              See Rewards
-            </button>
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="flex-1">
+                <h3 className="mb-1.5 font-display text-2xl font-extrabold leading-[0.95] tracking-tight">Earn while<br />you travel</h3>
+                <p className="mb-4 text-sm font-medium text-white/85">Get 2x points on your first 3 rides this month</p>
+                <button
+                  onClick={() => history.push('/rewards')}
+                  className="rounded-2xl bg-white px-5 py-2.5 font-display text-sm font-bold text-primary-600 transition hover:bg-paper active:scale-95"
+                >
+                  See Rewards
+                </button>
+              </div>
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl bg-white/90 shadow-lg">
+                <img src="/icons/award.png" alt="" aria-hidden className="h-12 w-12" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
