@@ -9,6 +9,8 @@ type NavItem = {
   matches: (pathname: string) => boolean;
 };
 
+const FIRE = 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))';
+
 const navItems: NavItem[] = [
   {
     key: 'home',
@@ -34,7 +36,7 @@ const navItems: NavItem[] = [
   },
   {
     key: 'rides',
-    label: 'Your Rides',
+    label: 'Rides',
     path: '/rides',
     Icon: Route,
     matches: (pathname) =>
@@ -75,11 +77,8 @@ const MobileBottomNav = () => {
   };
 
   return (
-    <nav
-      className="app-bottom-nav border-t border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85"
-      aria-label="Primary navigation"
-    >
-      <div className="mx-auto flex max-w-2xl items-center justify-around px-2 py-2">
+    <nav className="app-bottom-nav px-4 pb-3" aria-label="Primary navigation">
+      <div className="mx-auto flex max-w-md items-center justify-between gap-1 rounded-[26px] border border-white/70 bg-white/85 p-2 shadow-strong backdrop-blur-xl">
         {navItems.map(({ key, label, path, Icon, matches }) => {
           const isActive = matches(location.pathname);
 
@@ -88,15 +87,17 @@ const MobileBottomNav = () => {
               key={key}
               type="button"
               onClick={() => handleNavigate(path)}
-              className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2.5 text-xs font-semibold transition ${
-                isActive
-                  ? 'bg-primary-50 text-primary-700'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-              }`}
               aria-current={isActive ? 'page' : undefined}
+              aria-label={label}
+              className={`grain ${isActive ? 'grain-strong' : 'grain-soft'} relative flex items-center justify-center gap-2 overflow-hidden rounded-[18px] py-2.5 transition-all duration-300 active:scale-95 ${
+                isActive ? 'px-4 text-white shadow-glow' : 'px-3 text-ink/40 hover:text-ink/70'
+              }`}
+              style={isActive ? { background: FIRE } : undefined}
             >
-              <Icon className={`h-5 w-5 ${isActive ? 'text-primary-600' : 'text-slate-400'}`} />
-              <span>{label}</span>
+              <Icon className="h-5 w-5 shrink-0" strokeWidth={2.5} />
+              {isActive && (
+                <span className="font-display text-sm font-bold tracking-tight">{label}</span>
+              )}
             </button>
           );
         })}
