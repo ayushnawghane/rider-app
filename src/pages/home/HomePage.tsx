@@ -186,15 +186,16 @@ const HomePage = () => {
 
   return (
     <div className="app-scroll-screen app-bottom-nav-safe relative overflow-hidden bg-white">
-      {/* Grainy orange aura behind the header, fading to white */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[480px]">
+      {/* Grainy orange aura — weighted to the right (behind the car), light on
+          the left so the dark greeting reads cleanly. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[460px]">
         <div
           className="absolute inset-0"
-          style={{ background: 'radial-gradient(125% 78% at 50% -4%, rgba(255,107,0,0.62) 0%, rgba(255,145,0,0.34) 38%, rgba(255,255,255,0) 76%)' }}
+          style={{ background: 'radial-gradient(115% 72% at 84% -8%, rgba(255,107,0,0.5) 0%, rgba(255,160,30,0.2) 44%, rgba(255,255,255,0) 72%)' }}
         />
-        <div className="absolute -right-12 -top-10 h-72 w-72 rounded-full animate-aurora-1" style={{ background: 'radial-gradient(circle, rgba(255,212,59,0.8) 0%, transparent 62%)', filter: 'blur(46px)' }} />
-        <div className="absolute -left-14 top-24 h-64 w-64 rounded-full animate-aurora-2" style={{ background: 'radial-gradient(circle, rgba(255,107,0,0.55) 0%, transparent 62%)', filter: 'blur(48px)' }} />
-        <div className="absolute left-1/3 top-2 h-52 w-52 rounded-full animate-aurora-3" style={{ background: 'radial-gradient(circle, rgba(255,179,0,0.6) 0%, transparent 60%)', filter: 'blur(40px)' }} />
+        <div className="absolute -right-16 -top-12 h-72 w-72 rounded-full animate-aurora-1" style={{ background: 'radial-gradient(circle, rgba(255,200,50,0.78) 0%, transparent 62%)', filter: 'blur(48px)' }} />
+        <div className="absolute right-1/4 top-2 h-52 w-52 rounded-full animate-aurora-3" style={{ background: 'radial-gradient(circle, rgba(255,120,0,0.42) 0%, transparent 62%)', filter: 'blur(46px)' }} />
+        <div className="absolute -left-24 top-16 h-56 w-56 rounded-full animate-aurora-2" style={{ background: 'radial-gradient(circle, rgba(255,185,70,0.28) 0%, transparent 62%)', filter: 'blur(52px)' }} />
       </div>
 
       {/* Content */}
