@@ -269,19 +269,26 @@ class AuthService {
 
   async deleteAccount(userId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      // 1. Delete user data from profiles table
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
+      const { data, error } = await supabase.functions.invoke('delete-account');
 
-      if (profileError) {
-        console.error('Error deleting profile:', profileError.message);
-        return { success: false, error: profileError.message };
+      if (error) {
+        console.error('Error deleting account:', error.message);
+        return { success: false, error: error.message };
       }
 
-      // 2. Sign out the user
-      await this.logout();
+      if (!data?.success || (data.userId && data.userId !== userId)) {
+        return {
+          success: false,
+          error: data?.error || 'Failed to delete account',
+        };
+      }
+
+      // The server has removed the auth identity. Clear any remaining local session.
+      try {
+        await this.logout();
+      } catch (logoutError) {
+        console.warn('Account deleted, but local sign-out cleanup failed:', logoutError);
+      }
 
       return { success: true };
     } catch (error) {
