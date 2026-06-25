@@ -65,8 +65,8 @@ For every page below:
 - [ ] `src/pages/rides/SimpleUploadRidePage.tsx` — simple upload variant
 - [ ] `src/pages/rides/EditRidePage.tsx` — `/rides/edit/:id`
 - [x] `src/pages/rides/RideHistoryPage.tsx` — `/rides` ✅ fire header + aura, glossy car icons, warm status badges, fire empty state, screenshotted
-- [ ] `src/pages/rides/ActiveRidePage.tsx` — `/rides/active/:id` (live ride + map)
-- [ ] `src/pages/rides/TripTrackingPage.tsx` — `/trips/tracking/:id`
+- [x] `src/pages/rides/ActiveRidePage.tsx` — `/rides/active/:id` ✅ themed header/map chrome, fire status timeline, fire route, fire/red action tiles + confirm modals, screenshotted
+- [x] `src/pages/rides/TripTrackingPage.tsx` — `/trips/tracking/:id` ✅ themed header + status pill, fire progress bar, fire route, screenshotted
 
 ## 5. Rewards (showcase — make it pop)
 - [x] `src/pages/rewards/RewardsPage.tsx` — `/rewards` ✅ fire hero card, glossy AppIcons, fire tabs/chips, screenshotted
