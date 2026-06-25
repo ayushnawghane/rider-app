@@ -3,9 +3,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { disputeService } from '../../services';
-import { Plus, MessageSquare, HelpCircle, CheckCircle2, Clock2, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Plus, MessageSquare, CheckCircle2, Clock2, ChevronRight, AlertTriangle } from 'lucide-react';
 import { SkeletonList } from '../../components/Skeleton';
+import AppIcon from '../../components/icons/AppIcon';
 import type { Dispute } from '../../types';
+
+const FIRE = 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))';
 
 const SupportPage = () => {
   const { user } = useAuth();
@@ -42,9 +45,9 @@ const SupportPage = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      open: { icon: Clock2, color: 'status-completed', label: 'Open' },
-      in_review: { icon: AlertTriangle, color: 'status-pending', label: 'In Review' },
-      resolved: { icon: CheckCircle2, color: 'status-active', label: 'Resolved' },
+      open: { icon: Clock2, cls: 'bg-ink/8 text-ink/55', label: 'Open' },
+      in_review: { icon: AlertTriangle, cls: 'bg-fire-gold/25 text-[#9a5b00]', label: 'In Review' },
+      resolved: { icon: CheckCircle2, cls: 'bg-fire-orange text-white shadow-glow', label: 'Resolved' },
     };
     return statusMap[status as keyof typeof statusMap] || statusMap.open;
   };
@@ -58,15 +61,30 @@ const SupportPage = () => {
     });
   };
 
+  const Aura = () => (
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[320px]">
+      <div
+        className="absolute inset-0"
+        style={{ background: 'radial-gradient(120% 72% at 82% -10%, rgba(255,107,0,0.4) 0%, rgba(255,160,30,0.15) 46%, rgba(255,255,255,0) 74%)' }}
+      />
+      <div className="absolute -right-16 -top-12 h-72 w-72 rounded-full animate-aurora-1" style={{ background: 'radial-gradient(circle, rgba(255,200,50,0.62) 0%, transparent 62%)', filter: 'blur(48px)' }} />
+      <div className="absolute -left-20 top-8 h-52 w-52 rounded-full animate-aurora-2" style={{ background: 'radial-gradient(circle, rgba(255,140,0,0.24) 0%, transparent 62%)', filter: 'blur(50px)' }} />
+    </div>
+  );
+
   if (loading) {
     return (
       <IonPage>
-        <IonContent className="bg-gray-50" fullscreen forceOverscroll={false}>
-          <div className="mx-auto max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+16px)]">
-            <header className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">Support & Disputes</h1>
-            </header>
-            <SkeletonList count={3} lines={3} />
+        <IonContent fullscreen forceOverscroll={false}>
+          <div className="relative min-h-full overflow-hidden bg-white">
+            <Aura />
+            <div className="relative z-10 mx-auto max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+20px)]">
+              <header className="mb-6">
+                <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Help center</p>
+                <h1 className="font-display text-[2.4rem] font-extrabold leading-[0.9] tracking-tight text-ink">Support</h1>
+              </header>
+              <SkeletonList count={3} lines={3} />
+            </div>
           </div>
         </IonContent>
       </IonPage>
@@ -75,102 +93,108 @@ const SupportPage = () => {
 
   return (
     <IonPage>
-      <IonContent className="bg-gray-50" fullscreen forceOverscroll={false}>
-        <div className="mx-auto max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+16px)]">
-          <header className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Support & Disputes</h1>
-              <p className="text-gray-500 mt-1">{disputes.length} dispute{disputes.length !== 1 ? 's' : ''}</p>
-            </div>
-            <button
-              onClick={() => history.push('/support/dispute/new')}
-              className="p-3 bg-primary-500 text-white rounded-xl hover:bg-primary-600 active:scale-95 transition-all"
-            >
-              <Plus className="w-6 h-6" />
-            </button>
-          </header>
-
-          <button
-            onClick={() => void fetchDisputes()}
-            className="mb-4 text-sm font-medium text-primary-600 hover:text-primary-700"
-            type="button"
-          >
-            Refresh
-          </button>
-
-          {error && (
-            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
-
-          {disputes.length === 0 ? (
-            <div className="card p-8 text-center animate-fade-in">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-100">
-                <HelpCircle className="h-8 w-8 text-primary-600" />
+      <IonContent fullscreen forceOverscroll={false}>
+        <div className="relative min-h-full overflow-hidden bg-white">
+          <Aura />
+          <div className="relative z-10 mx-auto max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+20px)]">
+            <header className="mb-5 flex items-end justify-between">
+              <div>
+                <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Help center</p>
+                <h1 className="font-display text-[2.4rem] font-extrabold leading-[0.9] tracking-tight text-ink">Support</h1>
+                <p className="mt-2 text-sm font-medium text-ink/50">{disputes.length} dispute{disputes.length !== 1 ? 's' : ''}</p>
               </div>
-              <h2 className="mb-2 text-xl font-bold text-gray-900">Need Help?</h2>
-              <p className="mb-6 text-gray-500">You have no disputes yet. Start one and our support team will respond.</p>
               <button
                 onClick={() => history.push('/support/dispute/new')}
-                className="w-full btn btn-primary"
+                className="grain grain-strong relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl text-white shadow-glow transition active:scale-90"
+                style={{ background: FIRE }}
+                aria-label="Raise new dispute"
               >
-                Raise New Dispute
+                <Plus className="h-6 w-6" strokeWidth={2.75} />
               </button>
-            </div>
-          ) : (
-            <>
-              <div className="card p-6 mb-4 animate-fade-in">
-                <div className="text-center">
-                  <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-100">
-                    <HelpCircle className="h-7 w-7 text-primary-600" />
+            </header>
+
+            <button
+              onClick={() => void fetchDisputes()}
+              className="mb-4 font-display text-sm font-bold text-fire-orange transition hover:brightness-95"
+              type="button"
+            >
+              Refresh
+            </button>
+
+            {error && (
+              <div className="mb-4 rounded-2xl border border-fire-red/20 bg-fire-red/5 p-3 text-sm font-medium text-fire-red">
+                {error}
+              </div>
+            )}
+
+            {disputes.length === 0 ? (
+              <div className="animate-fade-in rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
+                  <AppIcon name="message" className="h-11 w-11" />
+                </div>
+                <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">Need help?</h2>
+                <p className="mt-2 text-sm font-medium text-ink/50">You have no disputes yet. Start one and our support team will respond.</p>
+                <button
+                  onClick={() => history.push('/support/dispute/new')}
+                  className="grain grain-strong relative mt-6 w-full overflow-hidden rounded-2xl px-4 py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+                  style={{ background: FIRE }}
+                >
+                  Raise New Dispute
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="mb-4 animate-fade-in rounded-[28px] border border-black/5 bg-white p-6 text-center shadow-soft">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
+                    <AppIcon name="message" className="h-8 w-8" />
                   </div>
-                  <h2 className="mb-1 text-lg font-bold text-gray-900">Need more help?</h2>
-                  <p className="text-sm text-gray-500 mb-4">Raise another dispute anytime.</p>
+                  <h2 className="mt-3 font-display text-lg font-extrabold tracking-tight text-ink">Need more help?</h2>
+                  <p className="mt-1 text-sm font-medium text-ink/50">Raise another dispute anytime.</p>
                   <button
                     onClick={() => history.push('/support/dispute/new')}
-                    className="w-full btn btn-primary"
+                    className="grain grain-strong relative mt-4 w-full overflow-hidden rounded-2xl px-4 py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+                    style={{ background: FIRE }}
                   >
                     Raise New Dispute
                   </button>
                 </div>
-              </div>
 
-              <div className="space-y-3">
-                {disputes.map((dispute) => {
-                  const status = getStatusBadge(dispute.status);
-                  return (
-                    <button
-                      key={dispute.id}
-                      onClick={() => history.push(`/support/dispute/${dispute.id}`)}
-                      className="card p-4 text-left hover:shadow-medium transition-all w-full animate-fade-in"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                          <MessageSquare className="w-6 h-6 text-warning-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="font-medium text-gray-900 capitalize">{dispute.disputeType}</span>
-                            <span className={`badge ${status.color} flex items-center gap-1.5`}>
-                              <status.icon className="w-3.5 h-3.5" />
-                              {status.label}
-                            </span>
+                <div className="space-y-3">
+                  {disputes.map((dispute) => {
+                    const status = getStatusBadge(dispute.status);
+                    return (
+                      <button
+                        key={dispute.id}
+                        onClick={() => history.push(`/support/dispute/${dispute.id}`)}
+                        className="w-full animate-fade-in rounded-[26px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.99]"
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
+                            <MessageSquare className="h-6 w-6 text-fire-orange" />
                           </div>
-                          <p className="text-sm text-gray-500 line-clamp-2 mb-2">{dispute.description}</p>
-                          <div className="flex items-center gap-4 text-sm">
-                            <span className="text-gray-500">#{dispute.id.slice(0, 8)}</span>
-                            <span className="text-gray-500">{formatDate(dispute.createdAt)}</span>
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-2 flex flex-wrap items-center gap-2">
+                              <span className="font-display font-bold capitalize text-ink">{dispute.disputeType}</span>
+                              <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-display text-[11px] font-bold ${status.cls}`}>
+                                <status.icon className="h-3.5 w-3.5" />
+                                {status.label}
+                              </span>
+                            </div>
+                            <p className="mb-2 line-clamp-2 text-sm font-medium text-ink/55">{dispute.description}</p>
+                            <div className="flex items-center gap-3 text-xs font-medium text-ink/40">
+                              <span>#{dispute.id.slice(0, 8)}</span>
+                              <span>{formatDate(dispute.createdAt)}</span>
+                            </div>
                           </div>
+                          <ChevronRight className="h-5 w-5 shrink-0 text-ink/25" />
                         </div>
-                        <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </IonContent>
     </IonPage>

@@ -73,9 +73,9 @@ For every page below:
 
 ## 6. Inbox & Support
 - [x] `src/pages/inbox/InboxPage.tsx` — `/inbox` ✅ aura header, glossy inbox/message icons, fire active-chat chip, bold empty states, screenshotted
-- [ ] `src/pages/support/SupportPage.tsx` — `/support`
-- [ ] `src/pages/support/NewDisputePage.tsx` — `/support/dispute/new`
-- [ ] `src/pages/support/DisputeChatPage.tsx` — `/support/dispute/:id` (chat bubbles)
+- [x] `src/pages/support/SupportPage.tsx` — `/support` ✅ aura header, fire add button, dispute cards w/ fire status badges, fire empty state, screenshotted
+- [x] `src/pages/support/NewDisputePage.tsx` — `/support/dispute/new` ✅ aura header, fire-selected type cards, themed inputs, warm tips card, fire submit + success state, screenshotted
+- [x] `src/pages/support/DisputeChatPage.tsx` — `/support/dispute/:id` ✅ fire user bubbles / white support bubbles, fire send bar, themed empty + skeleton, screenshotted
 
 ## 7. Safety
 - [ ] `src/pages/safety/SafetyPage.tsx` — `/safety`, `/safety/sos` (bold, serious SOS)
