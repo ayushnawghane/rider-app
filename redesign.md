@@ -64,7 +64,7 @@ For every page below:
 - [ ] `src/pages/rides/UploadRidePage.tsx` — `/upload-ride`
 - [ ] `src/pages/rides/SimpleUploadRidePage.tsx` — simple upload variant
 - [ ] `src/pages/rides/EditRidePage.tsx` — `/rides/edit/:id`
-- [ ] `src/pages/rides/RideHistoryPage.tsx` — `/rides/history`
+- [x] `src/pages/rides/RideHistoryPage.tsx` — `/rides` ✅ fire header + aura, glossy car icons, warm status badges, fire empty state, screenshotted
 - [ ] `src/pages/rides/ActiveRidePage.tsx` — `/rides/active/:id` (live ride + map)
 - [ ] `src/pages/rides/TripTrackingPage.tsx` — `/trips/tracking/:id`
 
