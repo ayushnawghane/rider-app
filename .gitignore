@@ -50,3 +50,7 @@ supabase/.temp/
 # OS
 Thumbs.db
 .vercel
+
+# Cypress artifacts
+cypress/screenshots/
+cypress/videos/

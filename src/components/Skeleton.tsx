@@ -13,7 +13,8 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   width,
   height,
 }) => {
-  const baseClasses = 'animate-pulse bg-gray-200';
+  const baseClasses = 'animate-pulse';
+  const baseStyleBg = 'rgba(255, 107, 0, 0.12)';
   
   const variantClasses = {
     text: 'rounded',
@@ -25,6 +26,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   const style: React.CSSProperties = {
     width: width || '100%',
     height: height || (variant === 'text' ? '1rem' : '100%'),
+    backgroundColor: baseStyleBg,
   };
 
   return (
@@ -47,7 +49,7 @@ export const SkeletonCard: React.FC<SkeletonCardProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`bg-white rounded-xl p-4 shadow-sm border border-gray-100 ${className}`}>
+    <div className={`glass rounded-3xl p-4 shadow-soft ${className}`}>
       {hasImage && (
         <Skeleton variant="rounded" height="120px" className="mb-4" />
       )}

@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   signInWithPassword: vi.fn(),
   signUp: vi.fn(),
+  signOut: vi.fn(),
+  invoke: vi.fn(),
   upsert: vi.fn(),
 }));
 
@@ -12,6 +14,10 @@ vi.mock('../lib/supabase', () => ({
     auth: {
       signInWithPassword: mocks.signInWithPassword,
       signUp: mocks.signUp,
+      signOut: mocks.signOut,
+    },
+    functions: {
+      invoke: mocks.invoke,
     },
     from: vi.fn(() => ({
       upsert: mocks.upsert,
@@ -24,6 +30,7 @@ const { authService } = await import('./auth');
 describe('authService', () => {
   beforeEach(() => {
     mocks.upsert.mockResolvedValue({ error: null });
+    mocks.signOut.mockResolvedValue({ error: null });
   });
 
   it('normalizes email before password sign in', async () => {
@@ -44,6 +51,32 @@ describe('authService', () => {
     await expect(authService.signInWithEmailPassword('rider@example.com', 'bad')).resolves.toEqual({
       success: false,
       error: 'Invalid login credentials',
+    });
+  });
+
+  it('deletes the authenticated account through the server function', async () => {
+    mocks.invoke.mockResolvedValue({
+      data: { success: true, userId: 'user-123' },
+      error: null,
+    });
+
+    await expect(authService.deleteAccount('user-123')).resolves.toEqual({
+      success: true,
+    });
+
+    expect(mocks.invoke).toHaveBeenCalledWith('delete-account');
+    expect(mocks.signOut).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not report success for a mismatched deleted user', async () => {
+    mocks.invoke.mockResolvedValue({
+      data: { success: true, userId: 'different-user' },
+      error: null,
+    });
+
+    await expect(authService.deleteAccount('user-123')).resolves.toEqual({
+      success: false,
+      error: 'Failed to delete account',
     });
   });
 
