@@ -72,7 +72,7 @@ For every page below:
 - [x] `src/pages/rewards/RewardsPage.tsx` — `/rewards` ✅ fire hero card, glossy AppIcons, fire tabs/chips, screenshotted
 
 ## 6. Inbox & Support
-- [ ] `src/pages/inbox/InboxPage.tsx` — `/inbox` (new)
+- [x] `src/pages/inbox/InboxPage.tsx` — `/inbox` ✅ aura header, glossy inbox/message icons, fire active-chat chip, bold empty states, screenshotted
 - [ ] `src/pages/support/SupportPage.tsx` — `/support`
 - [ ] `src/pages/support/NewDisputePage.tsx` — `/support/dispute/new`
 - [ ] `src/pages/support/DisputeChatPage.tsx` — `/support/dispute/:id` (chat bubbles)
