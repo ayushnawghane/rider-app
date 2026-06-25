@@ -9,6 +9,7 @@ import {
   Camera,
   Car,
   ChevronRight,
+  ChevronLeft,
   Clock3,
   Globe2,
   LogOut,
@@ -22,8 +23,9 @@ import {
   ShieldCheck,
   AlertCircle,
 } from 'lucide-react';
-import { isProfileIncomplete } from '../../utils/profileCompletion';
-import { BackButton } from '../../components/ui';
+import { isProfileIncomplete, isProfileNameIncomplete } from '../../utils/profileCompletion';
+
+const FIRE = 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))';
 
 interface ProfilePageLocationState {
   openEditor?: boolean;
@@ -43,13 +45,20 @@ const isSystemGeneratedEmail = (value?: string | null) => {
   return false;
 };
 
+const toEditableProfileName = (value?: string | null) => (isProfileNameIncomplete(value) ? '' : value || '');
+
+// Shared input styling for the fire/white aesthetic.
+const inputClass =
+  'mt-1.5 w-full rounded-2xl border-2 border-black/10 bg-white px-4 py-3 font-medium text-ink outline-none transition focus:border-fire-orange focus:ring-2 focus:ring-[rgba(255,107,0,0.18)] [color-scheme:light]';
+const labelClass = 'block font-display text-[11px] font-bold uppercase tracking-wide text-ink/45';
+
 const ProfilePage = () => {
   const { user, refreshUser, logout, isAuthLoaded } = useAuth();
   const [loading, setLoading] = useState(false);
   const location = useLocation<ProfilePageLocationState>();
   const requiresProfileCompletion = Boolean(location.state?.requireCompletion) || isProfileIncomplete(user);
   const [editing, setEditing] = useState(Boolean(location.state?.openEditor) || requiresProfileCompletion);
-  const [fullName, setFullName] = useState(user?.fullName || '');
+  const [fullName, setFullName] = useState(toEditableProfileName(user?.fullName));
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone?.startsWith('temp_') || user?.phone?.startsWith('phone-') ? '' : user?.phone || '');
   const [language, setLanguage] = useState(user?.language || 'en');
@@ -72,7 +81,7 @@ const ProfilePage = () => {
 
   useEffect(() => {
     if (user) {
-      setFullName(user.fullName);
+      setFullName(toEditableProfileName(user.fullName));
       setEmail(isSystemGeneratedEmail(user.email) ? '' : user.email);
       setPhone(user.phone?.startsWith('temp_') || user.phone?.startsWith('phone-') ? '' : user.phone || '');
       setLanguage(user.language);
@@ -269,25 +278,37 @@ const ProfilePage = () => {
       pending: {
         label: 'Pending',
         icon: <Clock3 size={14} />,
-        className: 'bg-amber-50 text-amber-700 border border-amber-100',
+        className: 'bg-fire-gold/20 text-[#9a5b00] border border-fire-gold/30',
       },
       rejected: {
         label: 'Rejected',
         icon: <span>!</span>,
-        className: 'bg-rose-50 text-rose-700 border border-rose-100',
+        className: 'bg-fire-red/10 text-fire-red border border-fire-red/20',
       },
     };
 
     return statusMap[user?.kycStatus || 'pending'] || statusMap.pending;
   }, [user?.kycStatus]);
 
+  // Grainy orange aura, right-weighted — shared across page states.
+  const Aura = () => (
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[340px]">
+      <div
+        className="absolute inset-0"
+        style={{ background: 'radial-gradient(120% 72% at 82% -10%, rgba(255,107,0,0.42) 0%, rgba(255,160,30,0.16) 46%, rgba(255,255,255,0) 74%)' }}
+      />
+      <div className="absolute -right-16 -top-12 h-72 w-72 rounded-full animate-aurora-1" style={{ background: 'radial-gradient(circle, rgba(255,200,50,0.66) 0%, transparent 62%)', filter: 'blur(48px)' }} />
+      <div className="absolute -left-20 top-8 h-52 w-52 rounded-full animate-aurora-2" style={{ background: 'radial-gradient(circle, rgba(255,140,0,0.26) 0%, transparent 62%)', filter: 'blur(50px)' }} />
+    </div>
+  );
+
   if (!isAuthLoaded) {
     return (
-      <div className="min-h-screen bg-slate-100 px-4 app-top-safe pb-20">
+      <div className="app-top-safe min-h-screen bg-white px-4 pb-20 pt-6">
         <div className="mx-auto max-w-2xl animate-pulse space-y-4">
-          <div className="h-36 rounded-3xl bg-slate-200" />
-          <div className="h-48 rounded-3xl bg-slate-200" />
-          <div className="h-40 rounded-3xl bg-slate-200" />
+          <div className="h-36 rounded-[28px] bg-primary-50" />
+          <div className="h-48 rounded-[28px] bg-primary-50" />
+          <div className="h-40 rounded-[28px] bg-primary-50" />
         </div>
       </div>
     );
@@ -295,7 +316,7 @@ const ProfilePage = () => {
 
   if (!user) {
     return (
-      <div className="grid min-h-screen place-items-center bg-slate-100 text-slate-500">
+      <div className="grid min-h-screen place-items-center bg-white font-medium text-ink/50">
         Loading profile...
       </div>
     );
@@ -309,544 +330,504 @@ const ProfilePage = () => {
     const currentStepLabel = SETUP_STEPS[setupStep];
 
     return (
-      <div className="app-scroll-screen bg-slate-100 pb-6">
-        <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 px-4 pb-20 app-header-top-safe">
+      <div className="app-scroll-screen relative overflow-hidden bg-white pb-6">
+        <Aura />
+        <div className="relative z-10 px-4 pb-6 pt-[calc(env(safe-area-inset-top)+24px)]">
           <div className="mx-auto max-w-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/80">
-              Profile setup
-            </p>
-            <h1 className="mt-2 text-4xl font-bold tracking-tight text-white sm:text-5xl">
+            <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Profile setup</p>
+            <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink sm:text-5xl">
               Complete your profile
             </h1>
-            <p className="mt-3 text-base text-white/90 sm:text-lg">
+            <p className="mt-3 text-sm font-medium text-ink/55 sm:text-base">
               Finish the required details to book rides. Vehicle details are added when you publish your first ride.
             </p>
           </div>
-        </div>
 
-        <div className="mx-auto -mt-12 max-w-2xl space-y-4 px-4">
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-5">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm font-semibold text-slate-600">
-                  Step {setupStep + 1} of {SETUP_STEPS.length}
-                </p>
-                <p className="text-sm font-semibold text-orange-600">{currentStepLabel}</p>
+          <div className="mx-auto mt-6 max-w-2xl space-y-4">
+            <section className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
+              <div className="mb-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="font-display text-sm font-bold text-ink/60">
+                    Step {setupStep + 1} of {SETUP_STEPS.length}
+                  </p>
+                  <p className="font-display text-sm font-bold text-fire-orange">{currentStepLabel}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {SETUP_STEPS.map((step, index) => (
+                    <div
+                      key={step}
+                      className="h-2 rounded-full"
+                      style={index <= setupStep ? { background: FIRE } : { background: 'rgba(0,0,0,0.08)' }}
+                    />
+                  ))}
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {SETUP_STEPS.map((step, index) => (
-                  <div
-                    key={step}
-                    className={`h-2 rounded-full ${index <= setupStep ? 'bg-orange-500' : 'bg-slate-200'}`}
-                  />
-                ))}
-              </div>
-            </div>
 
-            {setupStep === 0 && (
-              <div className="space-y-4">
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle size={18} className="mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold">Required to book rides</p>
-                      <p className="mt-1 text-sm text-amber-800">
-                        We need your real name, email, and mobile number before ride bookings are allowed.
-                      </p>
+              {setupStep === 0 && (
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-fire-gold/30 bg-fire-gold/10 px-4 py-3 text-[#7a4a00]">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle size={18} className="mt-0.5 shrink-0 text-fire-orange" />
+                      <div>
+                        <p className="font-display text-sm font-bold">Required to book rides</p>
+                        <p className="mt-1 text-sm">
+                          We need your real name, email, and mobile number before ride bookings are allowed.
+                        </p>
+                      </div>
                     </div>
                   </div>
+
+                  <label className="block">
+                    <span className={labelClass}>Full name</span>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(event) => setFullName(event.target.value)}
+                      placeholder="Your full name"
+                      className={inputClass}
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className={labelClass}>Email address</span>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      placeholder="you@example.com"
+                      className={inputClass}
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className={labelClass}>Mobile number</span>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(event) => setPhone(event.target.value)}
+                      placeholder="+91 9876543210"
+                      className={inputClass}
+                    />
+                  </label>
                 </div>
+              )}
 
-                <label className="block">
-                  <span className="text-sm font-medium text-slate-600">Full name</span>
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(event) => setFullName(event.target.value)}
-                    placeholder="Your full name"
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                  />
-                </label>
+              {setupStep === 1 && (
+                <div className="space-y-4">
+                  <label className="block">
+                    <span className={labelClass}>Language</span>
+                    <select
+                      value={language}
+                      onChange={(event) => setLanguage(event.target.value)}
+                      className={inputClass}
+                    >
+                      <option value="en">English</option>
+                      <option value="hi">Hindi</option>
+                    </select>
+                  </label>
 
-                <label className="block">
-                  <span className="text-sm font-medium text-slate-600">Email address</span>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="you@example.com"
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="text-sm font-medium text-slate-600">Mobile number</span>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(event) => setPhone(event.target.value)}
-                    placeholder="+91 9876543210"
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                  />
-                </label>
-              </div>
-            )}
-
-            {setupStep === 1 && (
-              <div className="space-y-4">
-                <label className="block">
-                  <span className="text-sm font-medium text-slate-600">Language</span>
-                  <select
-                    value={language}
-                    onChange={(event) => setLanguage(event.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                  >
-                    <option value="en">English</option>
-                    <option value="hi">Hindi</option>
-                  </select>
-                </label>
-
-                <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">Push notifications</p>
-                    <p className="text-xs text-slate-500">Ride, booking, and safety updates.</p>
+                  <div className="flex items-center justify-between rounded-2xl border border-black/5 bg-paper px-4 py-3">
+                    <div>
+                      <p className="font-display text-sm font-bold text-ink">Push notifications</p>
+                      <p className="text-xs font-medium text-ink/50">Ride, booking, and safety updates.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setNotifications((prev) => !prev)}
+                      className="relative h-7 w-12 rounded-full transition"
+                      style={notifications ? { background: FIRE } : { background: 'rgba(0,0,0,0.18)' }}
+                      aria-label="Toggle notifications"
+                    >
+                      <span
+                        className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${notifications ? 'left-[22px]' : 'left-0.5'}`}
+                      />
+                    </button>
                   </div>
+                </div>
+              )}
+
+              {saveError && (
+                <p className="mt-4 rounded-2xl border border-fire-red/20 bg-fire-red/5 px-3 py-2 text-sm font-medium text-fire-red">
+                  {saveError}
+                </p>
+              )}
+
+              <div className="mt-5 flex gap-3">
+                {setupStep > 0 && (
                   <button
                     type="button"
-                    onClick={() => setNotifications((prev) => !prev)}
-                    className={`relative h-7 w-12 rounded-full transition ${notifications ? 'bg-orange-500' : 'bg-slate-300'}`}
-                    aria-label="Toggle notifications"
+                    onClick={() => {
+                      setSaveError('');
+                      setSetupStep((step) => Math.max(step - 1, 0));
+                    }}
+                    className="flex-1 rounded-2xl border-2 border-black/10 bg-white px-4 py-3 font-display text-sm font-bold text-ink/70 transition hover:bg-paper"
                   >
-                    <span
-                      className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${notifications ? 'left-[22px]' : 'left-0.5'}`}
-                    />
+                    Back
                   </button>
-                </div>
+                )}
+
+                {setupStep < SETUP_STEPS.length - 1 ? (
+                  <button
+                    type="button"
+                    onClick={handleSetupNext}
+                    className="grain grain-strong relative flex-[2] overflow-hidden rounded-2xl px-4 py-3 font-display text-sm font-bold text-white shadow-glow transition active:scale-[0.98]"
+                    style={{ background: FIRE }}
+                  >
+                    Continue
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleCompleteSetup}
+                    disabled={loading}
+                    className="grain grain-strong relative flex-[2] overflow-hidden rounded-2xl px-4 py-3 font-display text-sm font-bold text-white shadow-glow transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
+                    style={{ background: FIRE }}
+                  >
+                    {loading ? 'Finishing...' : 'Finish setup'}
+                  </button>
+                )}
               </div>
-            )}
+            </section>
 
-            {saveError && (
-              <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-                {saveError}
-              </p>
-            )}
-
-            <div className="mt-5 flex gap-3">
-              {setupStep > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSaveError('');
-                    setSetupStep((step) => Math.max(step - 1, 0));
-                  }}
-                  className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700"
-                >
-                  Back
-                </button>
-              )}
-
-              {setupStep < SETUP_STEPS.length - 1 ? (
-                <button
-                  type="button"
-                  onClick={handleSetupNext}
-                  className="flex-[2] rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
-                >
-                  Continue
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleCompleteSetup}
-                  disabled={loading}
-                  className="flex-[2] rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {loading ? 'Finishing...' : 'Finish setup'}
-                </button>
-              )}
-            </div>
-          </section>
-
-          <button
-            onClick={handleLogout}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600 transition hover:bg-rose-100"
-          >
-            <LogOut size={18} />
-            Sign out
-          </button>
+            <button
+              onClick={handleLogout}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-fire-red/15 bg-fire-red/5 px-4 py-3 font-display text-sm font-bold text-fire-red transition hover:bg-fire-red/10"
+            >
+              <LogOut size={18} />
+              Sign out
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`app-scroll-screen bg-slate-100 ${requiresProfileCompletion ? 'pb-6' : 'app-bottom-nav-safe'}`}>
-      <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 px-4 pb-20 app-header-top-safe">
+    <div className="app-scroll-screen app-bottom-nav-safe relative overflow-hidden bg-white">
+      <Aura />
+      <div className="relative z-10 px-4 pb-6 pt-[calc(env(safe-area-inset-top)+20px)]">
         <div className="mx-auto max-w-2xl">
-          <div className="mb-4 flex items-center justify-between">
+          {/* Header */}
+          <div className="mb-6 flex items-start justify-between">
             <div className="flex items-center gap-3">
-              {!requiresProfileCompletion && (
-                <BackButton variant="light" onClick={handleBack} className="h-12 w-12 rounded-2xl border border-white/35" />
-              )}
-              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                {requiresProfileCompletion ? 'Account setup' : 'Profile'}
-              </h1>
+              <button
+                onClick={handleBack}
+                aria-label="Back"
+                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-black/10 bg-white/70 text-ink shadow-soft backdrop-blur-sm transition active:scale-95"
+              >
+                <ChevronLeft size={22} strokeWidth={2.5} />
+              </button>
+              <div>
+                <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Account</p>
+                <h1 className="font-display text-[2.4rem] font-extrabold leading-[0.9] tracking-tight text-ink">Profile</h1>
+              </div>
             </div>
 
-            {!requiresProfileCompletion && (
-              <button
-                onClick={() => setEditing((prev) => !prev)}
-                className="grid h-12 w-12 place-items-center rounded-2xl border border-white/35 bg-white/20 text-white backdrop-blur"
-                aria-label={editing ? 'Cancel editing profile' : 'Edit profile'}
-              >
-                <Pencil size={20} />
-              </button>
-            )}
+            <button
+              onClick={() => setEditing((prev) => !prev)}
+              className="flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-glow transition active:scale-95"
+              style={{ background: FIRE }}
+              aria-label={editing ? 'Cancel editing profile' : 'Edit profile'}
+            >
+              <Pencil size={18} strokeWidth={2.5} />
+            </button>
           </div>
 
-          <p className="text-base text-white/90 sm:text-lg">
-            {requiresProfileCompletion
-              ? 'Add the required details once, then you can use the rest of Blinkcar.'
-              : 'Manage your account details and ride preferences'}
-          </p>
-        </div>
-      </div>
+          <div className="space-y-4">
+            {/* Identity card */}
+            <section className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
+              <div className="flex items-start gap-4">
+                <div className="relative">
+                  <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-3xl font-display text-4xl font-extrabold text-white shadow-glow" style={{ background: FIRE }}>
+                    {avatarImageUrl ? (
+                      <img src={avatarImageUrl} alt={user.fullName} className="h-full w-full object-cover" />
+                    ) : (
+                      initials
+                    )}
+                  </div>
+                  {editing && (
+                    <>
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        aria-label="Choose profile picture"
+                        onChange={handleAvatarChange}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAvatarButtonClick}
+                        disabled={avatarUploading}
+                        className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-xl border-2 border-white bg-ink text-white shadow disabled:cursor-not-allowed disabled:opacity-70"
+                        aria-label={avatarUploading ? 'Uploading profile picture' : 'Change profile picture'}
+                      >
+                        {avatarUploading ? (
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                        ) : (
+                          <Camera size={14} />
+                        )}
+                      </button>
+                    </>
+                  )}
+                </div>
 
-      <div className="mx-auto -mt-12 max-w-2xl space-y-4 px-4">
-        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          {requiresProfileCompletion && (
-            <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
-              <div className="flex items-start gap-3">
-                <AlertCircle size={18} className="mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold">Complete your profile to continue</p>
-                  <p className="mt-1 text-sm text-amber-800">
-                    Finish these required fields before using rides, rewards, support, or safety tools.
-                  </p>
+                <div className="min-w-0 flex-1">
+                  <h2 className="truncate font-display text-3xl font-extrabold tracking-tight text-ink">
+                    {user.fullName}
+                  </h2>
+                  <p className="mt-1 max-w-full break-words text-sm font-medium text-ink/50">{displayEmail}</p>
+                  <span className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-display text-xs font-bold ${kycStatus.className}`}>
+                    {kycStatus.icon}
+                    KYC: {kycStatus.label}
+                  </span>
                 </div>
               </div>
-            </div>
-          )}
 
-          <div className="flex items-start gap-4">
-            <div className="relative">
-              <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-4xl font-bold text-white">
-                {avatarImageUrl ? (
-                  <img src={avatarImageUrl} alt={user.fullName} className="h-full w-full object-cover" />
-                ) : (
-                  initials
+              <div className="mt-5 divide-y divide-black/5 overflow-hidden rounded-2xl border border-black/5 bg-paper">
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <div className="grid h-9 w-9 place-items-center rounded-xl border border-primary-100 bg-white text-fire-orange">
+                    <Phone size={16} />
+                  </div>
+                  <span className="font-display text-sm font-bold text-ink/70">{user.phone || 'Not provided'}</span>
+                </div>
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <div className="grid h-9 w-9 place-items-center rounded-xl border border-primary-100 bg-white text-fire-orange">
+                    <Globe2 size={16} />
+                  </div>
+                  <span className="font-display text-sm font-bold text-ink/70">{language === 'en' ? 'English' : language}</span>
+                </div>
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <div className="grid h-9 w-9 place-items-center rounded-xl border border-primary-100 bg-white text-fire-orange">
+                    <Bell size={16} />
+                  </div>
+                  <span className="font-display text-sm font-bold text-ink/70">
+                    {notifications ? 'Notifications enabled' : 'Notifications disabled'}
+                  </span>
+                </div>
+                {user.vehicleDetails?.vehicleNumber && (
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    <div className="grid h-9 w-9 place-items-center rounded-xl border border-primary-100 bg-white text-fire-orange">
+                      <Car size={16} />
+                    </div>
+                    <div>
+                      <span className="font-display text-sm font-bold text-ink/70">
+                        {[user.vehicleDetails.make, user.vehicleDetails.model].filter(Boolean).join(' ') || user.vehicleDetails.vehicleType || 'Vehicle'}
+                      </span>
+                      <p className="text-xs font-medium text-ink/45">{user.vehicleDetails.vehicleNumber}</p>
+                    </div>
+                  </div>
                 )}
               </div>
-              {editing && (
-                <>
-                  <input
-                    ref={avatarInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="sr-only"
-                    aria-label="Choose profile picture"
-                    onChange={handleAvatarChange}
-                  />
+            </section>
+
+            {editing && (
+              <section className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
+                <h3 className="mb-4 font-display text-lg font-extrabold tracking-tight text-ink">Edit profile</h3>
+                <div className="space-y-4">
+                  <label className="block">
+                    <span className={labelClass}>Full name</span>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(event) => setFullName(event.target.value)}
+                      placeholder="Rider name"
+                      className={inputClass}
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className={labelClass}>Email address</span>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      placeholder="you@example.com"
+                      className={inputClass}
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className={labelClass}>Mobile number</span>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(event) => setPhone(event.target.value)}
+                      placeholder="+91 9876543210"
+                      className={inputClass}
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className={labelClass}>Language</span>
+                    <select
+                      value={language}
+                      onChange={(event) => setLanguage(event.target.value)}
+                      className={inputClass}
+                    >
+                      <option value="en">English</option>
+                      <option value="hi">Hindi</option>
+                    </select>
+                  </label>
+
+                  <div className="flex items-center justify-between rounded-2xl border border-black/5 bg-paper px-4 py-3">
+                    <span className="font-display text-sm font-bold text-ink/70">Push notifications</span>
+                    <button
+                      type="button"
+                      onClick={() => setNotifications((prev) => !prev)}
+                      className="relative h-7 w-12 rounded-full transition"
+                      style={notifications ? { background: FIRE } : { background: 'rgba(0,0,0,0.18)' }}
+                      aria-label="Toggle notifications"
+                    >
+                      <span
+                        className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${notifications ? 'left-[22px]' : 'left-0.5'}`}
+                      />
+                    </button>
+                  </div>
+
+                  {saveError && (
+                    <p className="rounded-2xl border border-fire-red/20 bg-fire-red/5 px-3 py-2 text-sm font-medium text-fire-red">
+                      {saveError}
+                    </p>
+                  )}
+
                   <button
-                    type="button"
-                    onClick={handleAvatarButtonClick}
-                    disabled={avatarUploading}
-                    className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-xl bg-indigo-600 text-white shadow disabled:cursor-not-allowed disabled:opacity-70"
-                    aria-label={avatarUploading ? 'Uploading profile picture' : 'Change profile picture'}
+                    onClick={handleSave}
+                    disabled={loading}
+                    className="grain grain-strong relative w-full overflow-hidden rounded-2xl px-4 py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
+                    style={{ background: FIRE }}
                   >
-                    {avatarUploading ? (
-                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                    {loading ? 'Saving...' : 'Save changes'}
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {editing && !requiresProfileCompletion && (
+              <section className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
+                <div className="mb-4 flex items-center gap-2">
+                  <Car size={18} className="text-fire-orange" />
+                  <h3 className="font-display text-lg font-extrabold tracking-tight text-ink">Vehicle details</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="block">
+                      <span className={labelClass}>Make</span>
+                      <input
+                        type="text"
+                        value={vehicleMake}
+                        onChange={(e) => setVehicleMake(e.target.value)}
+                        placeholder="e.g. Toyota"
+                        className={`${inputClass} text-sm`}
+                      />
+                    </label>
+                    <label className="block">
+                      <span className={labelClass}>Model</span>
+                      <input
+                        type="text"
+                        value={vehicleModel}
+                        onChange={(e) => setVehicleModel(e.target.value)}
+                        placeholder="e.g. Camry"
+                        className={`${inputClass} text-sm`}
+                      />
+                    </label>
+                  </div>
+                  <label className="block">
+                    <span className={labelClass}>Vehicle number</span>
+                    <input
+                      type="text"
+                      value={vehicleNumber}
+                      onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
+                      placeholder="e.g. MH01AB1234"
+                      className={`${inputClass} font-mono`}
+                    />
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="block">
+                      <span className={labelClass}>Type</span>
+                      <select
+                        value={vehicleType}
+                        onChange={(e) => setVehicleType(e.target.value)}
+                        className={`${inputClass} text-sm`}
+                      >
+                        <option value="">Select type</option>
+                        <option value="Sedan">Sedan</option>
+                        <option value="SUV">SUV</option>
+                        <option value="Hatchback">Hatchback</option>
+                        <option value="Bike">Bike</option>
+                        <option value="Auto">Auto</option>
+                        <option value="Luxury">Luxury</option>
+                      </select>
+                    </label>
+                    <label className="block">
+                      <span className={labelClass}>Color</span>
+                      <input
+                        type="text"
+                        value={vehicleColor}
+                        onChange={(e) => setVehicleColor(e.target.value)}
+                        placeholder="e.g. White"
+                        className={`${inputClass} text-sm`}
+                      />
+                    </label>
+                  </div>
+                  <button
+                    onClick={handleSaveVehicle}
+                    disabled={savingVehicle}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-primary-300 bg-primary-50 px-4 py-3 font-display text-sm font-bold text-primary-700 transition hover:bg-primary-100 disabled:opacity-60"
+                  >
+                    {vehicleSaved ? (
+                      <><CheckCircle2 size={16} className="text-emerald-600" /><span className="text-emerald-700">Vehicle saved!</span></>
                     ) : (
-                      <Camera size={14} />
+                      <><Bookmark size={16} />{savingVehicle ? 'Saving...' : 'Save for Later'}</>
                     )}
                   </button>
-                </>
-              )}
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <h2 className="truncate text-4xl font-bold text-slate-800 sm:text-5xl">
-                {user.fullName}
-              </h2>
-              <p className="mt-1 max-w-full break-words text-lg text-slate-500 sm:text-xl">{displayEmail}</p>
-              <span className={`mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${kycStatus.className}`}>
-                {kycStatus.icon}
-                KYC: {kycStatus.label}
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-5 divide-y divide-slate-100 rounded-2xl border border-slate-100 bg-slate-50">
-            <div className="flex items-center gap-3 px-4 py-3">
-              <div className="grid h-9 w-9 place-items-center rounded-xl bg-slate-200 text-slate-700">
-                <Phone size={16} />
-              </div>
-              <span className="text-sm font-medium text-slate-700">{user.phone || 'Not provided'}</span>
-            </div>
-            <div className="flex items-center gap-3 px-4 py-3">
-              <div className="grid h-9 w-9 place-items-center rounded-xl bg-slate-200 text-slate-700">
-                <Globe2 size={16} />
-              </div>
-              <span className="text-sm font-medium text-slate-700">{language === 'en' ? 'English' : language}</span>
-            </div>
-            <div className="flex items-center gap-3 px-4 py-3">
-              <div className="grid h-9 w-9 place-items-center rounded-xl bg-slate-200 text-slate-700">
-                <Bell size={16} />
-              </div>
-              <span className="text-sm font-medium text-slate-700">
-                {notifications ? 'Notifications enabled' : 'Notifications disabled'}
-              </span>
-            </div>
-            {user.vehicleDetails?.vehicleNumber && (
-              <div className="flex items-center gap-3 px-4 py-3">
-                <div className="grid h-9 w-9 place-items-center rounded-xl bg-orange-100 text-orange-700">
-                  <Car size={16} />
                 </div>
-                <div>
-                  <span className="text-sm font-medium text-slate-700">
-                    {[user.vehicleDetails.make, user.vehicleDetails.model].filter(Boolean).join(' ') || user.vehicleDetails.vehicleType || 'Vehicle'}
-                  </span>
-                  <p className="text-xs text-slate-500">{user.vehicleDetails.vehicleNumber}</p>
-                </div>
-              </div>
+              </section>
             )}
-          </div>
-        </section>
 
-        {editing && (
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h3 className="mb-4 text-base font-semibold text-slate-800">Edit profile</h3>
-            <div className="space-y-4">
-              <label className="block">
-                <span className="text-sm font-medium text-slate-600">Full name</span>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(event) => setFullName(event.target.value)}
-                  placeholder="Rider name"
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                />
-              </label>
-
-              <label className="block">
-                <span className="text-sm font-medium text-slate-600">Email address</span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="you@example.com"
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                />
-              </label>
-
-              <label className="block">
-                <span className="text-sm font-medium text-slate-600">Mobile number</span>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  placeholder="+91 9876543210"
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                />
-              </label>
-
-              <label className="block">
-                <span className="text-sm font-medium text-slate-600">Language</span>
-                <select
-                  value={language}
-                  onChange={(event) => setLanguage(event.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                >
-                  <option value="en">English</option>
-                  <option value="hi">Hindi</option>
-                </select>
-              </label>
-
-              <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <span className="text-sm font-medium text-slate-700">Push notifications</span>
-                <button
-                  type="button"
-                  onClick={() => setNotifications((prev) => !prev)}
-                  className={`relative h-7 w-12 rounded-full transition ${notifications ? 'bg-orange-500' : 'bg-slate-300'}`}
-                  aria-label="Toggle notifications"
-                >
-                  <span
-                    className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${notifications ? 'left-[22px]' : 'left-0.5'}`}
-                  />
-                </button>
-              </div>
-
-              {saveError && (
-                <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-                  {saveError}
-                </p>
-              )}
-
-              <button
-                onClick={handleSave}
-                disabled={loading}
-                className="w-full rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {loading ? 'Saving...' : 'Save changes'}
-              </button>
-            </div>
-          </section>
-        )}
-
-        {editing && !requiresProfileCompletion && (
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <Car size={18} className="text-orange-500" />
-              <h3 className="text-base font-semibold text-slate-800">Vehicle Details</h3>
-            </div>
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="text-xs font-medium text-slate-600">Make</span>
-                  <input
-                    type="text"
-                    value={vehicleMake}
-                    onChange={(e) => setVehicleMake(e.target.value)}
-                    placeholder="e.g. Toyota"
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-xs font-medium text-slate-600">Model</span>
-                  <input
-                    type="text"
-                    value={vehicleModel}
-                    onChange={(e) => setVehicleModel(e.target.value)}
-                    placeholder="e.g. Camry"
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                  />
-                </label>
-              </div>
-              <label className="block">
-                <span className="text-xs font-medium text-slate-600">Vehicle Number</span>
-                <input
-                  type="text"
-                  value={vehicleNumber}
-                  onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
-                  placeholder="e.g. MH01AB1234"
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100 font-mono"
-                />
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="text-xs font-medium text-slate-600">Type</span>
-                  <select
-                    value={vehicleType}
-                    onChange={(e) => setVehicleType(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+            {!requiresProfileCompletion && (
+              <section className="rounded-[28px] border border-black/5 bg-white p-2 shadow-soft">
+                {[
+                  { onClick: () => history.push('/profile/kyc'), Icon: FileText, title: 'KYC verification', subtitle: kycStatus.label },
+                  { onClick: () => history.push('/safety'), Icon: Shield, title: 'Safety center', subtitle: 'SOS and emergency tools' },
+                  { onClick: () => history.push('/profile/settings'), Icon: Settings, title: 'Settings', subtitle: 'App preferences' },
+                  { onClick: () => history.push('/privacy-policy'), Icon: ShieldCheck, title: 'Privacy Policy', subtitle: 'Legal and data terms' },
+                ].map(({ onClick, Icon, title, subtitle }) => (
+                  <button
+                    key={title}
+                    type="button"
+                    onClick={onClick}
+                    className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition hover:bg-paper"
                   >
-                    <option value="">Select type</option>
-                    <option value="Sedan">Sedan</option>
-                    <option value="SUV">SUV</option>
-                    <option value="Hatchback">Hatchback</option>
-                    <option value="Bike">Bike</option>
-                    <option value="Auto">Auto</option>
-                    <option value="Luxury">Luxury</option>
-                  </select>
-                </label>
-                <label className="block">
-                  <span className="text-xs font-medium text-slate-600">Color</span>
-                  <input
-                    type="text"
-                    value={vehicleColor}
-                    onChange={(e) => setVehicleColor(e.target.value)}
-                    placeholder="e.g. White"
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-800 text-sm outline-none focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                  />
-                </label>
-              </div>
-              <button
-                onClick={handleSaveVehicle}
-                disabled={savingVehicle}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-orange-300 bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-700 transition hover:bg-orange-100 disabled:opacity-60"
-              >
-                {vehicleSaved ? (
-                  <><CheckCircle2 size={16} className="text-green-600" /><span className="text-green-700">Vehicle saved!</span></>
-                ) : (
-                  <><Bookmark size={16} />{savingVehicle ? 'Saving...' : 'Save for Later'}</>
-                )}
-              </button>
-            </div>
-          </section>
-        )}
+                    <div className="grid h-11 w-11 place-items-center rounded-xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white text-fire-orange">
+                      <Icon size={18} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-display text-sm font-bold text-ink">{title}</p>
+                      <p className="text-xs font-medium text-ink/45">{subtitle}</p>
+                    </div>
+                    <ChevronRight size={20} className="text-ink/25" />
+                  </button>
+                ))}
+              </section>
+            )}
 
-        {!requiresProfileCompletion && <section className="rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
-          <button
-            onClick={() => history.push('/profile/kyc')}
-            className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left hover:bg-slate-50"
-          >
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-indigo-100 text-indigo-700">
-              <FileText size={18} />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-slate-800">KYC verification</p>
-              <p className="text-xs text-slate-500">{kycStatus.label}</p>
-            </div>
-            <ChevronRight size={20} className="text-slate-400" />
-          </button>
+            <button
+              onClick={handleLogout}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-fire-red/15 bg-fire-red/5 px-4 py-3 font-display text-sm font-bold text-fire-red transition hover:bg-fire-red/10"
+            >
+              <LogOut size={18} />
+              Sign out
+            </button>
 
-          <button
-            onClick={() => history.push('/safety')}
-            className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left hover:bg-slate-50"
-          >
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-100 text-emerald-700">
-              <Shield size={18} />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-slate-800">Safety center</p>
-              <p className="text-xs text-slate-500">SOS and emergency tools</p>
-            </div>
-            <ChevronRight size={20} className="text-slate-400" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => history.push('/profile/settings')}
-            className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left hover:bg-slate-50"
-          >
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-slate-200 text-slate-700">
-              <Settings size={18} />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-slate-800">Settings</p>
-              <p className="text-xs text-slate-500">App preferences</p>
-            </div>
-            <ChevronRight size={20} className="text-slate-400" />
-          </button>
-
-          <button
-            onClick={() => history.push('/privacy-policy')}
-            className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left hover:bg-slate-50"
-          >
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-orange-100 text-orange-700">
-              <ShieldCheck size={18} />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-slate-800">Privacy Policy</p>
-              <p className="text-xs text-slate-500">Legal and data terms</p>
-            </div>
-            <ChevronRight size={20} className="text-slate-400" />
-          </button>
-        </section>}
-
-        <button
-          onClick={handleLogout}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600 transition hover:bg-rose-100"
-        >
-          <LogOut size={18} />
-          Sign out
-        </button>
-
-        <button
-          onClick={() => history.push('/delete-account')}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium text-slate-400 transition hover:text-rose-600"
-        >
-          Delete Account
-        </button>
+            <button
+              onClick={() => history.push('/delete-account')}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium text-ink/35 transition hover:text-fire-red"
+            >
+              Delete Account
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

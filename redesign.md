@@ -81,7 +81,7 @@ For every page below:
 - [ ] `src/pages/safety/SafetyPage.tsx` — `/safety`, `/safety/sos` (bold, serious SOS)
 
 ## 8. Profile & Settings
-- [ ] `src/pages/profile/ProfilePage.tsx` — `/profile` (avatar, stats, level/points)
+- [x] `src/pages/profile/ProfilePage.tsx` — `/profile` ✅ aura header, fire avatar, fire-tinted info/menu chips, fire edit forms + toggles, fire setup wizard, screenshotted
 - [ ] `src/pages/profile/SettingsPage.tsx` — `/profile/settings`
 - [ ] `src/pages/profile/NotificationsPage.tsx` — `/notifications`
 
