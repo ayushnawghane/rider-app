@@ -58,7 +58,7 @@ For every page below:
 - [ ] `src/pages/home/HomePage.tsx` — `/home` (hero, search/route card, quick actions, routes, promo)
 
 ## 4. Rides (core flows)
-- [ ] `src/pages/rides/FindRidePage.tsx` — `/find-ride` (results, filters, driver cards)
+- [x] `src/pages/rides/FindRidePage.tsx` — `/find-ride` ✅ fire search form, glossy pin/route icons, fire sort pills, driver cards w/ fire→gold route line, fire empty state, screenshotted
 - [ ] `src/pages/rides/RideDetailPage.tsx` — `/rides/detail/:id`
 - [ ] `src/pages/rides/PublishRidePage.tsx` — `/publish-ride` (multi-step form)
 - [ ] `src/pages/rides/UploadRidePage.tsx` — `/upload-ride`
