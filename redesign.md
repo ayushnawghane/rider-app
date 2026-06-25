@@ -86,8 +86,9 @@ For every page below:
 - [x] `src/pages/profile/NotificationsPage.tsx` — `/notifications` ✅ de-Ionic'd to aura header + glossy type icons + fire NEW pills + unread tint, kept pull-to-refresh, screenshotted
 
 ## 9. Location pickers
-- [ ] `src/pages/common/SelectLocationPage.tsx` — `/select-location`
-- [ ] `src/pages/location/SelectLocationPage.tsx` — location variant (confirm which is active)
+- [x] `src/pages/common/SelectLocationPage.tsx` — `/select-location` ✅ aura header, warm LocationSearch (fire pin chip), fire confirm + outline current-location, fire selected/error states, screenshotted
+- [x] `src/components/maps/LocationSearch.tsx` — warmed icon chips, paper input, fire spinner (shared)
+- [ ] `src/pages/location/SelectLocationPage.tsx` — location variant (NOT in active routes — App.tsx uses common/; skip unless wired up)
 
 ## 10. Admin
 - [ ] `src/pages/admin/AdminDashboardPage.tsx` — `/admin`

@@ -31,11 +31,11 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
   const getIconConfig = () => {
     switch (icon) {
       case 'pickup':
-        return { emoji: '📍', bgColor: '#e0e7ff', color: '#6366f1' };
+        return { emoji: '📍', bgColor: '#FFEDD5', color: '#FF6B00' };
       case 'drop':
-        return { emoji: '🏁', bgColor: '#dcfce7', color: '#22c55e' };
+        return { emoji: '🏁', bgColor: '#FFF1CC', color: '#FFB300' };
       default:
-        return { emoji: '🔍', bgColor: '#f3f4f6', color: '#9ca3af' };
+        return { emoji: '🔍', bgColor: '#FFF1E0', color: '#FF6B00' };
     }
   };
 
@@ -143,10 +143,12 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: '16px 48px 16px 64px',
-    background: '#f9fafb',
-    borderRadius: '12px',
-    border: mapsError ? '1px solid #ef4444' : '1px solid #e5e7eb',
+    background: '#FFF7ED',
+    borderRadius: '16px',
+    border: mapsError ? '1px solid #FF3D00' : '1px solid rgba(0,0,0,0.08)',
     fontSize: '16px',
+    fontWeight: 500,
+    color: '#1A0E06',
     outline: 'none',
     boxSizing: 'border-box'
   };
@@ -327,8 +329,8 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
             <div style={{
               width: '20px',
               height: '20px',
-              border: '2px solid #e5e7eb',
-              borderTopColor: '#6366f1',
+              border: '2px solid #FFE9A8',
+              borderTopColor: '#FF6B00',
               borderRadius: '50%',
               animation: 'spin 1s linear infinite'
             }} />
