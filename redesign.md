@@ -69,7 +69,7 @@ For every page below:
 - [ ] `src/pages/rides/TripTrackingPage.tsx` — `/trips/tracking/:id`
 
 ## 5. Rewards (showcase — make it pop)
-- [ ] `src/pages/rewards/RewardsPage.tsx` — `/rewards` (points balance, tiers, badges, history)
+- [x] `src/pages/rewards/RewardsPage.tsx` — `/rewards` ✅ fire hero card, glossy AppIcons, fire tabs/chips, screenshotted
 
 ## 6. Inbox & Support
 - [ ] `src/pages/inbox/InboxPage.tsx` — `/inbox` (new)

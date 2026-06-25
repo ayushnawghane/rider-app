@@ -1,20 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
-import {
-  Award,
-  Star,
-  Trophy,
-  Target,
-  Zap,
-  Moon,
-  Sun,
-  Car,
-  Users,
-  Gift,
-} from 'lucide-react';
+import { Trophy, Check } from 'lucide-react';
 import type { Reward, Achievement, UserStats } from '../../types';
-import { AppCard, PageHeader, PageLoader } from '../../components/ui';
+import { PageLoader } from '../../components/ui';
+import AppIcon, { type AppIconName } from '../../components/icons/AppIcon';
+
+const FIRE = 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))';
 
 type RewardAction = Reward['action'];
 
@@ -235,13 +227,6 @@ const RewardsPage = () => {
     };
   }, [isAuthLoaded, user]);
 
-  const getTierColor = (level: number) => {
-    if (level >= 31) return 'from-purple-500 to-purple-700';
-    if (level >= 21) return 'from-yellow-400 to-yellow-600';
-    if (level >= 11) return 'from-gray-300 to-gray-500';
-    return 'from-amber-600 to-amber-800';
-  };
-
   const getTierName = (level: number) => {
     if (level >= 31) return 'Platinum';
     if (level >= 21) return 'Gold';
@@ -260,39 +245,20 @@ const RewardsPage = () => {
     return Math.max(0, Math.min(100, Math.round((pointsInCurrentLevel / pointsNeeded) * 100)));
   };
 
-  const getActionIcon = (action: RewardAction) => {
+  const getActionIconName = (action: RewardAction): AppIconName => {
     switch (action) {
       case 'publish_ride':
-        return <Car className="w-5 h-5" />;
+        return 'car';
       case 'join_ride':
       case 'complete_ride':
-        return <Users className="w-5 h-5" />;
+        return 'users';
       case 'weekly_streak':
-        return <Zap className="w-5 h-5" />;
+        return 'zap';
       case 'referral':
-        return <Gift className="w-5 h-5" />;
       case 'five_star_rating':
-        return <Star className="w-5 h-5" />;
+        return 'star';
       default:
-        return <Award className="w-5 h-5" />;
-    }
-  };
-
-  const getActionColor = (action: RewardAction) => {
-    switch (action) {
-      case 'publish_ride':
-        return 'bg-blue-100 text-blue-600';
-      case 'join_ride':
-      case 'complete_ride':
-        return 'bg-green-100 text-green-600';
-      case 'weekly_streak':
-        return 'bg-yellow-100 text-yellow-600';
-      case 'referral':
-        return 'bg-purple-100 text-purple-600';
-      case 'five_star_rating':
-        return 'bg-orange-100 text-orange-600';
-      default:
-        return 'bg-gray-100 text-gray-600';
+        return 'award';
     }
   };
 
@@ -301,263 +267,235 @@ const RewardsPage = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const renderAchievementIcon = (icon: string, color: string) => {
-    if (icon === 'sun') return <Sun className="w-7 h-7" style={{ color }} />;
-    if (icon === 'moon') return <Moon className="w-7 h-7" style={{ color }} />;
-    if (icon === 'car') return <Car className="w-7 h-7" style={{ color }} />;
-    if (icon === 'users') return <Users className="w-7 h-7" style={{ color }} />;
-    if (icon === 'star') return <Star className="w-7 h-7" style={{ color }} />;
-    return <Award className="w-7 h-7" style={{ color }} />;
+  const achievementIconName = (icon: string): AppIconName => {
+    if (icon === 'car') return 'car';
+    if (icon === 'users') return 'users';
+    if (icon === 'star') return 'star';
+    return 'award';
   };
 
   if (!isAuthLoaded) {
     return <PageLoader />;
   }
 
+  const tierName = getTierName(userStats.level);
+  const progress = getCurrentLevelProgress();
+  const pointsToNext = Math.max(0, getNextLevelPoints(userStats.level) - userStats.points);
+
+  const waysToEarn: { name: AppIconName; title: string; subtitle: string; pts: number }[] = [
+    { name: 'car', title: 'Publish a ride', subtitle: 'Share your journey', pts: 50 },
+    { name: 'users', title: 'Join a ride', subtitle: 'As a passenger', pts: 30 },
+    { name: 'zap', title: 'Weekly streak', subtitle: '3+ rides in a week', pts: 40 },
+    { name: 'star', title: 'Refer a friend', subtitle: 'They join and ride', pts: 100 },
+  ];
+
+  const benefits = [
+    'Priority matching with top-rated drivers',
+    'Featured listing when publishing rides',
+    ...(userStats.level >= 11 ? ['5% discount on all rides'] : []),
+    ...(userStats.level >= 21 ? ['Exclusive Gold member support'] : []),
+  ];
+
   return (
-    <div className="app-scroll-screen app-bottom-nav-safe bg-gray-50">
-      <PageHeader title="Rewards" variant="gradient" gradientClassName={getTierColor(userStats.level)} className="pb-8">
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-white/80 text-sm mb-1">Total Points</p>
-              <p className="text-4xl font-bold text-white">{userStats.points.toLocaleString()}</p>
-            </div>
-            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
-              <Trophy className="w-8 h-8 text-white" />
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <div className="flex items-center justify-between text-white mb-2">
-              <span className="text-sm font-medium">Level {userStats.level}</span>
-              <span className="text-sm opacity-80">{getCurrentLevelProgress()}%</span>
-            </div>
-            <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-white rounded-full transition-all duration-500"
-                style={{ width: `${getCurrentLevelProgress()}%` }}
-              />
-            </div>
-            <p className="text-white/60 text-xs mt-2">
-              {Math.max(0, getNextLevelPoints(userStats.level) - userStats.points)} points to Level{' '}
-              {userStats.level + 1}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div
-              className={`px-4 py-2 rounded-full bg-gradient-to-r ${getTierColor(
-                userStats.level,
-              )} border border-white/30`}
-            >
-              <span className="text-white font-bold text-sm">{getTierName(userStats.level)} Member</span>
-            </div>
-          </div>
-        </div>
-      </PageHeader>
-
-      <div className="px-4 -mt-4 mb-6">
-        <div className="grid grid-cols-2 gap-3">
-          <AppCard className="rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Car className="w-4 h-4 text-blue-600" />
-              </div>
-              <span className="text-xs text-gray-500">Rides Published</span>
-            </div>
-            <p className="text-2xl font-bold text-gray-900">{userStats.ridesPublished}</p>
-          </AppCard>
-          <AppCard className="rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                <Users className="w-4 h-4 text-green-600" />
-              </div>
-              <span className="text-xs text-gray-500">Rides Taken</span>
-            </div>
-            <p className="text-2xl font-bold text-gray-900">{userStats.ridesTaken}</p>
-          </AppCard>
-        </div>
+    <div className="app-scroll-screen app-bottom-nav-safe relative overflow-hidden bg-white">
+      {/* Grainy orange aura, right-weighted */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[420px]">
+        <div
+          className="absolute inset-0"
+          style={{ background: 'radial-gradient(120% 70% at 80% -10%, rgba(255,107,0,0.46) 0%, rgba(255,160,30,0.18) 46%, rgba(255,255,255,0) 74%)' }}
+        />
+        <div className="absolute -right-16 -top-12 h-72 w-72 rounded-full animate-aurora-1" style={{ background: 'radial-gradient(circle, rgba(255,200,50,0.72) 0%, transparent 62%)', filter: 'blur(48px)' }} />
+        <div className="absolute -left-20 top-10 h-56 w-56 rounded-full animate-aurora-2" style={{ background: 'radial-gradient(circle, rgba(255,140,0,0.3) 0%, transparent 62%)', filter: 'blur(50px)' }} />
       </div>
 
-      {loadError && (
-        <div className="px-4 mb-4">
-          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{loadError}</div>
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="px-5 pb-3 pt-[calc(env(safe-area-inset-top)+20px)]">
+          <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Your rewards</p>
+          <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">Rewards</h1>
         </div>
-      )}
 
-      {loadingRewards && (
-        <div className="px-4 mb-4">
-          <div className="rounded-xl border border-primary-100 bg-primary-50 p-3 text-sm text-primary-700">
-            Refreshing rewards...
-          </div>
-        </div>
-      )}
-
-      <div className="px-4 mb-4">
-        <div className="flex bg-gray-100 rounded-xl p-1">
-          {(['overview', 'achievements', 'history'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
-                activeTab === tab ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-600'
-              }`}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="px-4">
-        {activeTab === 'overview' && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl shadow-lg p-5">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Ways to Earn</h2>
-              <div className="space-y-3">
-                <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Car className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">Publish a Ride</p>
-                    <p className="text-xs text-gray-500">Share your journey</p>
-                  </div>
-                  <span className="text-blue-600 font-bold">+50 pts</span>
+        <div className="px-4">
+          {/* Hero points card */}
+          <div className="grain grain-strong relative overflow-hidden rounded-[30px] p-6 text-white shadow-glow-lg" style={{ background: FIRE }}>
+            <div className="relative z-10">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-white/80">Total points</p>
+                  <p className="mt-1 font-display text-6xl font-extrabold leading-none">{userStats.points.toLocaleString()}</p>
                 </div>
-                <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Users className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">Join a Ride</p>
-                    <p className="text-xs text-gray-500">As a passenger</p>
-                  </div>
-                  <span className="text-green-600 font-bold">+30 pts</span>
-                </div>
-                <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
-                  <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <Zap className="w-5 h-5 text-yellow-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">Weekly Streak</p>
-                    <p className="text-xs text-gray-500">3+ rides in a week</p>
-                  </div>
-                  <span className="text-yellow-600 font-bold">+40 pts</span>
-                </div>
-                <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Gift className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">Refer a Friend</p>
-                    <p className="text-xs text-gray-500">They join and ride</p>
-                  </div>
-                  <span className="text-purple-600 font-bold">+100 pts</span>
+                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white/20 backdrop-blur-sm">
+                  <Trophy className="h-8 w-8 text-white" strokeWidth={2.5} />
                 </div>
               </div>
-            </div>
 
-            <div className="bg-white rounded-2xl shadow-lg p-5">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">{getTierName(userStats.level)} Benefits</h2>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                    <Target className="w-3 h-3 text-green-600" />
-                  </div>
-                  <span className="text-gray-700">Priority matching with top-rated drivers</span>
+              <div className="mt-6">
+                <div className="mb-2 flex items-center justify-between font-display text-sm font-bold">
+                  <span>Level {userStats.level}</span>
+                  <span className="text-white/80">{progress}%</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                    <Target className="w-3 h-3 text-green-600" />
-                  </div>
-                  <span className="text-gray-700">Featured listing when publishing rides</span>
+                <div className="h-2.5 overflow-hidden rounded-full bg-white/25">
+                  <div className="h-full rounded-full bg-white transition-all duration-500" style={{ width: `${progress}%` }} />
                 </div>
-                {userStats.level >= 11 && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                      <Target className="w-3 h-3 text-green-600" />
-                    </div>
-                    <span className="text-gray-700">5% discount on all rides</span>
-                  </div>
-                )}
-                {userStats.level >= 21 && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                      <Target className="w-3 h-3 text-green-600" />
-                    </div>
-                    <span className="text-gray-700">Exclusive Gold member support</span>
-                  </div>
-                )}
+                <p className="mt-2 text-xs font-medium text-white/75">
+                  {pointsToNext} points to Level {userStats.level + 1}
+                </p>
+              </div>
+
+              <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
+                <span className="font-display text-sm font-extrabold uppercase tracking-wide">{tierName} Member</span>
               </div>
             </div>
           </div>
-        )}
 
-        {activeTab === 'achievements' && (
-          <div className="space-y-4">
-            {achievements.map((achievement) => (
-              <div key={achievement.id} className="bg-white rounded-2xl shadow-lg p-5">
-                <div className="flex items-center gap-4">
-                  <div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                    style={{ backgroundColor: `${achievement.badgeColor}20` }}
-                  >
-                    {renderAchievementIcon(achievement.badgeIcon, achievement.badgeColor)}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{achievement.badgeName}</h3>
-                    <p className="text-sm text-gray-500">{achievement.description}</p>
-                    <p className="text-xs text-gray-400 mt-1">Earned {formatDate(achievement.earnedAt)}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-primary-600 font-bold">Unlocked</span>
-                  </div>
-                </div>
+          {/* Stats */}
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="rounded-[24px] border border-black/5 bg-white p-4 shadow-soft">
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
+                <AppIcon name="car" className="h-6 w-6" />
               </div>
-            ))}
-
-            <div className="bg-gray-100 rounded-2xl p-5 opacity-60">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-gray-200 rounded-2xl flex items-center justify-center">
-                  <Star className="w-7 h-7 text-gray-400" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-700">Community Champion</h3>
-                  <p className="text-sm text-gray-500">Publish 25 rides</p>
-                </div>
-                <div className="text-right">
-                  <span className="text-gray-500 font-medium">{userStats.ridesPublished}/25</span>
-                </div>
+              <p className="font-display text-3xl font-extrabold leading-none text-ink">{userStats.ridesPublished}</p>
+              <p className="mt-1 font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">Rides published</p>
+            </div>
+            <div className="rounded-[24px] border border-black/5 bg-white p-4 shadow-soft">
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
+                <AppIcon name="users" className="h-6 w-6" />
               </div>
+              <p className="font-display text-3xl font-extrabold leading-none text-ink">{userStats.ridesTaken}</p>
+              <p className="mt-1 font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">Rides taken</p>
             </div>
           </div>
-        )}
 
-        {activeTab === 'history' && (
-          <div className="space-y-3">
-            {pointsHistory.length === 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-5 text-center text-sm text-gray-500">
-                No reward points yet. Publish or join a ride to start earning.
+          {loadError && (
+            <div className="mt-4 rounded-2xl border border-fire-red/20 bg-fire-red/5 p-3 text-sm font-medium text-fire-red">
+              {loadError}
+            </div>
+          )}
+
+          {loadingRewards && (
+            <div className="mt-4 rounded-2xl border border-primary-100 bg-primary-50 p-3 text-sm font-medium text-primary-700">
+              Refreshing rewards...
+            </div>
+          )}
+
+          {/* Tabs */}
+          <div className="mt-5 grid grid-cols-3 gap-1 rounded-[20px] border border-black/5 bg-white/80 p-1.5 shadow-soft backdrop-blur-md">
+            {(['overview', 'achievements', 'history'] as const).map((tab) => {
+              const isActive = activeTab === tab;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`${isActive ? 'grain grain-strong text-white shadow-glow' : 'text-ink/45 hover:text-ink/70'} relative overflow-hidden rounded-2xl py-2.5 font-display text-sm font-bold transition-all active:scale-95`}
+                  style={isActive ? { background: FIRE } : undefined}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-5">
+            {activeTab === 'overview' && (
+              <div className="space-y-4">
+                <div className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
+                  <h2 className="mb-4 font-display text-xl font-extrabold tracking-tight text-ink">Ways to earn</h2>
+                  <div className="space-y-3">
+                    {waysToEarn.map((way) => (
+                      <div key={way.title} className="flex items-center gap-3 rounded-2xl border border-black/5 bg-paper p-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary-100 bg-white">
+                          <AppIcon name={way.name} className="h-6 w-6" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-display font-bold text-ink">{way.title}</p>
+                          <p className="text-xs text-ink/50">{way.subtitle}</p>
+                        </div>
+                        <span className="shrink-0 rounded-full px-3 py-1 font-display text-sm font-extrabold text-white shadow-glow" style={{ background: FIRE }}>
+                          +{way.pts}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
+                  <h2 className="mb-4 font-display text-xl font-extrabold tracking-tight text-ink">{tierName} benefits</h2>
+                  <div className="space-y-3">
+                    {benefits.map((benefit) => (
+                      <div key={benefit} className="flex items-center gap-3">
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white" style={{ background: FIRE }}>
+                          <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                        </div>
+                        <span className="text-sm font-medium text-ink/75">{benefit}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
-            {pointsHistory.map((entry) => (
-              <div key={entry.id} className="bg-white rounded-xl shadow-lg p-4">
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getActionColor(entry.action)}`}>
-                    {getActionIcon(entry.action)}
+
+            {activeTab === 'achievements' && (
+              <div className="space-y-4">
+                {achievements.map((achievement) => (
+                  <div key={achievement.id} className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
+                        <AppIcon name={achievementIconName(achievement.badgeIcon)} className="h-8 w-8" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-display font-bold text-ink">{achievement.badgeName}</h3>
+                        <p className="text-sm text-ink/55">{achievement.description}</p>
+                        <p className="mt-1 text-xs text-ink/35">Earned {formatDate(achievement.earnedAt)}</p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-fire-gold px-3 py-1 font-display text-xs font-extrabold text-ink shadow-gold-glow">
+                        Unlocked
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{entry.description}</p>
-                    <p className="text-xs text-gray-500">{formatDate(entry.createdAt)}</p>
+                ))}
+
+                <div className="rounded-[28px] border border-black/5 bg-paper p-5 opacity-70">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-black/5 bg-white grayscale">
+                      <AppIcon name="star" className="h-8 w-8" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-display font-bold text-ink/70">Community Champion</h3>
+                      <p className="text-sm text-ink/45">Publish 25 rides</p>
+                    </div>
+                    <span className="shrink-0 font-display text-sm font-bold text-ink/45">{userStats.ridesPublished}/25</span>
                   </div>
-                  <span className="text-green-600 font-bold">+{entry.points}</span>
                 </div>
               </div>
-            ))}
+            )}
+
+            {activeTab === 'history' && (
+              <div className="space-y-3">
+                {pointsHistory.length === 0 && (
+                  <div className="rounded-[24px] border border-black/5 bg-white p-6 text-center shadow-soft">
+                    <p className="text-sm font-medium text-ink/55">No reward points yet. Publish or join a ride to start earning.</p>
+                  </div>
+                )}
+                {pointsHistory.map((entry) => (
+                  <div key={entry.id} className="rounded-[22px] border border-black/5 bg-white p-4 shadow-soft">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
+                        <AppIcon name={getActionIconName(entry.action)} className="h-6 w-6" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-display font-bold text-ink">{entry.description}</p>
+                        <p className="text-xs text-ink/45">{formatDate(entry.createdAt)}</p>
+                      </div>
+                      <span className="shrink-0 font-display text-base font-extrabold text-fire-orange">+{entry.points}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+
+          <div className="h-6" />
+        </div>
       </div>
     </div>
   );
