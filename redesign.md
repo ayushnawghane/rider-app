@@ -78,7 +78,7 @@ For every page below:
 - [x] `src/pages/support/DisputeChatPage.tsx` — `/support/dispute/:id` ✅ fire user bubbles / white support bubbles, fire send bar, themed empty + skeleton, screenshotted
 
 ## 7. Safety
-- [ ] `src/pages/safety/SafetyPage.tsx` — `/safety`, `/safety/sos` (bold, serious SOS)
+- [x] `src/pages/safety/SafetyPage.tsx` — `/safety`, `/safety/sos` ✅ de-inline-styled to Tailwind: aura header, location card + live badge, bold red SOS card, fire-icon safety tips, red/fire contacts, fire success state, screenshotted
 
 ## 8. Profile & Settings
 - [x] `src/pages/profile/ProfilePage.tsx` — `/profile` ✅ aura header, fire avatar, fire-tinted info/menu chips, fire edit forms + toggles, fire setup wizard, screenshotted
