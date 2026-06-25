@@ -3,7 +3,6 @@ import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { mapsService, rideService, vehicleService } from '../../services';
 import {
-  MapPin,
   Clock,
   Users,
   Car,
@@ -13,11 +12,14 @@ import {
   FileText,
   ChevronRight,
   Bookmark,
-  CheckCircle2
+  CheckCircle2,
 } from 'lucide-react';
 import { hasRequiredBookingProfile } from '../../utils/profileCompletion';
 import { displayPositiveIntegerInput, normalizePositiveIntegerInput } from '../../utils/numberInput';
-import { AppCard, PageHeader, PageLoader } from '../../components/ui';
+import AppIcon from '../../components/icons/AppIcon';
+import { PageLoader } from '../../components/ui';
+
+const FIRE = 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))';
 
 interface Location {
   address: string;
@@ -39,7 +41,7 @@ type PublishRideFieldErrors = {
 };
 
 const lightFieldClass =
-  'bg-white text-gray-900 placeholder-gray-400 [color-scheme:light]';
+  'bg-white text-ink placeholder-ink/30 [color-scheme:light]';
 
 const buildReferenceId = () => `RIDE-${Date.now().toString(36).toUpperCase()}`;
 const pad2 = (value: number) => String(value).padStart(2, '0');
@@ -290,30 +292,49 @@ const PublishRidePage = () => {
     return <PageLoader />;
   }
 
+  const sectionTitle = (text: string) => (
+    <h2 className="mb-4 font-display text-lg font-extrabold tracking-tight text-ink">{text}</h2>
+  );
+
   return (
     <div
-      className="app-scroll-screen app-bottom-nav-safe bg-gray-50 publish-ride-light"
+      className="app-scroll-screen app-bottom-nav-safe publish-ride-light relative overflow-hidden bg-white"
       style={{ colorScheme: 'light' }}
     >
-      <PageHeader title="Publish Ride" subtitle="Share your journey and earn points" variant="gradient" />
+      {/* Grainy orange aura, right-weighted */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[320px]">
+        <div
+          className="absolute inset-0"
+          style={{ background: 'radial-gradient(120% 72% at 82% -10%, rgba(255,107,0,0.4) 0%, rgba(255,160,30,0.15) 46%, rgba(255,255,255,0) 74%)' }}
+        />
+        <div className="absolute -right-16 -top-12 h-72 w-72 rounded-full animate-aurora-1" style={{ background: 'radial-gradient(circle, rgba(255,200,50,0.62) 0%, transparent 62%)', filter: 'blur(48px)' }} />
+        <div className="absolute -left-20 top-8 h-52 w-52 rounded-full animate-aurora-2" style={{ background: 'radial-gradient(circle, rgba(255,140,0,0.24) 0%, transparent 62%)', filter: 'blur(50px)' }} />
+      </div>
 
-      {/* Form */}
-      <div className="px-4 -mt-4">
-        <AppCard className="p-5">
+      <div className="relative z-10 px-4 pb-6 pt-[calc(env(safe-area-inset-top)+20px)]">
+        {/* Header */}
+        <div className="mb-5">
+          <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Publish</p>
+          <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">Offer a ride</h1>
+          <p className="mt-2 text-sm font-medium text-ink/50">Share your journey and earn points</p>
+        </div>
+
+        {/* Form */}
+        <div className="rounded-[28px] border border-black/5 bg-white/85 p-5 shadow-strong backdrop-blur-md">
           {Object.keys(fieldErrors).length > 0 && (
-            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div className="mb-4 rounded-2xl border border-fire-red/20 bg-fire-red/5 px-3 py-2 text-sm font-medium text-fire-red">
               Please complete all required fields highlighted below.
             </div>
           )}
           {submitError && (
-            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div className="mb-4 rounded-2xl border border-fire-red/20 bg-fire-red/5 px-3 py-2 text-sm font-medium text-fire-red">
               {submitError}
             </div>
           )}
 
           {/* Route Selection */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Route Details</h2>
+            {sectionTitle('Route details')}
 
             {/* From */}
             <button
@@ -324,25 +345,18 @@ const PublishRidePage = () => {
                 end: endLocation || undefined,
                 departureTime: departureTime || undefined,
               })}
-              className={`w-full p-4 border-2 rounded-xl mb-3 text-left transition-colors ${fieldErrors.startLocation
-                ? 'border-red-300 bg-red-50'
-                : 'border-primary-100 hover:border-primary-300'
-                }`}
+              className={`mb-3 flex w-full items-center gap-3 rounded-2xl border-2 p-3.5 text-left transition-colors ${
+                fieldErrors.startLocation ? 'border-fire-red/40 bg-fire-red/5' : 'border-primary-100 bg-primary-50/40 hover:border-primary-300'
+              }`}
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-primary-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-0.5">From</p>
-                  <p className="text-gray-900 font-medium">
-                    {startLocation?.address || 'Select starting point'}
-                  </p>
-                </div>
+              <AppIcon name="map-pin" className="h-6 w-6 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">From</p>
+                <p className="truncate font-display font-bold text-ink">{startLocation?.address || 'Select starting point'}</p>
               </div>
             </button>
             {fieldErrors.startLocation && (
-              <p className="-mt-1 mb-3 text-xs text-red-600">{fieldErrors.startLocation}</p>
+              <p className="-mt-1 mb-3 text-xs font-semibold text-fire-red">{fieldErrors.startLocation}</p>
             )}
 
             {/* To */}
@@ -354,37 +368,31 @@ const PublishRidePage = () => {
                 end: endLocation || undefined,
                 departureTime: departureTime || undefined,
               })}
-              className={`w-full p-4 border-2 rounded-xl text-left transition-colors ${fieldErrors.endLocation
-                ? 'border-red-300 bg-red-50'
-                : 'border-primary-100 hover:border-primary-300'
-                }`}
+              className={`flex w-full items-center gap-3 rounded-2xl border-2 p-3.5 text-left transition-colors ${
+                fieldErrors.endLocation ? 'border-fire-red/40 bg-fire-red/5' : 'border-primary-100 bg-primary-50/40 hover:border-primary-300'
+              }`}
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-0.5">To</p>
-                  <p className="text-gray-900 font-medium">
-                    {endLocation?.address || 'Select destination'}
-                  </p>
-                </div>
+              <AppIcon name="route" className="h-6 w-6 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">To</p>
+                <p className="truncate font-display font-bold text-ink">{endLocation?.address || 'Select destination'}</p>
               </div>
             </button>
             {fieldErrors.endLocation && (
-              <p className="mt-2 text-xs text-red-600">{fieldErrors.endLocation}</p>
+              <p className="mt-2 text-xs font-semibold text-fire-red">{fieldErrors.endLocation}</p>
             )}
           </div>
 
           {/* Departure Date and Time */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Departure Date and Time</h2>
+            {sectionTitle('Departure date & time')}
             <div className="grid grid-cols-2 gap-3">
               <label
-                className={`flex min-w-0 items-center gap-3 rounded-xl border-2 p-4 ${fieldErrors.departureTime ? 'border-red-300 bg-red-50' : 'border-transparent bg-gray-50'
-                  }`}
+                className={`flex min-w-0 items-center gap-3 rounded-2xl border p-4 ${
+                  fieldErrors.departureTime ? 'border-fire-red/40 bg-fire-red/5' : 'border-black/5 bg-paper'
+                }`}
               >
-                <Clock className="w-5 h-5 shrink-0 text-primary-500" />
+                <Clock className="h-5 w-5 shrink-0 text-fire-orange" />
                 <input
                   type="date"
                   value={getDatePart(departureTime)}
@@ -398,14 +406,15 @@ const PublishRidePage = () => {
                       return next;
                     });
                   }}
-                  className={`min-w-0 flex-1 bg-transparent text-gray-700 focus:outline-none ${lightFieldClass}`}
+                  className={`min-w-0 flex-1 bg-transparent font-display text-sm font-bold text-ink focus:outline-none ${lightFieldClass}`}
                 />
               </label>
               <label
-                className={`flex min-w-0 items-center gap-3 rounded-xl border-2 p-4 ${fieldErrors.departureTime ? 'border-red-300 bg-red-50' : 'border-transparent bg-gray-50'
-                  }`}
+                className={`flex min-w-0 items-center gap-3 rounded-2xl border p-4 ${
+                  fieldErrors.departureTime ? 'border-fire-red/40 bg-fire-red/5' : 'border-black/5 bg-paper'
+                }`}
               >
-                <Clock className="w-5 h-5 shrink-0 text-primary-500" />
+                <Clock className="h-5 w-5 shrink-0 text-fire-orange" />
                 <input
                   type="time"
                   step={1800}
@@ -420,33 +429,35 @@ const PublishRidePage = () => {
                       return next;
                     });
                   }}
-                  className={`min-w-0 flex-1 bg-transparent text-gray-700 focus:outline-none ${lightFieldClass}`}
+                  className={`min-w-0 flex-1 bg-transparent font-display text-sm font-bold text-ink focus:outline-none ${lightFieldClass}`}
                 />
               </label>
             </div>
             {fieldErrors.departureTime && (
-              <p className="mt-2 text-xs text-red-600">{fieldErrors.departureTime}</p>
+              <p className="mt-2 text-xs font-semibold text-fire-red">{fieldErrors.departureTime}</p>
             )}
           </div>
 
           {/* Available Seats */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Available Seats</h2>
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-              <Users className="w-5 h-5 text-primary-500" />
-              <div className="flex items-center gap-6">
+            {sectionTitle('Available seats')}
+            <div className="flex items-center gap-4 rounded-2xl border border-black/5 bg-paper p-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary-100 bg-white">
+                <AppIcon name="users" className="h-5 w-5" />
+              </div>
+              <div className="flex flex-1 items-center justify-end gap-6">
                 <button
                   onClick={() => setAvailableSeats(Math.max(1, availableSeats - 1))}
-                  className="w-12 h-12 rounded-xl bg-white border-2 border-gray-200 flex items-center justify-center hover:border-primary-300 transition-colors"
+                  className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-primary-200 bg-white transition active:scale-90 hover:bg-primary-50"
                 >
-                  <Minus className="w-5 h-5 text-gray-600" />
+                  <Minus className="h-5 w-5 text-ink" strokeWidth={2.5} />
                 </button>
-                <span className="text-2xl font-bold text-gray-900 w-8 text-center">{availableSeats}</span>
+                <span className="w-8 text-center font-display text-2xl font-extrabold text-ink">{availableSeats}</span>
                 <button
                   onClick={() => setAvailableSeats(Math.min(6, availableSeats + 1))}
-                  className="w-12 h-12 rounded-xl bg-white border-2 border-gray-200 flex items-center justify-center hover:border-primary-300 transition-colors"
+                  className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-primary-200 bg-white transition active:scale-90 hover:bg-primary-50"
                 >
-                  <Plus className="w-5 h-5 text-gray-600" />
+                  <Plus className="h-5 w-5 text-ink" strokeWidth={2.5} />
                 </button>
               </div>
             </div>
@@ -454,20 +465,20 @@ const PublishRidePage = () => {
 
           {/* Price Per Seat */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Price Per Seat</h2>
-            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-              <IndianRupee className="w-5 h-5 text-primary-500" />
+            {sectionTitle('Price per seat')}
+            <div className="flex items-center gap-3 rounded-2xl border border-black/5 bg-paper p-4">
+              <IndianRupee className="h-6 w-6 text-fire-orange" strokeWidth={2.5} />
               <input
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
                 value={displayPositiveIntegerInput(pricePerSeat)}
                 onChange={(e) => setPricePerSeat(normalizePositiveIntegerInput(e.target.value))}
-                className={`flex-1 bg-transparent text-2xl font-bold text-gray-900 focus:outline-none ${lightFieldClass}`}
-                placeholder="₹0"
+                className={`flex-1 bg-transparent font-display text-2xl font-extrabold text-ink focus:outline-none ${lightFieldClass}`}
+                placeholder="0"
               />
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="mt-2 text-xs font-medium text-ink/50">
               {routeMeta
                 ? `Route estimate: ${routeMeta.distanceKm} km • ${routeMeta.durationMinutes} min`
                 : 'Route estimate appears after both locations are selected'}
@@ -476,33 +487,36 @@ const PublishRidePage = () => {
 
           {/* Vehicle Details */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Vehicle Details</h2>
+            {sectionTitle('Vehicle details')}
 
             {/* Vehicle Type */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              {vehicleTypes.map(({ label, image }) => (
-                <button
-                  key={label}
-                  onClick={() => setVehicleType(label)}
-                  className={`p-3 rounded-xl border-2 text-sm font-medium transition-all ${vehicleType === label
-                    ? 'border-primary-500 bg-primary-50 text-primary-700 shadow-md shadow-primary-100'
-                    : 'border-gray-200 text-gray-600 hover:border-primary-300 hover:bg-gray-50'
+            <div className="mb-4 grid grid-cols-2 gap-3">
+              {vehicleTypes.map(({ label, image }) => {
+                const selected = vehicleType === label;
+                return (
+                  <button
+                    key={label}
+                    onClick={() => setVehicleType(label)}
+                    className={`rounded-2xl border-2 p-3 font-display text-sm font-bold transition-all ${
+                      selected
+                        ? 'border-primary-500 bg-primary-50 text-primary-700 shadow-soft'
+                        : 'border-black/10 text-ink/55 hover:border-primary-300 hover:bg-paper'
                     }`}
-                >
-                  <img
-                    src={image}
-                    alt={label}
-                    className={`w-16 h-10 object-contain mx-auto mb-1.5 transition-opacity ${vehicleType === label ? 'opacity-100' : 'opacity-60'
-                      }`}
-                  />
-                  <span className="block text-center">{label}</span>
-                </button>
-              ))}
+                  >
+                    <img
+                      src={image}
+                      alt={label}
+                      className={`mx-auto mb-1.5 h-10 w-16 object-contain transition-opacity ${selected ? 'opacity-100' : 'opacity-60'}`}
+                    />
+                    <span className="block text-center">{label}</span>
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Vehicle Number + Save for Later */}
+            {/* Vehicle Number */}
             <div className="relative">
-              <Car className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Car className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink/35" />
               <input
                 type="text"
                 value={vehicleNumber}
@@ -518,77 +532,79 @@ const PublishRidePage = () => {
                   });
                 }}
                 placeholder="Vehicle Number (e.g., MH01AB1234)"
-                className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:border-primary-500 ${fieldErrors.vehicleNumber ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                  } ${lightFieldClass}`}
+                className={`w-full rounded-2xl border-2 py-3 pl-11 pr-4 font-display font-bold focus:outline-none focus:border-fire-orange ${
+                  fieldErrors.vehicleNumber ? 'border-fire-red/40 bg-fire-red/5' : 'border-black/10'
+                } ${lightFieldClass}`}
               />
             </div>
             {fieldErrors.vehicleNumber && (
-              <p className="mt-2 text-xs text-red-600">{fieldErrors.vehicleNumber}</p>
+              <p className="mt-2 text-xs font-semibold text-fire-red">{fieldErrors.vehicleNumber}</p>
             )}
 
-            {/* Save for Later button */}
+            {/* Save for Later */}
             <button
               type="button"
               onClick={handleSaveVehicle}
               disabled={savingVehicle || !vehicleNumber.trim()}
-              className="mt-3 flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-primary-300 bg-primary-50 text-primary-700 text-sm font-medium hover:bg-primary-100 disabled:opacity-50 transition-all"
+              className="mt-3 flex items-center gap-2 rounded-xl border border-dashed border-primary-300 bg-primary-50 px-4 py-2 font-display text-sm font-bold text-primary-700 transition-all hover:bg-primary-100 disabled:opacity-50"
             >
               {vehicleSaved ? (
-                <><CheckCircle2 className="w-4 h-4 text-green-600" /><span className="text-green-700">Saved!</span></>
+                <><CheckCircle2 className="h-4 w-4 text-emerald-600" /><span className="text-emerald-700">Saved!</span></>
               ) : (
-                <><Bookmark className="w-4 h-4" />{savingVehicle ? 'Saving...' : 'Save for Later'}</>
+                <><Bookmark className="h-4 w-4" />{savingVehicle ? 'Saving...' : 'Save for Later'}</>
               )}
             </button>
           </div>
 
           {/* Additional Notes */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Additional Notes</h2>
+            {sectionTitle('Additional notes')}
             <div className="relative">
-              <FileText className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+              <FileText className="absolute left-3.5 top-3.5 h-5 w-5 text-ink/35" />
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Any preferences? (No smoking, AC on, etc.)"
                 rows={3}
-                className={`w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 resize-none ${lightFieldClass}`}
+                className={`w-full resize-none rounded-2xl border-2 border-black/10 py-3 pl-11 pr-4 font-medium focus:outline-none focus:border-fire-orange ${lightFieldClass}`}
               />
             </div>
           </div>
 
           {/* Points Preview */}
-          <div className="bg-primary-50 rounded-xl p-4 mb-6">
-            <div className="flex items-center justify-between">
+          <div className="grain grain-strong relative mb-6 overflow-hidden rounded-[24px] p-4 text-white shadow-glow" style={{ background: FIRE }}>
+            <div className="relative z-10 flex items-center justify-between">
               <div>
-                <p className="text-sm text-primary-700 font-medium">You'll earn</p>
-                <p className="text-2xl font-bold text-primary-600">+50 points</p>
+                <p className="font-display text-xs font-bold uppercase tracking-wide text-white/80">You'll earn</p>
+                <p className="font-display text-3xl font-extrabold leading-none">+50 points</p>
+                <p className="mt-1.5 text-xs font-medium text-white/75">Awarded when the ride is published</p>
               </div>
-              <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
-                <Car className="w-6 h-6 text-primary-600" />
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                <Car className="h-7 w-7 text-white" strokeWidth={2.5} />
               </div>
             </div>
-            <p className="text-xs text-primary-600 mt-2">Points awarded when the ride is published</p>
           </div>
 
           {/* Publish Button */}
           <button
             onClick={handlePublish}
             disabled={isSubmitting}
-            className="w-full py-4 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/30 transition-all active:scale-95 flex items-center justify-center gap-2"
+            className="grain grain-strong relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl py-4 font-display text-lg font-bold tracking-tight text-white shadow-glow transition-all hover:shadow-glow-lg active:scale-[0.98] disabled:opacity-80"
+            style={{ background: FIRE }}
           >
             {isSubmitting ? (
               <>
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 Publishing...
               </>
             ) : (
               <>
                 Publish Ride
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="h-5 w-5" strokeWidth={2.5} />
               </>
             )}
           </button>
-        </AppCard>
+        </div>
       </div>
     </div>
   );

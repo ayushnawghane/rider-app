@@ -60,7 +60,7 @@ For every page below:
 ## 4. Rides (core flows)
 - [x] `src/pages/rides/FindRidePage.tsx` — `/find-ride` ✅ fire search form, glossy pin/route icons, fire sort pills, driver cards w/ fire→gold route line, fire empty state, screenshotted
 - [x] `src/pages/rides/RideDetailPage.tsx` — `/rides/detail/:id` ✅ aura + map card, fire status badge, fire→gold from/to timeline, fire join/owner actions, fire SOS, screenshotted
-- [ ] `src/pages/rides/PublishRidePage.tsx` — `/publish-ride` (multi-step form)
+- [x] `src/pages/rides/PublishRidePage.tsx` — `/publish-ride` ✅ aura header, fire route selectors, fire seat stepper, fire vehicle cards, fire +50 points card, fire publish button, screenshotted
 - [ ] `src/pages/rides/UploadRidePage.tsx` — `/upload-ride`
 - [ ] `src/pages/rides/SimpleUploadRidePage.tsx` — simple upload variant
 - [ ] `src/pages/rides/EditRidePage.tsx` — `/rides/edit/:id`
