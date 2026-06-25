@@ -82,8 +82,8 @@ For every page below:
 
 ## 8. Profile & Settings
 - [x] `src/pages/profile/ProfilePage.tsx` — `/profile` ✅ aura header, fire avatar, fire-tinted info/menu chips, fire edit forms + toggles, fire setup wizard, screenshotted
-- [ ] `src/pages/profile/SettingsPage.tsx` — `/profile/settings`
-- [ ] `src/pages/profile/NotificationsPage.tsx` — `/notifications`
+- [x] `src/pages/profile/SettingsPage.tsx` — `/profile/settings` ✅ aura header, fire-icon menu rows, muted disabled rows, screenshotted
+- [x] `src/pages/profile/NotificationsPage.tsx` — `/notifications` ✅ de-Ionic'd to aura header + glossy type icons + fire NEW pills + unread tint, kept pull-to-refresh, screenshotted
 
 ## 9. Location pickers
 - [ ] `src/pages/common/SelectLocationPage.tsx` — `/select-location`
