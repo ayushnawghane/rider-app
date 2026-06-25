@@ -49,10 +49,10 @@ For every page below:
 ## 2. Auth (first impressions — make them strong)
 - [x] `src/pages/auth/LoginPage.tsx` — `/login` ✅ Golden Horizon aurora + glass card, screenshotted
 
-- [ ] `src/pages/auth/RegisterPage.tsx` — `/register`
-- [ ] `src/pages/auth/KycUploadPage.tsx` — `/profile/kyc`
-- [ ] `src/pages/auth/DeleteAccountPage.tsx` — `/delete-account`
-- [ ] `src/pages/auth/PrivacyPolicyPage.tsx` — `/privacy-policy`
+- [x] `src/pages/auth/RegisterPage.tsx` — `/register` ✅ Aurora Mist glass card matching Login, fire submit, screenshotted (tests pass)
+- [x] `src/pages/auth/KycUploadPage.tsx` — `/profile/kyc` ✅ aura header, warm status banner, fire upload dropzone, fire-check requirements, fire upload + success, screenshotted
+- [x] `src/pages/auth/DeleteAccountPage.tsx` — `/delete-account` ✅ red emergency header + delete button, warm warning, DELETE confirm, screenshotted (tests pass)
+- [x] `src/pages/auth/PrivacyPolicyPage.tsx` — `/privacy-policy` ✅ aura header + fire badge, white content card with fire section icons, screenshotted
 
 ## 3. Home
 - [ ] `src/pages/home/HomePage.tsx` — `/home` (hero, search/route card, quick actions, routes, promo)
