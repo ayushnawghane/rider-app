@@ -496,6 +496,13 @@ const ProfilePage = () => {
               <LogOut size={18} />
               Sign out
             </button>
+
+            <button
+              onClick={() => history.push('/delete-account')}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium text-ink/40 transition hover:text-fire-red"
+            >
+              Delete Account
+            </button>
           </div>
         </div>
       </div>
