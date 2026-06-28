@@ -1,89 +1,100 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
-import { ArrowLeft, ShieldCheck, Lock, Eye, FileText, Globe } from 'lucide-react';
+import { ChevronLeft, ShieldCheck, Lock, Eye, FileText, Globe } from 'lucide-react';
 import { IonContent, IonPage } from '@ionic/react';
+
+const dataCards = [
+  { title: 'Personal info', text: 'Name, email address, phone number, and profile picture provided during registration.' },
+  { title: 'Location', text: 'Real-time GPS coordinates to facilitate ride matching and safety tracking.' },
+  { title: 'Vehicle data', text: 'Car make, model, and registration number for driver verification.' },
+  { title: 'Usage data', text: 'Information about how you interact with our services and ride history.' },
+];
+
+const usageList = [
+  'To provide and maintain our Service',
+  'To match riders and drivers based on location',
+  'To ensure safety and security of our users',
+  'To process payments and rewards',
+  'To notify you about changes to our Service',
+];
 
 const PrivacyPolicyPage: React.FC = () => {
   const history = useHistory();
 
   return (
     <IonPage>
-      <IonContent className="ion-padding">
-        <div className="min-h-screen bg-slate-50 pb-12">
-          {/* Header */}
-          <div className="bg-orange-600 px-6 app-header-top-safe pb-20 text-white">
-            <div className="max-w-3xl mx-auto flex items-center justify-between">
-              <button 
-                onClick={() => history.goBack()}
-                className="p-2 rounded-xl bg-white/10 backdrop-blur hover:bg-white/20 transition"
-              >
-                <ArrowLeft size={24} />
-              </button>
-              <h1 className="text-3xl font-bold">Privacy Policy</h1>
-              <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+      <IonContent>
+        <div className="app-top-safe relative min-h-full overflow-hidden bg-white pb-12">
+          {/* Grainy orange aura */}
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[300px]">
+            <div
+              className="absolute inset-0"
+              style={{ background: 'radial-gradient(120% 72% at 82% -10%, rgba(255,107,0,0.4) 0%, rgba(255,160,30,0.15) 46%, rgba(255,255,255,0) 74%)' }}
+            />
+            <div className="absolute -right-16 -top-12 h-72 w-72 rounded-full animate-aurora-1" style={{ background: 'radial-gradient(circle, rgba(255,200,50,0.62) 0%, transparent 62%)', filter: 'blur(48px)' }} />
+          </div>
+
+          <div className="relative z-10 mx-auto max-w-3xl px-4 pt-5">
+            {/* Header */}
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => history.goBack()}
+                  aria-label="Back"
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-black/10 bg-white/70 text-ink shadow-soft backdrop-blur-sm transition active:scale-95"
+                >
+                  <ChevronLeft size={22} strokeWidth={2.5} />
+                </button>
+                <div>
+                  <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Legal</p>
+                  <h1 className="font-display text-[2rem] font-extrabold leading-[0.9] tracking-tight text-ink">Privacy Policy</h1>
+                </div>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-glow" style={{ background: 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))' }}>
                 <ShieldCheck size={24} />
               </div>
             </div>
-          </div>
 
-          {/* Content Card */}
-          <div className="max-w-3xl mx-auto -mt-10 px-4">
-            <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 md:p-12 space-y-10">
-              
+            {/* Content card */}
+            <div className="space-y-10 rounded-[32px] border border-black/5 bg-white p-7 shadow-soft md:p-10">
               <section className="space-y-4">
-                <div className="flex items-center gap-3 text-orange-600">
-                  <Globe size={24} />
-                  <h2 className="text-xl font-bold">Introduction</h2>
+                <div className="flex items-center gap-3 text-fire-orange">
+                  <Globe size={22} />
+                  <h2 className="font-display text-xl font-extrabold tracking-tight text-ink">Introduction</h2>
                 </div>
-                <p className="text-slate-600 leading-relaxed">
-                  Welcome to BlinkCar. We value your privacy and are committed to protecting your personal data. 
+                <p className="font-medium leading-relaxed text-ink/65">
+                  Welcome to BlinkCar. We value your privacy and are committed to protecting your personal data.
                   This Privacy Policy explains how we collect, use, and safeguard your information when you use our mobile application and services.
                 </p>
-                <p className="text-slate-500 text-sm">Last updated: March 26, 2024</p>
+                <p className="text-sm font-medium text-ink/40">Last updated: March 26, 2024</p>
               </section>
 
-              <div className="h-px bg-slate-100" />
+              <div className="h-px bg-black/5" />
 
               <section className="space-y-4">
-                <div className="flex items-center gap-3 text-orange-600">
-                  <Lock size={24} />
-                  <h2 className="text-xl font-bold">Data We Collect</h2>
+                <div className="flex items-center gap-3 text-fire-orange">
+                  <Lock size={22} />
+                  <h2 className="font-display text-xl font-extrabold tracking-tight text-ink">Data we collect</h2>
                 </div>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <h3 className="font-bold text-slate-800 mb-2">Personal info</h3>
-                    <p className="text-sm text-slate-600">Name, email address, phone number, and profile picture provided during registration.</p>
-                  </div>
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <h3 className="font-bold text-slate-800 mb-2">Location</h3>
-                    <p className="text-sm text-slate-600">Real-time GPS coordinates to facilitate ride matching and safety tracking.</p>
-                  </div>
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <h3 className="font-bold text-slate-800 mb-2">Vehicle data</h3>
-                    <p className="text-sm text-slate-600">Car make, model, and registration number for driver verification.</p>
-                  </div>
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <h3 className="font-bold text-slate-800 mb-2">Usage data</h3>
-                    <p className="text-sm text-slate-600">Information about how you interact with our services and ride history.</p>
-                  </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {dataCards.map((card) => (
+                    <div key={card.title} className="rounded-2xl border border-black/5 bg-paper p-4">
+                      <h3 className="mb-2 font-display font-bold text-ink">{card.title}</h3>
+                      <p className="text-sm font-medium text-ink/55">{card.text}</p>
+                    </div>
+                  ))}
                 </div>
               </section>
 
               <section className="space-y-4">
-                <div className="flex items-center gap-3 text-orange-600">
-                  <Eye size={24} />
-                  <h2 className="text-xl font-bold">How We Use Your Data</h2>
+                <div className="flex items-center gap-3 text-fire-orange">
+                  <Eye size={22} />
+                  <h2 className="font-display text-xl font-extrabold tracking-tight text-ink">How we use your data</h2>
                 </div>
                 <ul className="space-y-3">
-                  {[
-                    "To provide and maintain our Service",
-                    "To match riders and drivers based on location",
-                    "To ensure safety and security of our users",
-                    "To process payments and rewards",
-                    "To notify you about changes to our Service"
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-center gap-3 text-slate-600">
-                      <div className="w-1.5 h-1.5 bg-orange-400 rounded-full" />
+                  {usageList.map((item) => (
+                    <li key={item} className="flex items-center gap-3 font-medium text-ink/65">
+                      <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-fire-orange" />
                       {item}
                     </li>
                   ))}
@@ -91,33 +102,35 @@ const PrivacyPolicyPage: React.FC = () => {
               </section>
 
               <section className="space-y-4">
-                <div className="flex items-center gap-3 text-orange-600">
-                  <FileText size={24} />
-                  <h2 className="text-xl font-bold">Your Rights</h2>
+                <div className="flex items-center gap-3 text-fire-orange">
+                  <FileText size={22} />
+                  <h2 className="font-display text-xl font-extrabold tracking-tight text-ink">Your rights</h2>
                 </div>
-                <p className="text-slate-600 leading-relaxed">
-                  You have the right to access, update, or delete your personal information directly within the app settings. 
+                <p className="font-medium leading-relaxed text-ink/65">
+                  You have the right to access, update, or delete your personal information directly within the app settings.
                   If you choose to delete your account, all personal data will be removed or anonymized as per our data retention policy.
                 </p>
-                <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl">
-                  <p className="text-sm text-orange-800">
-                    <strong>Note:</strong> We do not sell your personal data to third parties for marketing purposes.
+                <div className="rounded-2xl border border-primary-100 bg-primary-50/60 p-4">
+                  <p className="text-sm font-medium text-ink/70">
+                    <strong className="font-display font-bold text-ink">Note:</strong> We do not sell your personal data to third parties for marketing purposes.
                   </p>
                 </div>
               </section>
 
-              <div className="pt-6 text-center">
-                <p className="text-sm text-slate-400 mb-4">Questions about our policy?</p>
-                <a href="mailto:support@riderapp.local" className="px-8 py-3 bg-slate-100 text-slate-700 font-bold rounded-2xl hover:bg-slate-200 transition inline-block">
+              <div className="pt-2 text-center">
+                <p className="mb-4 text-sm font-medium text-ink/40">Questions about our policy?</p>
+                <a
+                  href="mailto:support@riderapp.local"
+                  className="inline-block rounded-2xl border border-black/10 bg-paper px-8 py-3 font-display font-bold text-ink transition hover:bg-paper-dim"
+                >
                   Contact Privacy Team
                 </a>
               </div>
-
             </div>
-          </div>
 
-          <div className="mt-12 text-center text-slate-400 text-xs">
-            <p>© 2024 BlinkCar Technologies. All rights reserved.</p>
+            <div className="mt-10 text-center text-xs font-medium text-ink/35">
+              <p>© 2024 BlinkCar Technologies. All rights reserved.</p>
+            </div>
           </div>
         </div>
       </IonContent>

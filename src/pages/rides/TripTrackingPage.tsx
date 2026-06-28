@@ -12,6 +12,8 @@ import {
 import type { Ride } from '../../types';
 import LoadingOverlay from '../../components/LoadingOverlay';
 
+const FIRE = 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))';
+
 const getMarkerIcon = (type: 'pickup' | 'drop' | 'driver' | 'user'): google.maps.Icon | undefined => {
     if (typeof window === 'undefined' || !window.google) return undefined;
 
@@ -179,12 +181,15 @@ const TripTrackingPage = () => {
 
     if (!ride) {
         return (
-            <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
-                <AlertTriangle className="mb-4 h-16 w-16 text-gray-300" />
-                <h2 className="mb-2 text-xl font-bold text-gray-900">Trip Not Found</h2>
+            <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4">
+                <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-fire-red/10">
+                    <AlertTriangle className="h-10 w-10 text-fire-red" />
+                </div>
+                <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">Trip not found</h2>
                 <button
                     onClick={() => history.goBack()}
-                    className="mt-4 rounded-xl bg-primary-500 px-6 py-3 text-sm font-semibold text-white"
+                    className="grain grain-strong relative mt-6 overflow-hidden rounded-2xl px-8 py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+                    style={{ background: FIRE }}
                 >
                     Go Back
                 </button>
@@ -193,26 +198,27 @@ const TripTrackingPage = () => {
     }
 
     return (
-        <div className="flex h-screen flex-col bg-gray-50">
+        <div className="flex h-screen flex-col bg-white">
             {/* Header */}
-            <header className="z-10 bg-white px-4 py-3 shadow-sm">
+            <header className="z-10 border-b border-black/5 bg-white/90 px-4 py-3 backdrop-blur-md pt-[calc(env(safe-area-inset-top)+12px)]">
                 <div className="flex items-center justify-between">
                     <button
                         onClick={() => history.goBack()}
-                        className="rounded-full p-2 hover:bg-gray-100 transition-colors"
+                        aria-label="Back"
+                        className="flex h-10 w-10 items-center justify-center rounded-2xl border border-black/10 bg-white text-ink shadow-soft transition active:scale-95"
                     >
-                        <ChevronLeft className="h-6 w-6 text-gray-700" />
+                        <ChevronLeft className="h-5 w-5" strokeWidth={2.5} />
                     </button>
                     <div className="text-center">
-                        <h1 className="font-semibold text-gray-900">Track Trip</h1>
-                        <p className="text-xs text-gray-500">{ride.referenceId}</p>
+                        <h1 className="font-display text-lg font-extrabold tracking-tight text-ink">Track trip</h1>
+                        <p className="text-xs font-medium text-ink/45">{ride.referenceId}</p>
                     </div>
                     <div
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${ride.status === 'active'
-                            ? 'bg-green-100 text-green-700'
+                        className={`rounded-full px-3 py-1 font-display text-xs font-bold ${ride.status === 'active'
+                            ? 'bg-fire-orange text-white shadow-glow'
                             : ride.status === 'completed'
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'bg-amber-100 text-amber-700'
+                                ? 'bg-ink/8 text-ink/55'
+                                : 'bg-fire-gold/25 text-[#9a5b00]'
                             }`}
                     >
                         {ride.status.charAt(0).toUpperCase() + ride.status.slice(1)}
@@ -230,92 +236,91 @@ const TripTrackingPage = () => {
                     className="h-full"
                 />
 
-
                 {/* Recenter */}
                 <button
                     onClick={() => setIsAutoRecenter(true)}
-                    className="absolute right-4 top-4 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg hover:bg-gray-50 transition-colors"
+                    className="absolute right-4 top-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-black/5 bg-white text-fire-orange shadow-strong transition active:scale-95"
                 >
-                    <Target className="h-6 w-6 text-gray-700" />
+                    <Target className="h-6 w-6" />
                 </button>
 
                 {/* ETA pill */}
                 {eta && (
-                    <div className="absolute left-4 top-4 flex items-center gap-2 rounded-xl bg-white px-4 py-3 shadow-lg">
-                        <Clock className="h-5 w-5 text-primary-600" />
+                    <div className="absolute left-4 top-4 flex items-center gap-2 rounded-2xl border border-black/5 bg-white px-4 py-2.5 shadow-strong">
+                        <Clock className="h-5 w-5 text-fire-orange" />
                         <div>
-                            <p className="text-xs text-gray-500">ETA</p>
-                            <p className="font-semibold text-gray-900">{eta}</p>
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-ink/40">ETA</p>
+                            <p className="font-display font-bold text-ink">{eta}</p>
                         </div>
                     </div>
                 )}
             </div>
 
             {/* Bottom sheet */}
-            <div className="relative z-10 -mt-6 rounded-t-3xl bg-white shadow-strong flex flex-col max-h-[50vh]">
-                <div className="flex justify-center pb-2 pt-3 flex-shrink-0">
-                    <div className="h-1 w-12 rounded-full bg-gray-300" />
+            <div className="relative z-10 -mt-6 flex max-h-[50vh] flex-col rounded-t-[28px] border-t border-black/5 bg-white shadow-strong">
+                <div className="flex flex-shrink-0 justify-center pb-2 pt-3">
+                    <div className="h-1 w-12 rounded-full bg-ink/15" />
                 </div>
 
-                <div className="overflow-y-auto px-4 pb-8 flex-1">
+                <div className="flex-1 overflow-y-auto px-4 pb-8">
 
-                    {/* Driver & Vehicle Profile (Uber-like) */}
-                    <div className="flex items-center pb-4 mb-5 border-b border-gray-100">
-                        <div className="w-14 h-14 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 border-2 border-white shadow-sm">
-                            <img src={ride.driver?.avatar || `https://ui-avatars.com/api/?name=${ride.driver?.name || 'Driver'}&background=random`} alt="Driver" className="w-full h-full object-cover" />
+                    {/* Driver & Vehicle Profile */}
+                    <div className="mb-5 flex items-center border-b border-black/5 pb-4">
+                        <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl border-2 border-white bg-paper-dim shadow-soft">
+                            <img src={ride.driver?.avatar || `https://ui-avatars.com/api/?name=${ride.driver?.name || 'Driver'}&background=random`} alt="Driver" className="h-full w-full object-cover" />
                         </div>
                         <div className="ml-4 flex-1">
-                            <h3 className="text-base font-bold text-gray-900">{ride.driver?.name || 'Your Driver'}</h3>
-                            <div className="flex items-center text-sm text-gray-500 mt-0.5">
-                                <span className="font-medium text-warning-500 flex items-center gap-1">★ {ride.driver?.rating ? ride.driver.rating.toFixed(1) : '4.9'}</span>
+                            <h3 className="font-display text-base font-bold text-ink">{ride.driver?.name || 'Your Driver'}</h3>
+                            <div className="mt-0.5 flex items-center text-sm text-ink/50">
+                                <span className="flex items-center gap-1 font-bold text-fire-gold">★ {ride.driver?.rating ? ride.driver.rating.toFixed(1) : '4.9'}</span>
                                 <span className="mx-2">•</span>
-                                <span>{ride.vehicleType}</span>
+                                <span className="font-medium">{ride.vehicleType}</span>
                             </div>
                         </div>
-                        <div className="text-right flex-shrink-0">
-                            <div className="bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
-                                <span className="text-sm font-bold text-gray-900 tracking-wide">{ride.vehicleNumber}</span>
+                        <div className="flex-shrink-0 text-right">
+                            <div className="rounded-xl border border-black/5 bg-paper px-3 py-1.5">
+                                <span className="font-display text-sm font-bold tracking-wide text-ink">{ride.vehicleNumber}</span>
                             </div>
                         </div>
                     </div>
                     {/* Progress bar */}
                     <div className="mb-5">
                         <div className="mb-2 flex items-center justify-between">
-                            <span className="text-sm font-semibold text-gray-900">Trip Progress</span>
-                            <span className="text-sm font-bold text-primary-600">{progressPercent}%</span>
+                            <span className="font-display text-sm font-bold text-ink">Trip progress</span>
+                            <span className="font-display text-sm font-extrabold text-fire-orange">{progressPercent}%</span>
                         </div>
-                        <div className="h-3 overflow-hidden rounded-full bg-gray-100">
+                        <div className="h-3 overflow-hidden rounded-full bg-paper-dim">
                             <div
-                                className="h-full rounded-full bg-gradient-to-r from-primary-400 to-primary-600 transition-all duration-700"
-                                style={{ width: `${progressPercent}%` }}
+                                className="h-full rounded-full transition-all duration-700"
+                                style={{ width: `${progressPercent}%`, background: FIRE }}
                             />
                         </div>
-                        <div className="mt-1 flex justify-between text-xs text-gray-400">
+                        <div className="mt-1 flex justify-between text-xs font-medium text-ink/40">
                             <span>{coveredDistance.toFixed(1)} km covered</span>
                             <span>{totalDistance.toFixed(1)} km total</span>
                         </div>
                     </div>
 
                     {/* Route */}
-                    <div className="mb-4 rounded-2xl border border-gray-100 bg-gray-50 p-4">
-                        <div className="space-y-4">
+                    <div className="mb-4 rounded-2xl border border-black/5 bg-paper p-4">
+                        <div className="space-y-2">
                             <div className="flex items-start gap-4">
-                                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white border border-gray-200 mt-0.5 shadow-sm">
-                                    <div className="w-2.5 h-2.5 bg-gray-900 rounded-full" />
+                                <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-black/5 bg-white shadow-sm">
+                                    <div className="h-2.5 w-2.5 rounded-full bg-fire-orange" />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Pickup</p>
-                                    <p className="font-medium text-gray-900 leading-tight">{ride.startLocation}</p>
+                                    <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wide text-ink/40">Pickup</p>
+                                    <p className="font-display font-bold leading-tight text-ink">{ride.startLocation}</p>
                                 </div>
                             </div>
-                            <div className="ml-4 h-6 w-0.5 bg-gray-300" />
+                            <div className="ml-4 h-5 w-0.5 bg-gradient-to-b from-fire-orange to-fire-gold" />
                             <div className="flex items-start gap-4">
-                                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white border border-gray-200 mt-0.5 shadow-sm">
-                                    <div className="w-2.5 h-2.5 bg-primary-600 rounded-sm" />
+                                <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-black/5 bg-white shadow-sm">
+                                    <div className="h-2.5 w-2.5 rounded-sm bg-fire-gold" />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Dropoff</p>
-                                    <p className="font-medium text-gray-900 leading-tight">{ride.endLocation}</p>
+                                    <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wide text-ink/40">Dropoff</p>
+                                    <p className="font-display font-bold leading-tight text-ink">{ride.endLocation}</p>
                                 </div>
                             </div>
                         </div>
@@ -323,9 +328,9 @@ const TripTrackingPage = () => {
 
                     {/* Completed indicator */}
                     {ride.status === 'completed' && (
-                        <div className="flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-3 text-blue-700">
+                        <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700">
                             <CheckCircle2 className="h-5 w-5" />
-                            <span className="text-sm font-medium">This trip has been completed</span>
+                            <span className="text-sm font-bold">This trip has been completed</span>
                         </div>
                     )}
                 </div>

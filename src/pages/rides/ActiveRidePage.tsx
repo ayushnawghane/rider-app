@@ -1,6 +1,5 @@
-import { IonContent, IonPage, IonButton, IonToast } from '@ionic/react';
+import { IonContent, IonPage, IonToast } from '@ionic/react';
 import LoadingOverlay from '../../components/LoadingOverlay';
-import { PageHeader } from '../../components/ui';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
@@ -18,9 +17,11 @@ import {
   CheckCircle2,
   AlertTriangle,
   Target,
-  MoreVertical
+  ChevronLeft,
 } from 'lucide-react';
 import type { Ride } from '../../types';
+
+const FIRE = 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))';
 
 const getMarkerIcon = (type: 'pickup' | 'drop' | 'driver' | 'user'): google.maps.Icon | undefined => {
   if (typeof window === 'undefined' || !window.google) return undefined;
@@ -273,7 +274,7 @@ const ActiveRidePage = () => {
   if (loading) {
     return (
       <IonPage>
-        <IonContent className="ion-padding bg-gray-50">
+        <IonContent>
           <LoadingOverlay isOpen variant="fullscreen" message="Loading ride details..." />
         </IonContent>
       </IonPage>
@@ -283,19 +284,21 @@ const ActiveRidePage = () => {
   if (!ride) {
     return (
       <IonPage>
-        <IonContent className="ion-padding bg-gray-50">
-          <div className="max-w-2xl mx-auto px-4 app-top-safe pb-6">
-            <div className="card p-8 text-center">
-              <AlertTriangle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Ride Not Found</h2>
-              <p className="text-gray-500">The ride you're looking for doesn't exist.</p>
-              <IonButton
-                expand="block"
+        <IonContent>
+          <div className="app-top-safe mx-auto max-w-2xl px-4 pb-6 pt-6">
+            <div className="rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-fire-red/10">
+                <AlertTriangle className="h-10 w-10 text-fire-red" />
+              </div>
+              <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">Ride not found</h2>
+              <p className="mt-2 text-sm font-medium text-ink/50">The ride you're looking for doesn't exist.</p>
+              <button
                 onClick={() => history.push('/home')}
-                className="mt-4"
+                className="grain grain-strong relative mt-6 w-full overflow-hidden rounded-2xl py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+                style={{ background: FIRE }}
               >
                 Go Home
-              </IonButton>
+              </button>
             </div>
           </div>
         </IonContent>
@@ -307,20 +310,22 @@ const ActiveRidePage = () => {
 
   return (
     <IonPage>
-      <IonContent className="bg-gray-50">
-        <div className="app-scroll-screen flex flex-col bg-gray-50">
-          <PageHeader
-            title="Active Ride"
-            subtitle={`${ride.vehicleType} • ${ride.vehicleNumber}`}
-            variant="toolbar"
-            onBack={() => history.goBack()}
-            className="z-10"
-            rightAction={
-              <button type="button" className="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Ride actions">
-                <MoreVertical className="w-6 h-6 text-gray-700" />
-              </button>
-            }
-          />
+      <IonContent>
+        <div className="app-scroll-screen flex flex-col bg-white">
+          {/* Header */}
+          <div className="z-10 flex items-center gap-3 border-b border-black/5 bg-white/90 px-4 py-3 backdrop-blur-md pt-[calc(env(safe-area-inset-top)+12px)]">
+            <button
+              onClick={() => history.goBack()}
+              aria-label="Back"
+              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-black/10 bg-white text-ink shadow-soft transition active:scale-95"
+            >
+              <ChevronLeft size={22} strokeWidth={2.5} />
+            </button>
+            <div className="min-w-0">
+              <h1 className="font-display text-lg font-extrabold tracking-tight text-ink">Active ride</h1>
+              <p className="truncate text-xs font-medium text-ink/50">{ride.vehicleType} • {ride.vehicleNumber}</p>
+            </div>
+          </div>
 
           {/* Map Section */}
           <div className="flex-1 relative">
@@ -335,19 +340,19 @@ const ActiveRidePage = () => {
             {/* Recenter Button */}
             <button
               onClick={handleRecenter}
-              className="absolute top-4 right-4 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
+              className="absolute right-4 top-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-black/5 bg-white text-fire-orange shadow-strong transition active:scale-95"
             >
-              <Target className="w-6 h-6 text-gray-700" />
+              <Target className="h-6 w-6" />
             </button>
 
             {/* ETA Card */}
             {eta && (
-              <div className="absolute top-4 left-4 bg-white rounded-xl shadow-lg px-4 py-3">
+              <div className="absolute left-4 top-4 rounded-2xl border border-black/5 bg-white px-4 py-2.5 shadow-strong">
                 <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-primary-600" />
+                  <Clock className="h-5 w-5 text-fire-orange" />
                   <div>
-                    <p className="text-xs text-gray-500">ETA</p>
-                    <p className="font-semibold text-gray-900">{eta}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-ink/40">ETA</p>
+                    <p className="font-display font-bold text-ink">{eta}</p>
                   </div>
                 </div>
               </div>
@@ -355,39 +360,39 @@ const ActiveRidePage = () => {
           </div>
 
           {/* Bottom Sheet */}
-          <div className="bg-white rounded-t-3xl shadow-strong -mt-6 relative z-10 flex flex-col max-h-[60vh]">
+          <div className="relative z-10 -mt-6 flex max-h-[60vh] flex-col rounded-t-[28px] border-t border-black/5 bg-white shadow-strong">
             {/* Handle bar */}
-            <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
-              <div className="w-12 h-1 bg-gray-300 rounded-full" />
+            <div className="flex flex-shrink-0 justify-center pb-2 pt-3">
+              <div className="h-1 w-12 rounded-full bg-ink/15" />
             </div>
 
-            <div className="px-4 app-bottom-nav-safe overflow-y-auto flex-1">
+            <div className="app-bottom-nav-safe flex-1 overflow-y-auto px-4">
 
-              {/* Driver & Vehicle Profile (Uber-like) */}
-              <div className="flex items-center pb-4 mb-4 border-b border-gray-100">
-                <div className="w-14 h-14 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 border-2 border-white shadow-sm">
-                  <img src={ride.driver?.avatar || `https://ui-avatars.com/api/?name=${isDriver ? user?.fullName || 'Driver' : (ride.driver?.name || 'Driver')}&background=random`} alt="Driver" className="w-full h-full object-cover" />
+              {/* Driver & Vehicle Profile */}
+              <div className="mb-4 flex items-center border-b border-black/5 pb-4">
+                <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl border-2 border-white bg-paper-dim shadow-soft">
+                  <img src={ride.driver?.avatar || `https://ui-avatars.com/api/?name=${isDriver ? user?.fullName || 'Driver' : (ride.driver?.name || 'Driver')}&background=random`} alt="Driver" className="h-full w-full object-cover" />
                 </div>
                 <div className="ml-4 flex-1">
-                  <h3 className="text-base font-bold text-gray-900">{isDriver ? 'You (Driver)' : (ride.driver?.name || 'Your Driver')}</h3>
-                  <div className="flex items-center text-sm text-gray-500 mt-0.5">
-                    <span className="font-medium text-warning-500 flex items-center gap-1">★ {ride.driver?.rating ? ride.driver.rating.toFixed(1) : '4.9'}</span>
+                  <h3 className="font-display text-base font-bold text-ink">{isDriver ? 'You (Driver)' : (ride.driver?.name || 'Your Driver')}</h3>
+                  <div className="mt-0.5 flex items-center text-sm text-ink/50">
+                    <span className="flex items-center gap-1 font-bold text-fire-gold">★ {ride.driver?.rating ? ride.driver.rating.toFixed(1) : '4.9'}</span>
                     <span className="mx-2">•</span>
-                    <span>{ride.vehicleType}</span>
+                    <span className="font-medium">{ride.vehicleType}</span>
                   </div>
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <div className="bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
-                    <span className="text-sm font-bold text-gray-900 tracking-wide">{ride.vehicleNumber}</span>
+                <div className="flex-shrink-0 text-right">
+                  <div className="rounded-xl border border-black/5 bg-paper px-3 py-1.5">
+                    <span className="font-display text-sm font-bold tracking-wide text-ink">{ride.vehicleNumber}</span>
                   </div>
                 </div>
               </div>
 
               {/* Status Timeline */}
               <div className="mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Ride Status</h3>
-                  <span className="text-xs font-semibold px-2 py-1 bg-primary-50 text-primary-700 rounded-md">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="font-display text-xs font-bold uppercase tracking-[0.18em] text-ink/55">Ride status</h3>
+                  <span className="rounded-md bg-primary-50 px-2 py-1 font-display text-xs font-bold text-primary-700">
                     {ride.status.toUpperCase()}
                   </span>
                 </div>
@@ -398,21 +403,20 @@ const ActiveRidePage = () => {
                     const isCurrent = index === currentIndex;
 
                     return (
-                      <div key={step.id} className="flex-1 flex flex-col items-center relative">
+                      <div key={step.id} className="relative flex flex-1 flex-col items-center">
                         <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 z-10 transition-all ${isCompleted
-                            ? 'bg-primary-500 text-white shadow-md'
-                            : 'bg-gray-100 text-gray-400'
-                            } ${isCurrent ? 'ring-4 ring-primary-100 scale-110' : ''}`}
+                          className={`z-10 mb-2 flex h-10 w-10 items-center justify-center rounded-full transition-all ${
+                            isCompleted ? 'text-white shadow-glow' : 'bg-paper-dim text-ink/35'
+                          } ${isCurrent ? 'scale-110 ring-4 ring-[rgba(255,107,0,0.18)]' : ''}`}
+                          style={isCompleted ? { background: FIRE } : undefined}
                         >
-                          <Icon className="w-5 h-5" />
+                          <Icon className="h-5 w-5" />
                         </div>
-                        <span className={`text-[10px] text-center uppercase tracking-wider ${isCompleted ? 'text-gray-900 font-bold' : 'text-gray-400 font-semibold'}`}>
+                        <span className={`text-center text-[10px] uppercase tracking-wider ${isCompleted ? 'font-bold text-ink' : 'font-semibold text-ink/35'}`}>
                           {step.label}
                         </span>
                         {index < steps.length - 1 && (
-                          <div className={`absolute h-1 w-full top-4 left-1/2 -z-0 rounded-r-full transition-all ${isCompleted ? 'bg-primary-400' : 'bg-gray-100'
-                            }`} style={{ width: '100%' }} />
+                          <div className={`absolute left-1/2 top-4 -z-0 h-1 w-full rounded-r-full transition-all ${isCompleted ? 'bg-fire-amber' : 'bg-paper-dim'}`} style={{ width: '100%' }} />
                         )}
                       </div>
                     );
@@ -421,25 +425,25 @@ const ActiveRidePage = () => {
               </div>
 
               {/* Location Details */}
-              <div className="bg-gray-50 rounded-2xl p-4 mb-6 border border-gray-100">
-                <div className="space-y-4">
+              <div className="mb-6 rounded-2xl border border-black/5 bg-paper p-4">
+                <div className="space-y-2">
                   <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
-                      <div className="w-2.5 h-2.5 bg-gray-900 rounded-full" />
+                    <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-black/5 bg-white shadow-sm">
+                      <div className="h-2.5 w-2.5 rounded-full bg-fire-orange" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Pickup</p>
-                      <p className="font-medium text-gray-900 leading-tight">{ride.startLocation}</p>
+                      <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wide text-ink/40">Pickup</p>
+                      <p className="font-display font-bold leading-tight text-ink">{ride.startLocation}</p>
                     </div>
                   </div>
-                  <div className="ml-4 w-0.5 h-6 bg-gray-300" />
+                  <div className="ml-4 h-5 w-0.5 bg-gradient-to-b from-fire-orange to-fire-gold" />
                   <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
-                      <div className="w-2.5 h-2.5 bg-primary-600 rounded-sm" />
+                    <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-black/5 bg-white shadow-sm">
+                      <div className="h-2.5 w-2.5 rounded-sm bg-fire-gold" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Dropoff</p>
-                      <p className="font-medium text-gray-900 leading-tight">{ride.endLocation}</p>
+                      <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wide text-ink/40">Dropoff</p>
+                      <p className="font-display font-bold leading-tight text-ink">{ride.endLocation}</p>
                     </div>
                   </div>
                 </div>
@@ -448,26 +452,27 @@ const ActiveRidePage = () => {
               {/* Action Buttons */}
               <div className="grid gap-3">
                 {isDriver && !['completed', 'cancelled'].includes(ride.status) && (
-                  <div className="flex flex-col gap-3 mb-2">
+                  <div className="mb-2 flex flex-col gap-3">
                     {ride.status === 'pending' ? (
-                      <div className="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-800">
+                      <div className="rounded-2xl border border-fire-gold/30 bg-fire-gold/15 px-4 py-3 font-display text-sm font-bold text-[#9a5b00]">
                         Awaiting Departure
                       </div>
                     ) : (
                       <button
                         onClick={() => setShowEndConfirm(true)}
                         disabled={isUpdatingStatus}
-                        className="w-full py-3.5 bg-primary-600 text-white font-semibold rounded-xl shadow-md hover:bg-primary-700 active:bg-primary-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="grain grain-strong relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98] disabled:opacity-50"
+                        style={{ background: FIRE }}
                       >
-                        <CheckCircle2 className="w-5 h-5" /> Complete Trip
+                        <CheckCircle2 className="h-5 w-5" /> Complete Trip
                       </button>
                     )}
                     <button
                       onClick={() => setShowCancelConfirm(true)}
                       disabled={isUpdatingStatus}
-                      className="w-full py-3.5 bg-white text-danger-600 border border-danger-200 font-semibold rounded-xl hover:bg-danger-50 active:bg-danger-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-fire-red/30 bg-white py-3.5 font-display font-bold text-fire-red transition hover:bg-fire-red/5 active:scale-[0.98] disabled:opacity-50"
                     >
-                      <AlertTriangle className="w-5 h-5" /> Cancel Trip
+                      <AlertTriangle className="h-5 w-5" /> Cancel Trip
                     </button>
                   </div>
                 )}
@@ -476,25 +481,25 @@ const ActiveRidePage = () => {
                   {!isDriver && (
                     <button
                       onClick={handleContactDriver}
-                      className="flex flex-col items-center justify-center py-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                      className="flex flex-col items-center justify-center rounded-2xl border border-black/5 bg-white py-3 shadow-soft transition active:scale-95"
                     >
-                      <Phone className="w-5 h-5 text-gray-700 mb-1" />
-                      <span className="text-xs font-semibold text-gray-700">Call Driver</span>
+                      <Phone className="mb-1 h-5 w-5 text-fire-orange" />
+                      <span className="font-display text-xs font-bold text-ink/70">Call Driver</span>
                     </button>
                   )}
                   <button
                     onClick={handleContactSupport}
-                    className={`flex flex-col items-center justify-center py-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors ${isDriver ? 'col-span-1' : ''}`}
+                    className={`flex flex-col items-center justify-center rounded-2xl border border-black/5 bg-white py-3 shadow-soft transition active:scale-95 ${isDriver ? 'col-span-1' : ''}`}
                   >
-                    <MessageSquare className="w-5 h-5 text-gray-700 mb-1" />
-                    <span className="text-xs font-semibold text-gray-700">Support</span>
+                    <MessageSquare className="mb-1 h-5 w-5 text-fire-orange" />
+                    <span className="font-display text-xs font-bold text-ink/70">Support</span>
                   </button>
                   <button
                     onClick={handleSOS}
-                    className={`flex flex-col items-center justify-center py-3 bg-danger-50 border border-danger-100 rounded-xl hover:bg-danger-100 transition-colors ${isDriver ? 'col-span-2' : ''}`}
+                    className={`flex flex-col items-center justify-center rounded-2xl border border-fire-red/15 bg-fire-red/5 py-3 transition active:scale-95 ${isDriver ? 'col-span-2' : ''}`}
                   >
-                    <ShieldAlert className="w-5 h-5 text-danger-600 mb-1" />
-                    <span className="text-xs font-semibold text-danger-700">Emergency SOS</span>
+                    <ShieldAlert className="mb-1 h-5 w-5 text-fire-red" />
+                    <span className="font-display text-xs font-bold text-fire-red">Emergency SOS</span>
                   </button>
                 </div>
               </div>
@@ -504,32 +509,32 @@ const ActiveRidePage = () => {
 
         {/* Custom Tailwind Confirmation Modals */}
         {showEndConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 scale-100 transition-all">
-              <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="w-6 h-6 text-primary-600" />
+          <div className="fixed inset-0 z-50 flex animate-fade-in items-center justify-center bg-ink/50 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-sm rounded-[28px] border border-black/5 bg-white p-6 shadow-strong">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-glow" style={{ background: FIRE }}>
+                <CheckCircle2 className="h-7 w-7" />
               </div>
-              <h2 className="text-xl font-bold text-center text-gray-900 mb-2">Complete Trip</h2>
-              <p className="text-center text-gray-500 mb-6 text-sm">Are you sure you want to end this trip? This will mark the ride as successfully completed.</p>
+              <h2 className="mb-2 text-center font-display text-xl font-extrabold tracking-tight text-ink">Complete Trip</h2>
+              <p className="mb-6 text-center text-sm font-medium text-ink/55">Are you sure you want to end this trip? This will mark the ride as successfully completed.</p>
               <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => setShowEndConfirm(false)} className="py-3 font-semibold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">Go Back</button>
-                <button onClick={() => { setShowEndConfirm(false); handleUpdateStatus('completed'); }} className="py-3 font-semibold text-white bg-primary-600 rounded-xl hover:bg-primary-700 transition-colors">Complete Trip</button>
+                <button onClick={() => setShowEndConfirm(false)} className="rounded-2xl border-2 border-black/10 bg-white py-3 font-display font-bold text-ink/70 transition hover:bg-paper">Go Back</button>
+                <button onClick={() => { setShowEndConfirm(false); handleUpdateStatus('completed'); }} className="grain grain-strong relative overflow-hidden rounded-2xl py-3 font-display font-bold text-white shadow-glow transition active:scale-[0.98]" style={{ background: FIRE }}>Complete Trip</button>
               </div>
             </div>
           </div>
         )}
 
         {showCancelConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 scale-100 transition-all">
-              <div className="w-12 h-12 bg-danger-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertTriangle className="w-6 h-6 text-danger-600" />
+          <div className="fixed inset-0 z-50 flex animate-fade-in items-center justify-center bg-ink/50 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-sm rounded-[28px] border border-black/5 bg-white p-6 shadow-strong">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-fire-red/10">
+                <AlertTriangle className="h-7 w-7 text-fire-red" />
               </div>
-              <h2 className="text-xl font-bold text-center text-gray-900 mb-2">Cancel Trip</h2>
-              <p className="text-center text-gray-500 mb-6 text-sm">Are you sure you want to cancel this trip? This action cannot be undone.</p>
+              <h2 className="mb-2 text-center font-display text-xl font-extrabold tracking-tight text-ink">Cancel Trip</h2>
+              <p className="mb-6 text-center text-sm font-medium text-ink/55">Are you sure you want to cancel this trip? This action cannot be undone.</p>
               <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => setShowCancelConfirm(false)} className="py-3 font-semibold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">Go Back</button>
-                <button onClick={() => { setShowCancelConfirm(false); handleUpdateStatus('cancelled'); }} className="py-3 font-semibold text-white bg-danger-600 rounded-xl hover:bg-danger-700 transition-colors">Cancel Trip</button>
+                <button onClick={() => setShowCancelConfirm(false)} className="rounded-2xl border-2 border-black/10 bg-white py-3 font-display font-bold text-ink/70 transition hover:bg-paper">Go Back</button>
+                <button onClick={() => { setShowCancelConfirm(false); handleUpdateStatus('cancelled'); }} className="rounded-2xl py-3 font-display font-bold text-white shadow-strong transition active:scale-[0.98]" style={{ background: 'linear-gradient(135deg, #FF3D00 0%, #D81E00 100%)' }}>Cancel Trip</button>
               </div>
             </div>
           </div>

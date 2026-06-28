@@ -49,45 +49,46 @@ For every page below:
 ## 2. Auth (first impressions — make them strong)
 - [x] `src/pages/auth/LoginPage.tsx` — `/login` ✅ Golden Horizon aurora + glass card, screenshotted
 
-- [ ] `src/pages/auth/RegisterPage.tsx` — `/register`
-- [ ] `src/pages/auth/KycUploadPage.tsx` — `/profile/kyc`
-- [ ] `src/pages/auth/DeleteAccountPage.tsx` — `/delete-account`
-- [ ] `src/pages/auth/PrivacyPolicyPage.tsx` — `/privacy-policy`
+- [x] `src/pages/auth/RegisterPage.tsx` — `/register` ✅ Aurora Mist glass card matching Login, fire submit, screenshotted (tests pass)
+- [x] `src/pages/auth/KycUploadPage.tsx` — `/profile/kyc` ✅ aura header, warm status banner, fire upload dropzone, fire-check requirements, fire upload + success, screenshotted
+- [x] `src/pages/auth/DeleteAccountPage.tsx` — `/delete-account` ✅ red emergency header + delete button, warm warning, DELETE confirm, screenshotted (tests pass)
+- [x] `src/pages/auth/PrivacyPolicyPage.tsx` — `/privacy-policy` ✅ aura header + fire badge, white content card with fire section icons, screenshotted
 
 ## 3. Home
 - [ ] `src/pages/home/HomePage.tsx` — `/home` (hero, search/route card, quick actions, routes, promo)
 
 ## 4. Rides (core flows)
-- [ ] `src/pages/rides/FindRidePage.tsx` — `/find-ride` (results, filters, driver cards)
-- [ ] `src/pages/rides/RideDetailPage.tsx` — `/rides/detail/:id`
-- [ ] `src/pages/rides/PublishRidePage.tsx` — `/publish-ride` (multi-step form)
+- [x] `src/pages/rides/FindRidePage.tsx` — `/find-ride` ✅ fire search form, glossy pin/route icons, fire sort pills, driver cards w/ fire→gold route line, fire empty state, screenshotted
+- [x] `src/pages/rides/RideDetailPage.tsx` — `/rides/detail/:id` ✅ aura + map card, fire status badge, fire→gold from/to timeline, fire join/owner actions, fire SOS, screenshotted
+- [x] `src/pages/rides/PublishRidePage.tsx` — `/publish-ride` ✅ aura header, fire route selectors, fire seat stepper, fire vehicle cards, fire +50 points card, fire publish button, screenshotted
 - [ ] `src/pages/rides/UploadRidePage.tsx` — `/upload-ride`
 - [ ] `src/pages/rides/SimpleUploadRidePage.tsx` — simple upload variant
 - [ ] `src/pages/rides/EditRidePage.tsx` — `/rides/edit/:id`
-- [ ] `src/pages/rides/RideHistoryPage.tsx` — `/rides/history`
-- [ ] `src/pages/rides/ActiveRidePage.tsx` — `/rides/active/:id` (live ride + map)
-- [ ] `src/pages/rides/TripTrackingPage.tsx` — `/trips/tracking/:id`
+- [x] `src/pages/rides/RideHistoryPage.tsx` — `/rides` ✅ fire header + aura, glossy car icons, warm status badges, fire empty state, screenshotted
+- [x] `src/pages/rides/ActiveRidePage.tsx` — `/rides/active/:id` ✅ themed header/map chrome, fire status timeline, fire route, fire/red action tiles + confirm modals, screenshotted
+- [x] `src/pages/rides/TripTrackingPage.tsx` — `/trips/tracking/:id` ✅ themed header + status pill, fire progress bar, fire route, screenshotted
 
 ## 5. Rewards (showcase — make it pop)
-- [ ] `src/pages/rewards/RewardsPage.tsx` — `/rewards` (points balance, tiers, badges, history)
+- [x] `src/pages/rewards/RewardsPage.tsx` — `/rewards` ✅ fire hero card, glossy AppIcons, fire tabs/chips, screenshotted
 
 ## 6. Inbox & Support
-- [ ] `src/pages/inbox/InboxPage.tsx` — `/inbox` (new)
-- [ ] `src/pages/support/SupportPage.tsx` — `/support`
-- [ ] `src/pages/support/NewDisputePage.tsx` — `/support/dispute/new`
-- [ ] `src/pages/support/DisputeChatPage.tsx` — `/support/dispute/:id` (chat bubbles)
+- [x] `src/pages/inbox/InboxPage.tsx` — `/inbox` ✅ aura header, glossy inbox/message icons, fire active-chat chip, bold empty states, screenshotted
+- [x] `src/pages/support/SupportPage.tsx` — `/support` ✅ aura header, fire add button, dispute cards w/ fire status badges, fire empty state, screenshotted
+- [x] `src/pages/support/NewDisputePage.tsx` — `/support/dispute/new` ✅ aura header, fire-selected type cards, themed inputs, warm tips card, fire submit + success state, screenshotted
+- [x] `src/pages/support/DisputeChatPage.tsx` — `/support/dispute/:id` ✅ fire user bubbles / white support bubbles, fire send bar, themed empty + skeleton, screenshotted
 
 ## 7. Safety
-- [ ] `src/pages/safety/SafetyPage.tsx` — `/safety`, `/safety/sos` (bold, serious SOS)
+- [x] `src/pages/safety/SafetyPage.tsx` — `/safety`, `/safety/sos` ✅ de-inline-styled to Tailwind: aura header, location card + live badge, bold red SOS card, fire-icon safety tips, red/fire contacts, fire success state, screenshotted
 
 ## 8. Profile & Settings
-- [ ] `src/pages/profile/ProfilePage.tsx` — `/profile` (avatar, stats, level/points)
-- [ ] `src/pages/profile/SettingsPage.tsx` — `/profile/settings`
-- [ ] `src/pages/profile/NotificationsPage.tsx` — `/notifications`
+- [x] `src/pages/profile/ProfilePage.tsx` — `/profile` ✅ aura header, fire avatar, fire-tinted info/menu chips, fire edit forms + toggles, fire setup wizard, screenshotted
+- [x] `src/pages/profile/SettingsPage.tsx` — `/profile/settings` ✅ aura header, fire-icon menu rows, muted disabled rows, screenshotted
+- [x] `src/pages/profile/NotificationsPage.tsx` — `/notifications` ✅ de-Ionic'd to aura header + glossy type icons + fire NEW pills + unread tint, kept pull-to-refresh, screenshotted
 
 ## 9. Location pickers
-- [ ] `src/pages/common/SelectLocationPage.tsx` — `/select-location`
-- [ ] `src/pages/location/SelectLocationPage.tsx` — location variant (confirm which is active)
+- [x] `src/pages/common/SelectLocationPage.tsx` — `/select-location` ✅ aura header, warm LocationSearch (fire pin chip), fire confirm + outline current-location, fire selected/error states, screenshotted
+- [x] `src/components/maps/LocationSearch.tsx` — warmed icon chips, paper input, fire spinner (shared)
+- [ ] `src/pages/location/SelectLocationPage.tsx` — location variant (NOT in active routes — App.tsx uses common/; skip unless wired up)
 
 ## 10. Admin
 - [ ] `src/pages/admin/AdminDashboardPage.tsx` — `/admin`

@@ -3,19 +3,19 @@ import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { locationService, rideService } from '../../services';
 import {
-  MapPin,
   Clock,
   Users,
-  Search,
   Star,
   Car,
   Filter,
   ChevronRight,
-  Navigation
+  Navigation,
 } from 'lucide-react';
 import type { PublishedRide } from '../../types';
-import Button from '../../components/Button';
-import { AppCard, EmptyState, PageHeader, PageLoader } from '../../components/ui';
+import AppIcon from '../../components/icons/AppIcon';
+import { PageLoader } from '../../components/ui';
+
+const FIRE = 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))';
 
 interface SearchLocation {
   address: string;
@@ -182,30 +182,26 @@ const FindRidePage = () => {
   }
 
   return (
-    <div className="app-scroll-screen app-bottom-nav-safe bg-gray-50">
-      <PageHeader title="Find a Ride" variant="gradient">
-        {/* Search Summary */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-          <div className="flex items-center gap-2 text-white mb-2">
-            <MapPin className="w-4 h-4" />
-            <span className="text-sm">{pickupLocation?.address || 'Select pickup'}</span>
-          </div>
-          <div className="flex items-center gap-2 text-white/80">
-            <Navigation className="w-4 h-4" />
-            <span className="text-sm">{dropoffLocation?.address || 'Select destination'}</span>
-          </div>
-          <div className="flex items-center gap-4 mt-3 text-white/70 text-xs">
-            <span className="flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              {passengerCount} passenger{passengerCount > 1 ? 's' : ''}
-            </span>
-          </div>
-        </div>
-      </PageHeader>
+    <div className="app-scroll-screen app-bottom-nav-safe relative overflow-hidden bg-white">
+      {/* Grainy orange aura, right-weighted */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[340px]">
+        <div
+          className="absolute inset-0"
+          style={{ background: 'radial-gradient(120% 72% at 82% -10%, rgba(255,107,0,0.42) 0%, rgba(255,160,30,0.16) 46%, rgba(255,255,255,0) 74%)' }}
+        />
+        <div className="absolute -right-16 -top-12 h-72 w-72 rounded-full animate-aurora-1" style={{ background: 'radial-gradient(circle, rgba(255,200,50,0.66) 0%, transparent 62%)', filter: 'blur(48px)' }} />
+        <div className="absolute -left-20 top-8 h-52 w-52 rounded-full animate-aurora-2" style={{ background: 'radial-gradient(circle, rgba(255,140,0,0.26) 0%, transparent 62%)', filter: 'blur(50px)' }} />
+      </div>
 
-      {/* Search Form */}
-      <div className="px-4 -mt-4 mb-4">
-        <AppCard className="p-4">
+      <div className="relative z-10 px-4 pb-24 pt-[calc(env(safe-area-inset-top)+20px)]">
+        {/* Header */}
+        <div className="mb-5">
+          <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Find a ride</p>
+          <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">Search</h1>
+        </div>
+
+        {/* Search Form */}
+        <div className="mb-5 rounded-[28px] border border-black/5 bg-white/80 p-4 shadow-strong backdrop-blur-md">
           {/* Pickup */}
           <button
             onClick={() => history.push('/select-location', {
@@ -214,14 +210,12 @@ const FindRidePage = () => {
               pickup: pickupLocation || undefined,
               dropoff: dropoffLocation || undefined,
             })}
-            className="w-full p-3 border-2 border-primary-100 rounded-xl mb-3 text-left hover:border-primary-300 transition-colors"
+            className="mb-3 flex w-full items-center gap-3 rounded-2xl border-2 border-primary-100 bg-primary-50/40 p-3.5 text-left transition-colors hover:border-primary-300"
           >
-            <div className="flex items-center gap-3">
-              <MapPin className="w-5 h-5 text-primary-500" />
-              <span className="text-gray-900 font-medium">
-                {pickupLocation?.address || 'Select pickup location'}
-              </span>
-            </div>
+            <AppIcon name="map-pin" className="h-6 w-6 shrink-0" />
+            <span className="min-w-0 flex-1 truncate font-display font-bold text-ink">
+              {pickupLocation?.address || 'Select pickup location'}
+            </span>
           </button>
 
           {/* Dropoff */}
@@ -232,193 +226,196 @@ const FindRidePage = () => {
               pickup: pickupLocation || undefined,
               dropoff: dropoffLocation || undefined,
             })}
-            className="w-full p-3 border-2 border-primary-100 rounded-xl mb-3 text-left hover:border-primary-300 transition-colors"
+            className="mb-3 flex w-full items-center gap-3 rounded-2xl border-2 border-primary-100 bg-primary-50/40 p-3.5 text-left transition-colors hover:border-primary-300"
           >
-            <div className="flex items-center gap-3">
-              <Navigation className="w-5 h-5 text-primary-500" />
-              <span className="text-gray-900 font-medium">
-                {dropoffLocation?.address || 'Select destination'}
-              </span>
-            </div>
+            <AppIcon name="route" className="h-6 w-6 shrink-0" />
+            <span className="min-w-0 flex-1 truncate font-display font-bold text-ink">
+              {dropoffLocation?.address || 'Select destination'}
+            </span>
           </button>
 
           {/* Passengers */}
-          <div className="mb-4">
-            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
-              <Users className="w-4 h-4 text-primary-500" />
-              <select
-                value={passengerCount}
-                onChange={(e) => setPassengerCount(Number(e.target.value))}
-                className="flex-1 bg-transparent text-sm text-gray-700 focus:outline-none"
+          <label className="mb-4 flex items-center gap-3 rounded-2xl border border-black/5 bg-paper p-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary-100 bg-white">
+              <AppIcon name="users" className="h-5 w-5" />
+            </div>
+            <span className="font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">Seats</span>
+            <select
+              value={passengerCount}
+              onChange={(e) => setPassengerCount(Number(e.target.value))}
+              className="ml-auto bg-transparent text-right font-display text-sm font-bold text-ink focus:outline-none [color-scheme:light]"
+            >
+              {[1, 2, 3, 4, 5, 6].map((n) => (
+                <option key={n} value={n}>{n} passenger{n > 1 ? 's' : ''}</option>
+              ))}
+            </select>
+          </label>
+
+          <button
+            onClick={handleSearch}
+            disabled={loading}
+            className="grain grain-strong relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl py-4 font-display text-lg font-bold tracking-tight text-white shadow-glow transition-all hover:shadow-glow-lg active:scale-[0.98] disabled:opacity-80"
+            style={{ background: FIRE }}
+          >
+            <AppIcon name="search" className="h-5 w-5 brightness-0 invert" />
+            {loading ? 'Searching...' : 'Search Rides'}
+          </button>
+        </div>
+
+        {/* Results */}
+        {availableRides.length > 0 && (
+          <div>
+            {/* Filters */}
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-display text-lg font-extrabold tracking-tight text-ink">
+                {availableRides.length} ride{availableRides.length === 1 ? '' : 's'} available
+              </h2>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-1.5 rounded-full border border-primary-200 bg-white px-3 py-1.5 font-display text-sm font-bold text-primary-600 shadow-soft transition active:scale-95"
               >
-                {[1, 2, 3, 4, 5, 6].map(n => (
-                  <option key={n} value={n}>{n} passenger{n > 1 ? 's' : ''}</option>
-                ))}
-              </select>
+                <Filter className="h-4 w-4" strokeWidth={2.5} />
+                Filter
+              </button>
+            </div>
+
+            {/* Sort Options */}
+            {showFilters && (
+              <div className="mb-4 flex gap-2 overflow-x-auto pb-2">
+                {(['time', 'price', 'rating'] as const).map((sort) => {
+                  const isActive = sortBy === sort;
+                  return (
+                    <button
+                      key={sort}
+                      onClick={() => setSortBy(sort)}
+                      className={`${isActive ? 'grain grain-strong text-white shadow-glow' : 'border border-black/5 bg-white text-ink/55'} relative overflow-hidden whitespace-nowrap rounded-full px-4 py-2 font-display text-sm font-bold transition active:scale-95`}
+                      style={isActive ? { background: FIRE } : undefined}
+                    >
+                      {sort.charAt(0).toUpperCase() + sort.slice(1)}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Ride Cards */}
+            <div className="space-y-4">
+              {availableRides.map((ride) => {
+                const isBooked = joinedRideIds.has(ride.id);
+                return (
+                  <div key={ride.id} className="rounded-[26px] border border-black/5 bg-white p-5 shadow-soft">
+                    {/* Driver Info */}
+                    <div className="mb-4 flex items-start gap-4">
+                      <div className="relative">
+                        <div className="h-14 w-14 overflow-hidden rounded-2xl border border-black/5 bg-paper-dim">
+                          <img
+                            src={ride.driver?.avatar || 'https://via.placeholder.com/56'}
+                            alt={ride.driver?.name}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        {ride.driver?.rating && ride.driver.rating >= 4.8 && (
+                          <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-fire-gold shadow-gold-glow">
+                            <Star className="h-3 w-3 fill-ink text-ink" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-display font-bold text-ink">{ride.driver?.name}</h3>
+                        <div className="flex items-center gap-1 text-fire-gold">
+                          <Star className="h-4 w-4 fill-current" />
+                          <span className="text-sm font-bold">{ride.driver?.rating}</span>
+                        </div>
+                        <div className="mt-1 flex items-center gap-1.5 text-xs font-medium text-ink/50">
+                          <Car className="h-3.5 w-3.5" />
+                          <span className="truncate">{ride.vehicleType} • {ride.vehicleNumber}</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-display text-2xl font-extrabold leading-none text-fire-orange">₹{ride.pricePerSeat}</p>
+                        <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">per seat</p>
+                      </div>
+                    </div>
+
+                    {/* Route Info */}
+                    <div className="mb-4 flex items-center gap-3 text-sm">
+                      <div className="flex-1">
+                        <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wide text-ink/40">Departure</p>
+                        <p className="font-display font-bold text-ink">{formatTime(ride.departureTime)}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-2 w-2 rounded-full bg-fire-orange" />
+                        <div className="h-0.5 w-14 rounded-full bg-gradient-to-r from-fire-orange to-fire-gold" />
+                        <div className="h-2 w-2 rounded-full bg-fire-gold" />
+                      </div>
+                      <div className="flex-1 text-right">
+                        <p className="mb-0.5 text-[11px] font-bold uppercase tracking-wide text-ink/40">Arrival</p>
+                        <p className="font-display font-bold text-ink">
+                          {formatTime(new Date(new Date(ride.departureTime).getTime() + getRideDuration(ride) * 60000).toISOString())}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Details */}
+                    <div className="mb-4 flex items-center justify-between rounded-2xl border border-black/5 bg-paper px-3 py-2.5 text-xs font-medium text-ink/55">
+                      <span className="flex items-center gap-1">
+                        <Navigation className="h-3.5 w-3.5" />
+                        {getRideDistance(ride) ? `${getRideDistance(ride)} km` : 'Distance unknown'}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        {formatDuration(getRideDuration(ride))}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3.5 w-3.5" />
+                        {ride.availableSeats - ride.bookedSeats} seats left
+                      </span>
+                    </div>
+
+                    {/* Notes */}
+                    {ride.notes && (
+                      <p className="mb-4 rounded-2xl border border-black/5 bg-paper p-3 text-xs font-medium italic text-ink/55">
+                        "{ride.notes}"
+                      </p>
+                    )}
+
+                    {/* Book Button */}
+                    <button
+                      onClick={() => handleBookRide(ride)}
+                      disabled={isBooked}
+                      className={`${isBooked ? 'border-2 border-black/10 bg-paper text-ink/45' : 'grain grain-strong text-white shadow-glow'} relative flex w-full items-center justify-center gap-1.5 overflow-hidden rounded-2xl py-3.5 font-display font-bold tracking-tight transition-all active:scale-[0.98]`}
+                      style={isBooked ? undefined : { background: FIRE }}
+                    >
+                      {isBooked ? 'Booked' : `Book ${passengerCount} Seat${passengerCount > 1 ? 's' : ''}`}
+                      {!isBooked && <ChevronRight className="h-5 w-5" strokeWidth={2.5} />}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
+        )}
 
-          <Button
-            onClick={handleSearch}
-            loading={loading}
-            expand="block"
-            icon={<Search className="w-5 h-5" />}
-          >
-            {loading ? 'Searching...' : 'Search Rides'}
-          </Button>
-        </AppCard>
-      </div>
-
-      {/* Results */}
-      {availableRides.length > 0 && (
-        <div className="px-4">
-          {/* Filters */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {availableRides.length} rides available
-            </h2>
+        {/* Empty State */}
+        {!loading && hasSearched && availableRides.length === 0 && (pickupLocation || dropoffLocation) && (
+          <div className="mt-8 rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
+              <AppIcon name="car" className="h-12 w-12" />
+            </div>
+            <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">No rides found</h2>
+            <p className="mt-2 text-sm font-medium text-ink/50">
+              We couldn't find any rides for your route. Try adjusting your search or publish your own ride!
+            </p>
             <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-1 text-primary-600 font-medium text-sm"
+              onClick={handlePublishFromSearch}
+              className="grain grain-strong relative mt-6 w-full overflow-hidden rounded-2xl px-4 py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+              style={{ background: FIRE }}
             >
-              <Filter className="w-4 h-4" />
-              Filter
+              Publish a Ride
             </button>
           </div>
-
-          {/* Sort Options */}
-          {showFilters && (
-            <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-              {(['time', 'price', 'rating'] as const).map((sort) => (
-                <button
-                  key={sort}
-                  onClick={() => setSortBy(sort)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${sortBy === sort
-                      ? 'bg-primary-500 text-white'
-                      : 'bg-gray-100 text-gray-700'
-                    }`}
-                >
-                  {sort.charAt(0).toUpperCase() + sort.slice(1)}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Ride Cards */}
-          <div className="space-y-4 pb-24">
-            {availableRides.map((ride) => {
-              const isBooked = joinedRideIds.has(ride.id);
-              return (
-                <AppCard
-                  key={ride.id}
-                  className="p-5"
-                >
-                {/* Driver Info */}
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="relative">
-                    <div className="w-14 h-14 rounded-full bg-gray-200 overflow-hidden">
-                      <img
-                        src={ride.driver?.avatar || 'https://via.placeholder.com/56'}
-                        alt={ride.driver?.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    {ride.driver?.rating && ride.driver.rating >= 4.8 && (
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
-                        <Star className="w-3 h-3 text-white fill-white" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{ride.driver?.name}</h3>
-                    <div className="flex items-center gap-1 text-yellow-500">
-                      <Star className="w-4 h-4 fill-current" />
-                      <span className="text-sm font-medium">{ride.driver?.rating}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-                      <Car className="w-3 h-3" />
-                      <span>{ride.vehicleType} • {ride.vehicleNumber}</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-primary-600">₹{ride.pricePerSeat}</p>
-                    <p className="text-xs text-gray-500">per seat</p>
-                  </div>
-                </div>
-
-                {/* Route Info */}
-                <div className="flex items-center gap-3 mb-4 text-sm">
-                  <div className="flex-1">
-                    <p className="text-gray-500 text-xs mb-0.5">Departure</p>
-                    <p className="font-semibold text-gray-900">{formatTime(ride.departureTime)}</p>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-400">
-                    <div className="w-2 h-2 rounded-full bg-primary-500" />
-                    <div className="w-16 h-0.5 bg-gray-200" />
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                  </div>
-                  <div className="flex-1 text-right">
-                    <p className="text-gray-500 text-xs mb-0.5">Arrival</p>
-                    <p className="font-semibold text-gray-900">
-                      {formatTime(new Date(new Date(ride.departureTime).getTime() + getRideDuration(ride) * 60000).toISOString())}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Details */}
-                <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                  <span className="flex items-center gap-1">
-                    <Navigation className="w-3 h-3" />
-                    {getRideDistance(ride) ? `${getRideDistance(ride)} km` : 'Distance unknown'}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {formatDuration(getRideDuration(ride))}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Users className="w-3 h-3" />
-                    {ride.availableSeats - ride.bookedSeats} seats left
-                  </span>
-                </div>
-
-                {/* Notes */}
-                {ride.notes && (
-                  <p className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2 mb-4">
-                    "{ride.notes}"
-                  </p>
-                )}
-
-                {/* Book Button */}
-                <Button
-                  onClick={() => handleBookRide(ride)}
-                  expand="block"
-                  disabled={isBooked}
-                >
-                  {isBooked ? 'Booked' : `Book ${passengerCount} Seat${passengerCount > 1 ? 's' : ''}`}
-                  {!isBooked && <ChevronRight className="w-5 h-5" />}
-                </Button>
-                </AppCard>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!loading && hasSearched && availableRides.length === 0 && (pickupLocation || dropoffLocation) && (
-        <div className="px-4 mt-8">
-          <EmptyState
-            icon={
-              <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center">
-              <Car className="w-10 h-10 text-primary-600" />
-            </div>
-            }
-            title="No rides found"
-            message="We couldn't find any rides for your route. Try adjusting your search or publish your own ride!"
-            action={<Button onClick={handlePublishFromSearch}>Publish a Ride</Button>}
-          />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

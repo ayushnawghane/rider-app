@@ -5,6 +5,9 @@ import { authService } from "../../services";
 import { AlertTriangle, ArrowLeft, Trash2, ShieldAlert } from "lucide-react";
 import { IonContent } from "@ionic/react";
 
+const ALERT = 'linear-gradient(135deg, #FF3D00 0%, #D81E00 100%)';
+const FIRE = 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))';
+
 const DeleteAccountPage: React.FC = () => {
   const { user } = useAuth();
   const history = useHistory();
@@ -37,37 +40,31 @@ const DeleteAccountPage: React.FC = () => {
   };
 
   return (
-    <IonContent className="ion-padding">
-      <div className="min-h-full bg-slate-50 flex flex-col items-center justify-center p-6">
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
+    <IonContent>
+      <div className="flex min-h-full flex-col items-center justify-center bg-white p-6">
+        <div className="w-full max-w-md overflow-hidden rounded-[32px] border border-black/5 bg-white shadow-strong">
           {/* Header */}
-          <div className="bg-rose-500 p-8 text-center relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full opacity-10">
-              <ShieldAlert size={120} className="absolute -right-8 -bottom-8" />
-            </div>
+          <div className="relative overflow-hidden p-8 text-center" style={{ background: ALERT }}>
+            <ShieldAlert size={120} className="absolute -bottom-8 -right-8 text-white/10" />
             <div className="relative z-10">
-              <div className="mx-auto w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-sm border border-white/30">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/30 bg-white/20 backdrop-blur-sm">
                 <Trash2 className="text-white" size={32} />
               </div>
-              <h1 className="text-2xl font-bold text-white mb-2">
-                Delete Account
-              </h1>
-              <p className="text-rose-100 text-sm">
+              <h1 className="font-display text-2xl font-extrabold tracking-tight text-white">Delete Account</h1>
+              <p className="mt-2 text-sm font-medium text-white/90">
                 This action is permanent and cannot be undone.
               </p>
             </div>
           </div>
 
           {/* Content */}
-          <div className="p-8 space-y-6">
+          <div className="space-y-6 p-8">
             <div className="space-y-4">
-              <div className="flex gap-4 items-start p-4 bg-amber-50 rounded-2xl border border-amber-100">
-                <AlertTriangle className="text-amber-600 shrink-0" size={20} />
-                <div className="text-sm text-amber-800">
-                  <p className="font-semibold mb-1">
-                    What happens when you delete your account?
-                  </p>
-                  <ul className="list-disc ml-4 space-y-1">
+              <div className="flex items-start gap-4 rounded-2xl border border-fire-gold/30 bg-fire-gold/10 p-4">
+                <AlertTriangle className="shrink-0 text-fire-orange" size={20} />
+                <div className="text-sm text-[#7a4a00]">
+                  <p className="mb-1 font-display font-bold">What happens when you delete your account?</p>
+                  <ul className="ml-4 list-disc space-y-1 font-medium">
                     <li>Your profile information will be removed.</li>
                     <li>Your ride history will be anonymized.</li>
                     <li>Pending ride requests will be cancelled.</li>
@@ -79,35 +76,31 @@ const DeleteAccountPage: React.FC = () => {
               {user ? (
                 <>
                   <div className="space-y-3">
-                    <p className="text-sm text-slate-600 text-center">
+                    <p className="text-center text-sm font-medium text-ink/60">
                       To confirm deletion, please type{" "}
-                      <span className="font-bold text-rose-600">DELETE</span>{" "}
-                      below.
+                      <span className="font-display font-bold text-fire-red">DELETE</span> below.
                     </p>
                     <input
                       type="text"
                       value={confirmText}
-                      onChange={(e) =>
-                        setConfirmText(e.target.value.toUpperCase())
-                      }
+                      onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
                       placeholder="Type DELETE here"
-                      className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-center font-bold tracking-widest text-slate-800 focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none transition"
+                      className="w-full rounded-2xl border-2 border-black/10 bg-paper px-4 py-3 text-center font-display font-bold tracking-widest text-ink outline-none transition focus:border-fire-red focus:ring-2 focus:ring-[rgba(216,30,0,0.15)]"
                     />
                   </div>
 
                   {error && (
-                    <p className="text-sm text-rose-600 text-center font-medium">
-                      {error}
-                    </p>
+                    <p className="text-center text-sm font-semibold text-fire-red">{error}</p>
                   )}
 
                   <button
                     onClick={handleDelete}
                     disabled={isDeleting || confirmText !== "DELETE"}
-                    className="w-full py-4 bg-rose-500 hover:bg-rose-600 disabled:bg-slate-300 text-white font-bold rounded-2xl shadow-lg shadow-rose-200 transition-all flex items-center justify-center gap-2 group"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-display font-bold text-white shadow-strong transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{ background: ALERT }}
                   >
                     {isDeleting ? (
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                     ) : (
                       <>
                         <Trash2 size={20} />
@@ -117,13 +110,12 @@ const DeleteAccountPage: React.FC = () => {
                   </button>
                 </>
               ) : (
-                <div className="text-center space-y-4 py-4">
-                  <p className="text-slate-600">
-                    You must be logged in to delete your account.
-                  </p>
+                <div className="space-y-4 py-4 text-center">
+                  <p className="font-medium text-ink/60">You must be logged in to delete your account.</p>
                   <button
                     onClick={() => history.push("/login")}
-                    className="px-6 py-2 bg-orange-500 text-white rounded-xl font-semibold shadow-lg shadow-orange-200"
+                    className="grain grain-strong relative overflow-hidden rounded-2xl px-6 py-2.5 font-display font-bold text-white shadow-glow"
+                    style={{ background: FIRE }}
                   >
                     Go to Login
                   </button>
@@ -132,7 +124,7 @@ const DeleteAccountPage: React.FC = () => {
 
               <button
                 onClick={() => history.goBack()}
-                className="w-full py-3 text-slate-500 font-medium hover:text-slate-800 transition flex items-center justify-center gap-2"
+                className="flex w-full items-center justify-center gap-2 py-3 font-display font-bold text-ink/50 transition hover:text-ink"
               >
                 <ArrowLeft size={18} />
                 Nevermind, keep my account
@@ -141,11 +133,9 @@ const DeleteAccountPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-8 text-center text-slate-400 text-xs">
+        <div className="mt-8 text-center text-xs font-medium text-ink/35">
           <p>© {new Date().getFullYear()} BlinkCar. All rights reserved.</p>
-          <p className="mt-1">
-            For data portability requests, please contact support.
-          </p>
+          <p className="mt-1">For data portability requests, please contact support.</p>
         </div>
       </div>
     </IonContent>

@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useHistory, useLocation } from 'react-router';
-import { CheckCircle2, MapPin, Navigation as NavigationIcon, Target } from 'lucide-react';
+import { CheckCircle2, MapPin, Navigation as NavigationIcon, Target, ChevronLeft } from 'lucide-react';
 import { useJsApiLoader } from '@react-google-maps/api';
 import { useAuth } from '../../context/AuthContext';
-import Button from '../../components/Button';
-import { AppCard, PageHeader, PageLoader } from '../../components/ui';
+import { PageLoader } from '../../components/ui';
 import { LocationSearch } from '../../components/maps';
 import { googleMapsLoaderOptions } from '../../lib/googleMapsLoader';
 import { mapsService, locationService } from '../../services';
 import type { Location as MapLocation } from '../../types/maps';
+
+const FIRE = 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))';
 
 type LocationType = 'pickup' | 'dropoff' | 'start' | 'end';
 
@@ -129,78 +130,102 @@ const SelectLocationPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 app-bottom-nav-safe">
-      <PageHeader title={title} subtitle="Choose a location to continue" variant="gradient" />
+    <div className="app-scroll-screen app-bottom-nav-safe relative overflow-hidden bg-white">
+      {/* Grainy orange aura */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[300px]">
+        <div
+          className="absolute inset-0"
+          style={{ background: 'radial-gradient(120% 72% at 82% -10%, rgba(255,107,0,0.4) 0%, rgba(255,160,30,0.15) 46%, rgba(255,255,255,0) 74%)' }}
+        />
+        <div className="absolute -right-16 -top-12 h-72 w-72 rounded-full animate-aurora-1" style={{ background: 'radial-gradient(circle, rgba(255,200,50,0.62) 0%, transparent 62%)', filter: 'blur(48px)' }} />
+      </div>
 
-      <div className="px-4 -mt-4 pb-6">
-        <AppCard className="p-4 space-y-4">
-          {!loadError ? (
-            <LocationSearch
-              placeholder={placeholder}
-              value={selectedLocation?.address || ''}
-              onLocationSelect={(loc) => {
-                setError(null);
-                setSelectedLocation(loc);
-              }}
-              icon={iconMode}
-              onClear={() => setSelectedLocation(null)}
-            />
-          ) : (
-            <div className="space-y-2">
-              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                Google Maps is unavailable. Enter address manually.
-              </p>
-              <input
-                value={manualAddress}
-                onChange={(e) => setManualAddress(e.target.value)}
-                placeholder={placeholder}
-                className="w-full p-3 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
+      <div className="relative z-10 px-4 pb-6 pt-[calc(env(safe-area-inset-top)+20px)]">
+        <div className="mx-auto max-w-2xl">
+          {/* Header */}
+          <div className="mb-6 flex items-center gap-3">
+            <button
+              onClick={() => history.goBack()}
+              aria-label="Back"
+              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-black/10 bg-white/70 text-ink shadow-soft backdrop-blur-sm transition active:scale-95"
+            >
+              <ChevronLeft size={22} strokeWidth={2.5} />
+            </button>
+            <div>
+              <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Location</p>
+              <h1 className="font-display text-[1.9rem] font-extrabold leading-[0.9] tracking-tight text-ink">{title}</h1>
             </div>
-          )}
+          </div>
 
-          <Button
-            onClick={handleUseCurrentLocation}
-            type="button"
-            disabled={isResolvingCurrent || !isLoaded}
-            variant="outline"
-            className="w-full"
-          >
-            <Target className="w-4 h-4" />
-            {isResolvingCurrent ? 'Detecting current location...' : 'Use Current Location'}
-          </Button>
+          <div className="space-y-4 rounded-[28px] border border-black/5 bg-white/85 p-4 shadow-strong backdrop-blur-md">
+            {!loadError ? (
+              <LocationSearch
+                placeholder={placeholder}
+                value={selectedLocation?.address || ''}
+                onLocationSelect={(loc) => {
+                  setError(null);
+                  setSelectedLocation(loc);
+                }}
+                icon={iconMode}
+                onClear={() => setSelectedLocation(null)}
+              />
+            ) : (
+              <div className="space-y-2">
+                <p className="rounded-xl border border-fire-gold/30 bg-fire-gold/10 px-3 py-2 text-sm font-medium text-[#7a4a00]">
+                  Google Maps is unavailable. Enter address manually.
+                </p>
+                <input
+                  value={manualAddress}
+                  onChange={(e) => setManualAddress(e.target.value)}
+                  placeholder={placeholder}
+                  className="w-full rounded-2xl border-2 border-black/10 bg-white p-3 font-medium text-ink outline-none transition focus:border-fire-orange focus:ring-2 focus:ring-[rgba(255,107,0,0.18)]"
+                />
+              </div>
+            )}
 
-          {selectedLocation && (
-            <div className="p-3 rounded-xl border border-green-200 bg-green-50">
-              <div className="flex items-start gap-2">
-                {iconMode === 'drop' ? (
-                  <NavigationIcon className="w-5 h-5 text-green-600 mt-0.5" />
-                ) : (
-                  <MapPin className="w-5 h-5 text-primary-600 mt-0.5" />
-                )}
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{selectedLocation.name}</p>
-                  <p className="text-xs text-gray-600 break-words">{selectedLocation.address}</p>
+            <button
+              onClick={handleUseCurrentLocation}
+              type="button"
+              disabled={isResolvingCurrent || !isLoaded}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-primary-200 py-3.5 font-display font-bold text-primary-700 transition hover:bg-primary-50 active:scale-[0.98] disabled:opacity-60"
+            >
+              <Target className="h-4 w-4" strokeWidth={2.5} />
+              {isResolvingCurrent ? 'Detecting current location...' : 'Use Current Location'}
+            </button>
+
+            {selectedLocation && (
+              <div className="rounded-2xl border border-primary-100 bg-primary-50/60 p-3">
+                <div className="flex items-start gap-2.5">
+                  {iconMode === 'drop' ? (
+                    <NavigationIcon className="mt-0.5 h-5 w-5 text-fire-gold" />
+                  ) : (
+                    <MapPin className="mt-0.5 h-5 w-5 text-fire-orange" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate font-display font-bold text-ink">{selectedLocation.name}</p>
+                    <p className="break-words text-xs font-medium text-ink/55">{selectedLocation.address}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-              {error}
-            </p>
-          )}
+            {error && (
+              <p className="rounded-xl border border-fire-red/20 bg-fire-red/5 px-3 py-2 text-sm font-medium text-fire-red">
+                {error}
+              </p>
+            )}
 
-          <Button
-            onClick={handleConfirm}
-            type="button"
-            className="w-full"
-          >
-            <CheckCircle2 className="w-4 h-4" />
-            Confirm Location
-          </Button>
-        </AppCard>
+            <button
+              onClick={handleConfirm}
+              type="button"
+              className="grain grain-strong relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl py-4 font-display text-lg font-bold tracking-tight text-white shadow-glow transition-all active:scale-[0.98]"
+              style={{ background: FIRE }}
+            >
+              <CheckCircle2 className="h-5 w-5" strokeWidth={2.5} />
+              Confirm Location
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

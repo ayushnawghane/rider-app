@@ -3,9 +3,21 @@ import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { sosService, locationService } from '../../services';
 import { MapComponent } from '../../components/maps';
-import Button from '../../components/Button';
 import LoadingOverlay from '../../components/LoadingOverlay';
+import {
+  ChevronLeft,
+  ShieldAlert,
+  Navigation,
+  AlertTriangle,
+  CheckCircle2,
+  Phone,
+  MapPin,
+  Zap,
+  MessageCircle,
+} from 'lucide-react';
 
+const FIRE = 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))';
+const ALERT = 'linear-gradient(135deg, #FF3D00 0%, #D81E00 100%)';
 
 const emergencyContacts = [
   { id: 1, name: 'Emergency Services', number: '112' },
@@ -27,14 +39,20 @@ const safetyTips = [
     id: 3,
     title: 'Stay Calm & Alert',
     description: 'Keep your phone charged and stay aware of your surroundings.',
-  }
+  },
 ];
+
+const tipIcon = (id: number) => {
+  if (id === 1) return <Phone className="h-5 w-5" />;
+  if (id === 2) return <MapPin className="h-5 w-5" />;
+  return <Zap className="h-5 w-5" />;
+};
 
 const SafetyPage: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
   const history = useHistory();
-  
+
   const [loading, setLoading] = useState(false);
   const [sosSent, setSosSent] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -102,7 +120,7 @@ const SafetyPage: React.FC = () => {
 
     if (!locationToUse) {
       showToastMessage('Getting your location... Please wait.');
-      
+
       const position = await locationService.getCurrentPosition();
       if (!position) {
         showToastMessage('Unable to get location. Please check your location settings.');
@@ -167,266 +185,197 @@ const SafetyPage: React.FC = () => {
   };
 
   return (
-    <div style={{ 
-      height: 'calc(100vh - var(--app-bottom-nav-height))', 
-      overflow: 'auto', 
-      background: '#f9fafb', 
-      padding: '16px',
-      paddingTop: 'calc(env(safe-area-inset-top) + 16px)',
-      paddingBottom: 'calc(var(--app-bottom-nav-height) + 16px)',
-      WebkitOverflowScrolling: 'touch'
-    }}>
-      {/* Header */}
-      <header style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        padding: '12px 0', 
-        marginBottom: '16px',
-        borderBottom: '1px solid #e5e7eb'
-      }}>
-        <button 
-          onClick={() => history.goBack()}
-          style={{ 
-            background: 'transparent', 
-            border: 'none', 
-            padding: '8px',
-            cursor: 'pointer'
-          }}
-        >
-          <span style={{ fontSize: '24px' }}>←</span>
-        </button>
-        <h1 style={{ fontSize: '18px', fontWeight: '600', margin: 0 }}>Safety & SOS</h1>
-      </header>
+    <div className="app-scroll-screen app-bottom-nav-safe relative overflow-hidden bg-white">
+      {/* Subtle grainy aura */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[280px]">
+        <div
+          className="absolute inset-0"
+          style={{ background: 'radial-gradient(120% 72% at 82% -10%, rgba(255,107,0,0.34) 0%, rgba(255,160,30,0.12) 46%, rgba(255,255,255,0) 74%)' }}
+        />
+        <div className="absolute -right-16 -top-12 h-64 w-64 rounded-full animate-aurora-1" style={{ background: 'radial-gradient(circle, rgba(255,200,50,0.52) 0%, transparent 62%)', filter: 'blur(48px)' }} />
+      </div>
 
-      {!sosSent ? (
-        <>
-          {/* Your Location */}
-          <div style={{ marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 12px 0' }}>Your Location</h2>
-            <div style={{ height: '180px', borderRadius: '12px', overflow: 'hidden', position: 'relative', background: '#f3f4f6' }}>
-              {currentLocation ? (
-                <>
-                  <MapComponent
-                    center={currentLocation}
-                    markers={[{ position: currentLocation, title: 'Your Location' }]}
-                    zoom={16}
-                  />
-                  {isTracking && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '12px',
-                      left: '12px',
-                      background: 'rgba(255,255,255,0.95)',
-                      borderRadius: '20px',
-                      padding: '6px 12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                    }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e' }} />
-                      <span style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Live Location</span>
+      <div className="relative z-10 px-4 pb-6 pt-[calc(env(safe-area-inset-top)+18px)]">
+        <div className="mx-auto max-w-2xl">
+          {/* Header */}
+          <header className="mb-6 flex items-center gap-3">
+            <button
+              onClick={() => history.goBack()}
+              aria-label="Back"
+              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-black/10 bg-white/70 text-ink shadow-soft backdrop-blur-sm transition active:scale-95"
+            >
+              <ChevronLeft size={22} strokeWidth={2.5} />
+            </button>
+            <div>
+              <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-red">Stay safe</p>
+              <h1 className="font-display text-[2rem] font-extrabold leading-[0.9] tracking-tight text-ink">Safety &amp; SOS</h1>
+            </div>
+          </header>
+
+          {!sosSent ? (
+            <>
+              {/* Your Location */}
+              <div className="mb-6">
+                <h2 className="mb-3 font-display text-lg font-extrabold tracking-tight text-ink">Your location</h2>
+                <div className="relative h-44 overflow-hidden rounded-[24px] border border-black/5 bg-paper shadow-soft">
+                  {currentLocation ? (
+                    <>
+                      <MapComponent
+                        center={currentLocation}
+                        markers={[{ position: currentLocation, title: 'Your Location' }]}
+                        zoom={16}
+                      />
+                      {isTracking && (
+                        <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 shadow-soft">
+                          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                          <span className="font-display text-xs font-bold text-ink/70">Live location</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <div className="text-center">
+                        <MapPin className="mx-auto h-10 w-10 text-ink/30" />
+                        <p className="mt-2 text-sm font-medium text-ink/50">Getting your location...</p>
+                      </div>
                     </div>
                   )}
-                </>
-              ) : (
-                <div style={{ height: '100%', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <span style={{ fontSize: '40px', color: '#9ca3af' }}>📍</span>
-                    <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '8px', margin: 0 }}>Getting your location...</p>
+                </div>
+
+                {currentLocation && (
+                  <div className="mt-2 flex items-center justify-between rounded-2xl border border-black/5 bg-white p-3 shadow-soft">
+                    <div className="flex items-center gap-2">
+                      <Navigation className="h-4 w-4 text-fire-orange" />
+                      <span className="font-mono text-sm text-ink/60">
+                        {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleShareLocation}
+                      className="rounded-xl px-3 py-1.5 font-display text-sm font-bold text-fire-orange transition hover:bg-primary-50 active:scale-95"
+                    >
+                      Share
+                    </button>
                   </div>
+                )}
+
+                {locationError && (
+                  <div className="mt-2 flex items-start gap-3 rounded-2xl border border-fire-red/20 bg-fire-red/5 p-3">
+                    <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-fire-red" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-fire-red">{locationError}</p>
+                      <button
+                        onClick={getCurrentLocation}
+                        className="mt-1 font-display text-sm font-bold text-fire-red transition hover:brightness-90"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* SOS Card */}
+              <div className="mb-6 rounded-[28px] p-6 text-center shadow-strong" style={{ background: ALERT }}>
+                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                  <ShieldAlert className="h-8 w-8 text-white" strokeWidth={2.5} />
+                </div>
+                <h2 className="font-display text-2xl font-extrabold tracking-tight text-white">Emergency SOS</h2>
+                <p className="mx-auto mt-2 max-w-sm text-sm font-medium text-white/90">
+                  In case of emergency, tap the button below to alert our support team with your live location.
+                </p>
+                <button
+                  onClick={handleSOS}
+                  disabled={loading || !currentLocation}
+                  className="mt-5 w-full rounded-2xl bg-white py-4 font-display text-lg font-extrabold tracking-tight text-[#D81E00] shadow-lg transition active:scale-[0.98] disabled:opacity-70"
+                >
+                  {loading ? 'Sending Alert...' : 'SOS EMERGENCY'}
+                </button>
+                {!currentLocation && (
+                  <p className="mt-2 text-xs font-medium text-white/80">Waiting for location...</p>
+                )}
+              </div>
+
+              {/* Safety Tips */}
+              <div className="mb-6">
+                <h2 className="mb-3 font-display text-lg font-extrabold tracking-tight text-ink">Safety tips</h2>
+                <div className="space-y-2.5">
+                  {safetyTips.map((tip) => (
+                    <div key={tip.id} className="flex items-start gap-3 rounded-[22px] border border-black/5 bg-white p-3.5 shadow-soft">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white text-fire-orange">
+                        {tipIcon(tip.id)}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-display font-bold text-ink">{tip.title}</h3>
+                        <p className="mt-0.5 text-sm font-medium text-ink/55">{tip.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Emergency Contacts */}
+              <div className="mb-2">
+                <h2 className="mb-3 font-display text-lg font-extrabold tracking-tight text-ink">Emergency contacts</h2>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => handleEmergencyCall('tel:112')}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 font-display font-bold text-white shadow-strong transition active:scale-[0.98]"
+                    style={{ background: ALERT }}
+                  >
+                    <Phone className="h-5 w-5" strokeWidth={2.5} />
+                    Emergency Services (112)
+                  </button>
+                  <button
+                    onClick={() => handleEmergencyCall('support@blinkcar.com')}
+                    className="grain grain-strong relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+                    style={{ background: FIRE }}
+                  >
+                    <MessageCircle className="h-5 w-5" strokeWidth={2.5} />
+                    Blink Car Support
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="rounded-[28px] border border-black/5 bg-white p-6 text-center shadow-strong">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+                <CheckCircle2 className="h-9 w-9 text-emerald-600" />
+              </div>
+              <h2 className="mt-4 font-display text-2xl font-extrabold tracking-tight text-emerald-600">SOS Alert Sent!</h2>
+              <p className="mt-2 text-sm font-medium text-ink/55">
+                Our support team has been notified with your live location and will contact you immediately.
+              </p>
+
+              {currentLocation && (
+                <div className="mt-4 rounded-2xl border border-black/5 bg-paper p-3">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">Location shared</p>
+                  <p className="mt-0.5 font-mono text-xs text-ink">
+                    {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
+                  </p>
                 </div>
               )}
-            </div>
 
-            {currentLocation && (
-              <div style={{ marginTop: '8px', padding: '12px', background: 'white', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ color: '#6366f1' }}>🧭</span>
-                  <span style={{ fontSize: '14px', color: '#4b5563', fontFamily: 'monospace' }}>
-                    {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
-                  </span>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleShareLocation}
-                >
-                  Share
-                </Button>
-              </div>
-            )}
-
-            {locationError && (
-              <div style={{ marginTop: '8px', padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#ef4444', fontSize: '20px', marginTop: '2px' }}>⚠️</span>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: '14px', color: '#b91c1c', margin: 0 }}>{locationError}</p>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={getCurrentLocation}
-                      style={{ marginTop: '4px', color: '#dc2626' }}
-                    >
-                      Try Again
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* SOS Card */}
-          <div style={{ 
-            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', 
-            borderRadius: '12px',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-            marginBottom: '24px',
-            padding: '20px',
-            textAlign: 'center'
-          }}>
-            <div style={{ width: '48px', height: '48px', background: 'rgba(255,255,255,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-              <span style={{ fontSize: '28px' }}>🚨</span>
-            </div>
-            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', margin: '0 0 8px 0' }}>Emergency SOS</h2>
-            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', margin: '0 0 16px 0' }}>
-              In case of emergency, tap the button below to alert our support team with your live location.
-            </p>
-            <Button
-              variant="secondary"
-              size="md"
-              onClick={handleSOS}
-              loading={loading}
-              disabled={!currentLocation}
-              expand="full"
-              style={{ background: 'white', color: '#dc2626', fontWeight: '600' }}
-            >
-              {loading ? 'Sending Alert...' : 'SOS EMERGENCY'}
-            </Button>
-            {!currentLocation && (
-              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', marginTop: '8px', margin: 0 }}>Waiting for location...</p>
-            )}
-          </div>
-
-          {/* Safety Tips */}
-          <div style={{ marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 12px 0' }}>Safety Tips</h2>
-            {safetyTips.map((tip) => (
-              <div key={tip.id} style={{ 
-                background: 'white', 
-                borderRadius: '8px', 
-                boxShadow: '0 1px 2px rgba(0,0,0,0.05)', 
-                marginBottom: '8px',
-                padding: '12px',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '12px'
-              }}>
-                <div style={{ 
-                  width: '40px', 
-                  height: '40px', 
-                  borderRadius: '50%', 
-                  background: '#f3f4f6',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  fontSize: '20px'
-                }}>
-                  {tip.id === 1 && '📞'}
-                  {tip.id === 2 && '📍'}
-                  {tip.id === 3 && '⚡️'}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937', margin: 0 }}>{tip.title}</h3>
-                  <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px', margin: 0 }}>{tip.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Emergency Contacts */}
-          <div style={{ marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 12px 0' }}>Emergency Contacts</h2>
-            <div style={{ background: 'white', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', padding: '12px' }}>
-              {emergencyContacts.map((contact) => (
-                <Button
-                  key={contact.id}
-                  expand="block"
-                  variant={contact.id === 1 ? 'danger' : 'primary'}
-                  size="md"
-                  onClick={() => handleEmergencyCall(contact.id === 1 ? `tel:${contact.number}` : contact.number)}
-                  style={{ marginBottom: contact.id === 1 ? '8px' : 0 }}
-                >
-                  {contact.id === 1 && '📞 '}
-                  {contact.id === 2 && '💬 '}
-                  {contact.name} {contact.id === 1 && `(${contact.number})`}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </>
-      ) : (
-        <div style={{ 
-          background: 'white', 
-          borderRadius: '12px', 
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', 
-          padding: '24px',
-          textAlign: 'center'
-        }}>
-          <div style={{ width: '64px', height: '64px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-            <span style={{ fontSize: '36px' }}>✅</span>
-          </div>
-          <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#22c55e', margin: '0 0 8px 0' }}>SOS Alert Sent!</h2>
-          <p style={{ fontSize: '14px', color: '#4b5563', margin: '0 0 16px 0' }}>
-            Our support team has been notified with your live location and will contact you immediately.
-          </p>
-          
-          {currentLocation && (
-            <div style={{ padding: '12px', background: '#f9fafb', borderRadius: '8px', marginBottom: '16px' }}>
-              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px', margin: 0 }}>Location Shared:</p>
-              <p style={{ fontSize: '12px', fontFamily: 'monospace', color: '#1f2937', margin: 0 }}>
-                {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
-              </p>
+              <button
+                onClick={() => history.replace('/home')}
+                className="grain grain-strong relative mt-6 w-full overflow-hidden rounded-2xl py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+                style={{ background: FIRE }}
+              >
+                Return to Home
+              </button>
             </div>
           )}
-
-          <Button
-            expand="block"
-            onClick={() => history.replace('/home')}
-            variant="primary"
-            size="md"
-          >
-            Return to Home
-          </Button>
         </div>
-      )}
+      </div>
 
       {/* Toast */}
       {showToast && (
-        <div style={{
-          position: 'fixed',
-          bottom: 'calc(var(--app-bottom-nav-height) + 16px)',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: '#1f2937',
-          color: 'white',
-          padding: '12px 24px',
-          borderRadius: '8px',
-          fontSize: '14px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          zIndex: 1000
-        }}>
+        <div className="fixed left-1/2 z-[1000] -translate-x-1/2 rounded-2xl bg-ink px-6 py-3 text-sm font-medium text-white shadow-strong" style={{ bottom: 'calc(var(--app-bottom-nav-height) + 16px)' }}>
           {toastMessage}
         </div>
       )}
 
-      <LoadingOverlay 
-        isOpen={loading} 
-        variant="fullscreen" 
-        message="Sending SOS alert..."
-      />
+      <LoadingOverlay isOpen={loading} variant="fullscreen" message="Sending SOS alert..." />
     </div>
   );
 };

@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useHistory } from 'react-router';
+import Aurora from '../../components/ui/Aurora';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/auth';
 
 const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 const isValidPhone = (value: string) => /^\+?[1-9]\d{7,14}$/.test(value.trim().replace(/[\s-]/g, ''));
+
+const labelClass = 'mb-1.5 block font-display text-[11px] font-bold uppercase tracking-wide text-ink/45';
+const inputClass =
+  'block w-full rounded-2xl border-2 border-black/10 bg-white px-4 py-3 font-medium text-ink placeholder:text-ink/30 outline-none transition focus:border-fire-orange focus:ring-2 focus:ring-[rgba(255,107,0,0.18)] disabled:opacity-60';
 
 const RegisterPage = () => {
   const history = useHistory();
@@ -79,123 +84,112 @@ const RegisterPage = () => {
   };
 
   return (
-    <div
-      className="relative min-h-screen overflow-y-auto bg-gray-50 px-4 py-10 sm:px-6 lg:px-8"
-      style={{ WebkitOverflowScrolling: 'touch' }}
-    >
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-20 top-10 h-72 w-72 rounded-full bg-primary-200/50 blur-3xl" />
-          <div className="absolute -right-20 bottom-10 h-72 w-72 rounded-full bg-orange-100/70 blur-3xl" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(255,237,213,0.55),rgba(249,250,251,0.92)_45%,rgba(249,250,251,1))]" />
-        </div>
-
-        <div className="relative mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md items-center">
-          <div className="w-full rounded-3xl border border-primary-100/80 bg-white p-6 shadow-strong sm:p-8">
-            <div className="mb-7 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <img
-                  src="/logo.png"
-                  alt="Blinkcar"
-                  className="h-11 w-11 rounded-xl border border-primary-100 bg-white object-contain p-1"
-                />
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-600">Blinkcar</p>
-                  <h1 className="text-xl font-bold tracking-tight text-gray-900">Create account</h1>
-                </div>
+    <Aurora variant="sunrise" grain="strong" className="min-h-screen">
+      <div className="app-top-safe flex min-h-screen w-full items-center justify-center px-5 py-10">
+        <div className="w-full max-w-md animate-rise rounded-[32px] border border-white/60 bg-white/80 p-6 shadow-strong backdrop-blur-md sm:p-7">
+          {/* Brand */}
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <img src="/logo-mark.png" alt="Blinkcar" className="h-11 w-11 rounded-[16px] object-cover shadow-glow" />
+              <div>
+                <p className="font-display text-[11px] font-extrabold lowercase tracking-tight text-fire-orange">blinkcar</p>
+                <h1 className="font-display text-xl font-extrabold tracking-tight text-ink">Create account</h1>
               </div>
-              <span className="rounded-full bg-primary-100 px-3 py-1 text-xs font-semibold text-primary-700">Free</span>
             </div>
-
-            <p className="mb-6 text-sm leading-relaxed text-gray-600">
-              Register with your name, email, mobile number, and password.
-            </p>
-
-            <form onSubmit={handleRegister} className="space-y-4">
-              <label className="block text-sm font-medium text-gray-700">
-                Full name
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(event) => setFullName(event.target.value)}
-                  placeholder="Ayush Sharma"
-                  autoComplete="name"
-                  disabled={isSubmitting}
-                  className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
-                />
-              </label>
-
-              <label className="block text-sm font-medium text-gray-700">
-                Email
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  disabled={isSubmitting}
-                  className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
-                />
-              </label>
-
-              <label className="block text-sm font-medium text-gray-700">
-                Mobile
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  placeholder="+91 9876543210"
-                  autoComplete="tel"
-                  disabled={isSubmitting}
-                  className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
-                />
-              </label>
-
-              <label className="block text-sm font-medium text-gray-700">
-                Password
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Create a password"
-                  autoComplete="new-password"
-                  disabled={isSubmitting}
-                  className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
-                />
-              </label>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isSubmitting ? 'Creating account...' : 'Create account'}
-              </button>
-            </form>
-
-            {info && (
-              <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                {info}
-              </div>
-            )}
-            {error && (
-              <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-                {error}
-              </div>
-            )}
-
-            <p className="mt-7 text-center text-sm text-gray-600">
-              Already have an account?{' '}
-              <button
-                onClick={() => history.push('/login')}
-                className="font-semibold text-primary-600 transition-colors hover:text-primary-500"
-                type="button"
-              >
-                Sign in
-              </button>
-            </p>
+            <span className="rounded-full bg-fire-gold/25 px-3 py-1 font-display text-xs font-bold text-[#9a5b00]">Free</span>
           </div>
+
+          <p className="mb-6 text-sm font-medium leading-relaxed text-ink/55">
+            Register with your name, email, mobile number, and password.
+          </p>
+
+          <form onSubmit={handleRegister} className="space-y-4">
+            <label className="block">
+              <span className={labelClass}>Full name</span>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(event) => setFullName(event.target.value)}
+                placeholder="Ayush Sharma"
+                autoComplete="name"
+                disabled={isSubmitting}
+                className={inputClass}
+              />
+            </label>
+
+            <label className="block">
+              <span className={labelClass}>Email</span>
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+                disabled={isSubmitting}
+                className={inputClass}
+              />
+            </label>
+
+            <label className="block">
+              <span className={labelClass}>Mobile</span>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                placeholder="+91 9876543210"
+                autoComplete="tel"
+                disabled={isSubmitting}
+                className={inputClass}
+              />
+            </label>
+
+            <label className="block">
+              <span className={labelClass}>Password</span>
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Create a password"
+                autoComplete="new-password"
+                disabled={isSubmitting}
+                className={inputClass}
+              />
+            </label>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="grain grain-strong relative w-full overflow-hidden rounded-2xl py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
+              style={{ background: 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))' }}
+            >
+              {isSubmitting ? 'Creating account...' : 'Create account'}
+            </button>
+          </form>
+
+          {info && (
+            <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">
+              {info}
+            </div>
+          )}
+          {error && (
+            <div className="mt-4 rounded-2xl border border-fire-red/20 bg-fire-red/5 px-3 py-2 text-sm font-medium text-fire-red">
+              {error}
+            </div>
+          )}
+
+          <p className="mt-7 text-center text-sm font-medium text-ink/55">
+            Already have an account?{' '}
+            <button
+              onClick={() => history.push('/login')}
+              className="font-display font-bold text-fire-orange transition hover:brightness-95"
+              type="button"
+            >
+              Sign in
+            </button>
+          </p>
         </div>
-    </div>
+      </div>
+    </Aurora>
   );
 };
 
