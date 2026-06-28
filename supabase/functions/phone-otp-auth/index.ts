@@ -63,6 +63,20 @@ const normalizePhone = (phone: string) => {
   return compact.startsWith('+') ? compact : `+${compact}`;
 };
 
+// Single demo account for App Store / TestFlight review: this exact number
+// accepts a fixed OTP without sending a real SMS, in any environment. Every
+// other number still goes through real SMS verification. Configurable via env.
+const DEMO_PHONE = (() => {
+  const raw = env('DEMO_PHONE') || '+919000000000';
+  try {
+    return normalizePhone(raw);
+  } catch {
+    return '';
+  }
+})();
+const DEMO_OTP = env('DEMO_OTP') || '123456';
+const isDemoPhone = (phone: string) => DEMO_PHONE !== '' && phone === DEMO_PHONE;
+
 const toMsg91Mobile = (phone: string) => phone.replace(/^\+/, '');
 
 const toHex = (bytes: Uint8Array) => Array.from(bytes).map((byte) => byte.toString(16).padStart(2, '0')).join('');
@@ -420,6 +434,17 @@ Deno.serve(async (request) => {
     const ip = getClientIp(request);
 
     if (action === 'send') {
+      // Demo review account: store the fixed OTP, skip SMS + rate limits.
+      if (isDemoPhone(phone)) {
+        await storeOtp(phone, DEMO_OTP, 'demo-otp');
+        return jsonResponse(200, {
+          success: true,
+          message: 'OTP sent',
+          request_id: 'demo-otp',
+          provider_type: 'demo',
+        });
+      }
+
       applyRateLimits(action, phone, ip);
 
       if (ALLOW_DUMMY_OTP) {
@@ -445,20 +470,19 @@ Deno.serve(async (request) => {
     }
 
     if (action === 'verify') {
-      applyRateLimits(action, phone, ip);
-
-      if (ALLOW_DUMMY_OTP) {
-        await verifyStoredOtp(phone, body.otp || '');
-      } else {
-        await verifyStoredOtp(phone, body.otp || '');
+      // Demo review account skips rate limits; the stored fixed OTP is still checked.
+      if (!isDemoPhone(phone)) {
+        applyRateLimits(action, phone, ip);
       }
+
+      await verifyStoredOtp(phone, body.otp || '');
 
       const session = await signInPhoneUser(phone);
       return jsonResponse(200, {
         success: true,
         access_token: session.access_token,
         refresh_token: session.refresh_token,
-        provider_type: ALLOW_DUMMY_OTP ? 'dummy' : 'sms',
+        provider_type: isDemoPhone(phone) ? 'demo' : ALLOW_DUMMY_OTP ? 'dummy' : 'sms',
       });
     }
 
