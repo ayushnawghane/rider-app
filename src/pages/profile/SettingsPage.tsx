@@ -5,6 +5,7 @@ import {
   Globe2,
   ShieldCheck,
   UserRound,
+  Trash2,
 } from 'lucide-react';
 
 const SettingsPage = () => {
@@ -81,6 +82,24 @@ const SettingsPage = () => {
                 <p className="text-xs font-medium text-ink/45">Managed from your profile</p>
               </div>
             </div>
+          </section>
+
+          {/* Account */}
+          <section className="mt-4 rounded-[28px] border border-black/5 bg-white p-2 shadow-soft">
+            <button
+              type="button"
+              onClick={() => history.push('/delete-account')}
+              className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition hover:bg-fire-red/5"
+            >
+              <div className="grid h-11 w-11 place-items-center rounded-xl border border-fire-red/15 bg-fire-red/5 text-fire-red">
+                <Trash2 size={18} />
+              </div>
+              <div className="flex-1">
+                <p className="font-display text-sm font-bold text-fire-red">Delete account</p>
+                <p className="text-xs font-medium text-ink/45">Permanently remove your account and data</p>
+              </div>
+              <ChevronRight size={20} className="text-ink/25" />
+            </button>
           </section>
         </div>
       </div>

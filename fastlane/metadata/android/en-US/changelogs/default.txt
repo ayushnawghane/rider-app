@@ -1,5 +1,6 @@
 What's new:
 - Sign in with your Indian mobile number using SMS OTP.
-- Android social login support is now configured.
+- Social sign-in is now smoother and more reliable.
 - Profile setup is simpler, with vehicle details collected when you publish a ride.
 - Publishing a ride now saves your vehicle type and number for future rides.
+- You can delete your account anytime from Profile or Settings.
