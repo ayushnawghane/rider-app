@@ -114,7 +114,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, hasSeenOnboarding
                             transform: brandVisible ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.96)',
                         }}
                     >
-                        <img src="/logo.png" alt="blinkcar" className="h-24 w-24 object-contain" />
+                        <img src="/logo.png" alt="blinkcar" className="h-24 w-24 object-contain rounded-[28px]" />
                         <h1 className="font-display text-[4.5rem] font-extrabold leading-[0.9] tracking-tightest text-ink">
                             blinkcar
                         </h1>

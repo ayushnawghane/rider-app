@@ -369,7 +369,7 @@ const createOrUpdatePhoneUser = async (phone: string, password: string): Promise
   if (preferredProfile?.id) {
     const fallbackEmail = preferredProfile.email || generatedEmail;
     const signInEmail = await getAuthEmailForUser(preferredProfile.id, fallbackEmail);
-    const existingName = preferredProfile.full_name?.trim() || phone;
+    const existingName = preferredProfile.full_name?.trim() || "";
 
     const { error } = await getAdminClient().auth.admin.updateUserById(preferredProfile.id, {
       password,
@@ -387,7 +387,7 @@ const createOrUpdatePhoneUser = async (phone: string, password: string): Promise
     email_confirm: true,
     user_metadata: {
       phone,
-      full_name: phone,
+      full_name: "",
     },
   });
 
