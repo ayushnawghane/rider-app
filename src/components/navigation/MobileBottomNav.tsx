@@ -77,8 +77,17 @@ const MobileBottomNav = () => {
   };
 
   return (
-    <nav className="app-bottom-nav px-4 pb-3" aria-label="Primary navigation">
-      <div className="mx-auto flex max-w-md items-center justify-between gap-1 rounded-[26px] border border-white/70 bg-white/85 p-2 shadow-strong backdrop-blur-xl">
+    <nav
+      className="app-bottom-nav pointer-events-none px-4 pb-3"
+      aria-label="Primary navigation"
+    >
+      <div
+        className="pointer-events-auto mx-auto flex max-w-md items-center justify-between gap-1 rounded-[30px] border border-fire-orange/15 bg-white/95 p-2.5 shadow-[0_18px_55px_rgba(24,24,27,0.18),0_0_0_1px_rgba(255,255,255,0.65)_inset] backdrop-blur-2xl"
+        style={{
+          background:
+            'linear-gradient(135deg, rgba(255,255,255,0.97), rgba(255,247,237,0.94))',
+        }}
+      >
         {navItems.map(({ key, label, path, Icon, matches }) => {
           const isActive = matches(location.pathname);
 
