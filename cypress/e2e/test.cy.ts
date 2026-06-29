@@ -29,10 +29,12 @@ describe('authentication entry', () => {
       },
     });
 
-    cy.contains('h1', 'Sign in').should('be.visible');
+    cy.location('pathname', { timeout: 10000 }).should('eq', '/login');
+    cy.contains(/mobile number/i, { timeout: 10000 }).should('be.visible');
     cy.contains('label', /mobile number/i).find('input').should('be.visible');
     cy.contains('+91').should('be.visible');
     cy.contains('button', /send code/i).should('be.enabled');
     cy.contains('button', /continue with google/i).should('be.enabled');
+    cy.contains('button', /continue with apple/i).should('be.enabled');
   });
 });
