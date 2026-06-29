@@ -6,6 +6,11 @@ const TEMP_PROFILE_EMAIL_REGEX = /^user-[^@]+@otp\.riderapp\.local$/i;
 
 const looksLikeEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
+const looksLikePhone = (value: string) => {
+  const stripped = value.replace(/[0-9\s+()*-]/g, '');
+  return stripped.length === 0 && /\d/.test(value);
+};
+
 export const isProfileNameIncomplete = (value?: string | null) => {
   const fullName = value?.trim() || '';
   if (!fullName) return true;
@@ -14,6 +19,7 @@ export const isProfileNameIncomplete = (value?: string | null) => {
   if (GENERIC_PROFILE_NAMES.has(normalizedName)) return true;
   if (normalizedName.startsWith('phone-')) return true;
   if (looksLikeEmail(fullName)) return true;
+  if (looksLikePhone(fullName)) return true;
 
   return false;
 };
