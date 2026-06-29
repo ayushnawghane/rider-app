@@ -42,6 +42,20 @@ describe('profile completion checks', () => {
     expect(isProfileNameIncomplete('Aarav Mehta')).toBe(false);
   });
 
+  it('rejects phone-like names including masked placeholders', () => {
+    expect(isProfileNameIncomplete('+919876543210')).toBe(true);
+    expect(isProfileNameIncomplete('919876543210')).toBe(true);
+    expect(isProfileNameIncomplete('+91 98765 43210')).toBe(true);
+    expect(isProfileNameIncomplete('+919****3210')).toBe(true);
+    expect(isProfileNameIncomplete('9876543210')).toBe(true);
+    expect(isProfileNameIncomplete('(91) 98765-43210')).toBe(true);
+  });
+
+  it('still accepts real names that happen to contain digits', () => {
+    expect(isProfileNameIncomplete('John 2nd')).toBe(false);
+    expect(isProfileNameIncomplete('Priya Sharma')).toBe(false);
+  });
+
   it('rejects placeholder OTP and phone fallback emails', () => {
     expect(isProfileEmailIncomplete('')).toBe(true);
     expect(isProfileEmailIncomplete('phone-user-1@riderapp.local')).toBe(true);
