@@ -3,7 +3,7 @@ import LoadingOverlay from '../../components/LoadingOverlay';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { rideService, locationService, mapsService } from '../../services';
+import { rideService, locationService, mapsService, liveLocationService } from '../../services';
 import { supabase } from '../../lib/supabase';
 import { MapComponent } from '../../components/maps';
 import {
@@ -116,74 +116,80 @@ const ActiveRidePage = () => {
   // Start location tracking + live_locations publishing + Realtime subscription
   useEffect(() => {
     if (!ride || !user) return;
-    let locationInsertInterval: ReturnType<typeof setInterval> | null = null;
+    let locationPublishInterval: ReturnType<typeof setInterval> | null = null;
+    let latestPosition: {
+      lat: number;
+      lng: number;
+      accuracy?: number;
+        } | null = null;
+
+    const publish = (pos: {
+      lat: number;
+      lng: number;
+      accuracy?: number;
+        }) => {
+      latestPosition = pos;
+      void liveLocationService.publishLocation({
+        rideId: ride.id,
+        userId: user.id,
+        lat: pos.lat,
+        lng: pos.lng,
+        accuracy: pos.accuracy,
+          });
+    };
 
     const startTracking = async () => {
-      // Get initial location
+      // Initial fetch of the latest known location(s) for the other participant(s)
+      const others = await liveLocationService.getLatestOtherLocations(ride.id, user.id);
+      if (others.length > 0) {
+        setDriverLocation({ lat: others[0].lat, lng: others[0].lng });
+      }
+
+      // Get initial location + publish immediately
       const position = await locationService.getCurrentPosition();
       if (position) {
         setCurrentLocation({ lat: position.lat, lng: position.lng });
-        // Publish initial location
-        await supabase.from('live_locations').insert({
-          ride_id: ride.id,
-          user_id: user.id,
+        publish({
           lat: position.lat,
           lng: position.lng,
           accuracy: position.accuracy,
-        });
+            });
       }
 
-      // Watch position + publish every update
+      // Watch position + publish each fresh fix
       await locationService.startWatching(
-        async (pos) => {
+        (pos) => {
           setCurrentLocation({ lat: pos.lat, lng: pos.lng });
+          publish({
+            lat: pos.lat,
+            lng: pos.lng,
+            accuracy: pos.accuracy,
+          });
         },
         (error) => {
           console.error('Location tracking error:', error);
         }
       );
 
-      // Publish location every 10 seconds
-      locationInsertInterval = setInterval(async () => {
-        const pos = await locationService.getCurrentPosition();
-        if (pos) {
-          await supabase.from('live_locations').insert({
-            ride_id: ride.id,
-            user_id: user.id,
-            lat: pos.lat,
-            lng: pos.lng,
-            accuracy: pos.accuracy,
-          });
+      // Backup: re-publish the latest known location every 10s without
+      // triggering a fresh getCurrentPosition lookup.
+      locationPublishInterval = setInterval(() => {
+        if (latestPosition) {
+          publish(latestPosition);
         }
       }, 10000);
     };
 
     startTracking();
 
-    // Subscribe to live_locations for this ride via Realtime
-    const channel = supabase
-      .channel(`live_locations:${ride.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'live_locations',
-          filter: `ride_id=eq.${ride.id}`,
-        },
-        (payload) => {
-          const row = payload.new as { user_id: string; lat: number; lng: number };
-          // Show other participants' location as the driver/co-rider marker
-          if (row.user_id !== user.id) {
-            setDriverLocation({ lat: row.lat, lng: row.lng });
-          }
-        }
-      )
-      .subscribe();
+    // Subscribe to live location changes (INSERT + UPDATE) for other participants
+    const channel = liveLocationService.subscribeToRideLocations(ride.id, user.id, (location) => {
+      setDriverLocation({ lat: location.lat, lng: location.lng });
+    });
 
     return () => {
       locationService.stopWatching();
-      if (locationInsertInterval) clearInterval(locationInsertInterval);
+      if (locationPublishInterval) clearInterval(locationPublishInterval);
       supabase.removeChannel(channel);
     };
   }, [ride, user]);

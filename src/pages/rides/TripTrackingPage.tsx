@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useHistory } from 'react-router';
-import { rideService, locationService, mapsService } from '../../services';
+import { rideService, locationService, mapsService, liveLocationService } from '../../services';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
 import { MapComponent } from '../../components/maps';
 import {
     ChevronLeft,
@@ -46,10 +48,12 @@ const getMarkerIcon = (type: 'pickup' | 'drop' | 'driver' | 'user'): google.maps
 const TripTrackingPage = () => {
     const { id } = useParams<{ id: string }>();
     const history = useHistory();
+    const { user } = useAuth();
 
     const [ride, setRide] = useState<Ride | null>(null);
     const [loading, setLoading] = useState(true);
     const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
+    const [remoteLocation, setRemoteLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [routePath, setRoutePath] = useState<Array<{ lat: number; lng: number }>>([]);
     const [eta, setEta] = useState<string>('');
     const [totalDistance, setTotalDistance] = useState<number>(0);
@@ -116,28 +120,82 @@ const TripTrackingPage = () => {
         return () => clearInterval(interval);
     }, [fetchRide, ride]);
 
-    // Start live GPS tracking
+    // Start live GPS tracking + publish our location + stream remote location
     useEffect(() => {
-        if (!ride) return;
+        if (!ride || !user) return;
+        let locationPublishInterval: ReturnType<typeof setInterval> | null = null;
+        let latestPosition: {
+            lat: number;
+            lng: number;
+            accuracy?: number;
+                        } | null = null;
+
+        const publish = (pos: {
+            lat: number;
+            lng: number;
+            accuracy?: number;
+                        }) => {
+            latestPosition = pos;
+            void liveLocationService.publishLocation({
+                rideId: ride.id,
+                userId: user.id,
+                lat: pos.lat,
+                lng: pos.lng,
+                accuracy: pos.accuracy,
+                                });
+        };
 
         const startTracking = async () => {
+            // Initial fetch of the latest known location(s) for the other participant(s)
+            const others = await liveLocationService.getLatestOtherLocations(ride.id, user.id);
+            if (others.length > 0) {
+                setRemoteLocation({ lat: others[0].lat, lng: others[0].lng });
+            }
+
             const position = await locationService.getCurrentPosition();
             if (position) {
                 const pos = { lat: position.lat, lng: position.lng };
                 setCurrentLocation(pos);
                 calculateProgress(pos, ride);
+                publish({
+                    lat: position.lat,
+                    lng: position.lng,
+                    accuracy: position.accuracy,
+                                        });
             }
 
             await locationService.startWatching((position) => {
                 const pos = { lat: position.lat, lng: position.lng };
                 setCurrentLocation(pos);
                 calculateProgress(pos, ride);
+                publish({
+                    lat: position.lat,
+                    lng: position.lng,
+                    accuracy: position.accuracy,
+                                        });
             });
+
+            // Backup: re-publish the latest known location every 10s
+            locationPublishInterval = setInterval(() => {
+                if (latestPosition) {
+                    publish(latestPosition);
+                }
+            }, 10000);
         };
 
         startTracking();
-        return () => { locationService.stopWatching(); };
-    }, [ride, calculateProgress]);
+
+        // Subscribe to live location changes (INSERT + UPDATE) for the other participant
+        const channel = liveLocationService.subscribeToRideLocations(ride.id, user.id, (location) => {
+            setRemoteLocation({ lat: location.lat, lng: location.lng });
+        });
+
+        return () => {
+            locationService.stopWatching();
+            if (locationPublishInterval) clearInterval(locationPublishInterval);
+            supabase.removeChannel(channel);
+        };
+    }, [ride, user, calculateProgress]);
 
     // Refresh ETA every 30 seconds when we have a location
     useEffect(() => {
@@ -165,15 +223,20 @@ const TripTrackingPage = () => {
         ...(ride?.endLocationCoords
             ? [{ position: { lat: ride.endLocationCoords.lat, lng: ride.endLocationCoords.lng }, title: 'Drop', icon: getMarkerIcon('drop') }]
             : []),
+        ...(remoteLocation
+            ? [{ position: remoteLocation, title: 'Driver', icon: getMarkerIcon('driver') }]
+            : []),
         ...(currentLocation
             ? [{ position: currentLocation, title: 'You', icon: getMarkerIcon('user') }]
             : []),
     ];
 
     const mapCenter =
-        isAutoRecenter && currentLocation
-            ? currentLocation
-            : ride?.startLocationCoords || { lat: 28.6139, lng: 77.209 };
+        isAutoRecenter && remoteLocation
+            ? remoteLocation
+            : isAutoRecenter && currentLocation
+                ? currentLocation
+                : ride?.startLocationCoords || { lat: 28.6139, lng: 77.209 };
 
     if (loading) {
         return <LoadingOverlay isOpen variant="fullscreen" message="Loading trip..." />;

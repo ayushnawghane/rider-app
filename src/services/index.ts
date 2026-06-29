@@ -7,4 +7,6 @@ export { notificationService } from './notification';
 export { sosService } from './sos';
 export { mapsService } from './maps';
 export { locationService } from './location';
+export { liveLocationService } from './liveLocation';
+export type { LiveLocation, PublishLocationParams } from './liveLocation';
 export { vehicleService } from './vehicle';
