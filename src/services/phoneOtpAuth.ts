@@ -84,14 +84,6 @@ export const phoneOtpAuthService = {
   },
 
   async verifyOtp(phone: string, otp: string) {
-    const {
-      data: { session: existingSession },
-    } = await supabase.auth.getSession();
-
-    if (existingSession?.access_token && existingSession?.refresh_token) {
-      return;
-    }
-
     const payload = await callOtpFunction('verify', phone, otp);
     const accessToken = payload.access_token;
     const refreshToken = payload.refresh_token;

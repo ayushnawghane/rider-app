@@ -304,10 +304,22 @@ const verifyStoredOtp = async (phone: string, otp: string) => {
   await getAdminClient().from('phone_otp_requests').delete().eq('phone', phone);
 };
 
-const getProfileUserIdByPhone = async (phone: string) => {
+type ExistingProfile = {
+  id: string;
+  email?: string | null;
+  full_name?: string | null;
+  phone?: string | null;
+};
+
+type PhoneUserResult = {
+  signInEmail: string;
+  profile?: ExistingProfile | null;
+};
+
+const getProfileByPhone = async (phone: string) => {
   const { data, error } = await getAdminClient()
     .from('profiles')
-    .select('id')
+    .select('id, email, full_name, phone')
     .eq('phone', phone)
     .maybeSingle();
 
@@ -315,13 +327,13 @@ const getProfileUserIdByPhone = async (phone: string) => {
     throw new Error(error.message);
   }
 
-  return data?.id as string | undefined;
+  return data as ExistingProfile | null;
 };
 
-const getProfileUserIdByEmail = async (email: string) => {
+const getProfileByEmail = async (email: string) => {
   const { data, error } = await getAdminClient()
     .from('profiles')
-    .select('id, phone')
+    .select('id, email, full_name, phone')
     .eq('email', email)
     .maybeSingle();
 
@@ -329,39 +341,48 @@ const getProfileUserIdByEmail = async (email: string) => {
     throw new Error(error.message);
   }
 
-  return data as { id: string; phone?: string | null } | null;
+  return data as ExistingProfile | null;
 };
 
-const createOrUpdatePhoneUser = async (phone: string, password: string) => {
-  const email = await createEmailForPhone(phone);
-  const [existingUserIdByPhone, existingProfileByEmail] = await Promise.all([
-    getProfileUserIdByPhone(phone),
-    getProfileUserIdByEmail(email),
-  ]);
-  const existingUserId = existingUserIdByPhone || existingProfileByEmail?.id;
-
-  if (
-    existingUserIdByPhone &&
-    existingProfileByEmail?.id &&
-    existingUserIdByPhone !== existingProfileByEmail.id
-  ) {
-    throw new Error('Phone login profile conflict. Please contact support.');
+const getAuthEmailForUser = async (userId: string, fallbackEmail: string) => {
+  const { data, error } = await getAdminClient().auth.admin.getUserById(userId);
+  if (error) {
+    // If Auth lookup fails, still prefer the existing profile email over the
+    // generated phone email so we do not force a duplicate email change.
+    return fallbackEmail;
   }
+  return data.user?.email || fallbackEmail;
+};
 
-  if (existingUserId) {
-    const { data, error } = await getAdminClient().auth.admin.updateUserById(existingUserId, {
-      email,
+const createOrUpdatePhoneUser = async (phone: string, password: string): Promise<PhoneUserResult> => {
+  const generatedEmail = await createEmailForPhone(phone);
+  const [profileByPhone, profileByGeneratedEmail] = await Promise.all([
+    getProfileByPhone(phone),
+    getProfileByEmail(generatedEmail),
+  ]);
+
+  // Phone is the stable identity for OTP login. If an existing completed profile
+  // already owns this phone, keep that profile/user and only rotate the OTP
+  // password. Do NOT overwrite its email/name with generated phone placeholders.
+  const preferredProfile = profileByPhone || profileByGeneratedEmail;
+
+  if (preferredProfile?.id) {
+    const fallbackEmail = preferredProfile.email || generatedEmail;
+    const signInEmail = await getAuthEmailForUser(preferredProfile.id, fallbackEmail);
+    const existingName = preferredProfile.full_name?.trim() || phone;
+
+    const { error } = await getAdminClient().auth.admin.updateUserById(preferredProfile.id, {
       password,
       email_confirm: true,
-      user_metadata: { phone, full_name: phone },
+      user_metadata: { phone, full_name: existingName },
     });
 
     if (error) throw new Error(error.message);
-    return data.user;
+    return { signInEmail, profile: preferredProfile };
   }
 
-  const { data, error } = await getAdminClient().auth.admin.createUser({
-    email,
+  const { error } = await getAdminClient().auth.admin.createUser({
+    email: generatedEmail,
     password,
     email_confirm: true,
     user_metadata: {
@@ -370,25 +391,48 @@ const createOrUpdatePhoneUser = async (phone: string, password: string) => {
     },
   });
 
-  if (error) throw new Error(error.message);
-  return data.user;
+  if (error) {
+    // If the deterministic phone email already exists in auth but not profiles,
+    // sign in with the deterministic credentials and repair/create the profile
+    // after Supabase returns the session user id.
+    if (/already|duplicate|registered|exists/i.test(error.message)) {
+      return { signInEmail: generatedEmail, profile: null };
+    }
+    throw new Error(error.message);
+  }
+
+  return { signInEmail: generatedEmail, profile: null };
 };
 
-const signInPhoneUser = async (phone: string) => {
-  const email = await createEmailForPhone(phone);
-  const password = await createPasswordForPhone(phone);
-  const user = await createOrUpdatePhoneUser(phone, password);
+const ensurePhoneProfile = async (userId: string, signInEmail: string, phone: string, existingProfile?: ExistingProfile | null) => {
+  if (existingProfile?.id) {
+    // Preserve completed profile fields. Only ensure the phone stays normalized.
+    if (existingProfile.phone !== phone) {
+      const { error } = await getAdminClient()
+        .from('profiles')
+        .update({ phone, updated_at: new Date().toISOString() })
+        .eq('id', existingProfile.id);
+      if (error) throw new Error(error.message);
+    }
+    return existingProfile.id;
+  }
+
+  const { data: profileById, error: profileByIdError } = await getAdminClient()
+    .from('profiles')
+    .select('id')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (profileByIdError) throw new Error(profileByIdError.message);
+  if (profileById?.id) return profileById.id as string;
 
   const { data: profile, error: profileError } = await getAdminClient()
     .from('profiles')
     .upsert(
       {
-        id: user.id,
-        email,
-        full_name:
-          typeof user.user_metadata?.full_name === 'string' && user.user_metadata.full_name.trim()
-            ? user.user_metadata.full_name
-            : phone,
+        id: userId,
+        email: signInEmail,
+        full_name: phone,
         phone,
         kyc_status: 'pending',
         language: 'en',
@@ -405,13 +449,22 @@ const signInPhoneUser = async (phone: string) => {
     throw new Error(profileError?.message || 'Failed to prepare phone profile.');
   }
 
+  return profile.id as string;
+};
+
+const signInPhoneUser = async (phone: string) => {
+  const password = await createPasswordForPhone(phone);
+  const { signInEmail, profile } = await createOrUpdatePhoneUser(phone, password);
+
   const { data, error } = await getAnonClient().auth.signInWithPassword({
-    email,
+    email: signInEmail,
     password,
   });
 
   if (error) throw new Error(error.message);
-  if (!data.session) throw new Error('OTP verified but Supabase did not return a session.');
+  if (!data.session || !data.user) throw new Error('OTP verified but Supabase did not return a session.');
+
+  await ensurePhoneProfile(data.user.id, signInEmail, phone, profile);
 
   return data.session;
 };
