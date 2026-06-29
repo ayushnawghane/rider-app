@@ -332,7 +332,7 @@ const ProfilePage = () => {
     return (
       <div className="app-scroll-screen relative overflow-hidden bg-white pb-6">
         <Aura />
-        <div className="relative z-10 px-4 pb-6 pt-[calc(env(safe-area-inset-top)+24px)]">
+        <div className="relative z-10 px-4 pb-[calc(env(safe-area-inset-bottom)+112px)] pt-[calc(env(safe-area-inset-top)+24px)]">
           <div className="mx-auto max-w-2xl">
             <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Profile setup</p>
             <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink sm:text-5xl">
@@ -452,7 +452,10 @@ const ProfilePage = () => {
                 </p>
               )}
 
-              <div className="mt-5 flex gap-3">
+            </section>
+
+            <div className="sticky bottom-0 z-20 -mx-4 mt-5 border-t border-black/5 bg-white/90 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 shadow-[0_-18px_40px_rgba(0,0,0,0.08)] backdrop-blur-xl">
+              <div className="mx-auto flex max-w-2xl gap-3">
                 {setupStep > 0 && (
                   <button
                     type="button"
@@ -487,7 +490,7 @@ const ProfilePage = () => {
                   </button>
                 )}
               </div>
-            </section>
+            </div>
 
             <button
               onClick={handleLogout}
