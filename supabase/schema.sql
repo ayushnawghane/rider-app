@@ -287,3 +287,81 @@ INSERT INTO faq (question, answer, category, "order") VALUES
 INSERT INTO notices (title, content, priority) VALUES
     ('Welcome to RiderApp', 'Thank you for joining RiderApp. We are committed to providing you with the best ride management experience.', 'low'),
     ('Safety Reminder', 'Always verify your ride details before boarding. Contact support if you have any concerns.', 'medium');
+
+-- ==========================================
+-- LIVE LOCATIONS (realtime trip tracking)
+-- ==========================================
+-- One row per (ride_id, user_id) holds the participant's latest GPS fix.
+-- Upserted by the app on each position update so we keep a single latest
+-- location per participant (Uber/Rapido style) instead of endless inserts.
+
+CREATE TABLE IF NOT EXISTS live_locations (
+    ride_id UUID NOT NULL REFERENCES rides(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    lat DOUBLE PRECISION NOT NULL,
+    lng DOUBLE PRECISION NOT NULL,
+    accuracy DOUBLE PRECISION,
+    timestamp TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (ride_id, user_id)
+);
+
+-- Indexes for efficient lookups
+CREATE INDEX IF NOT EXISTS idx_live_locations_ride_id ON live_locations(ride_id);
+CREATE INDEX IF NOT EXISTS idx_live_locations_timestamp ON live_locations(timestamp DESC);
+
+-- Enable RLS
+ALTER TABLE live_locations ENABLE ROW LEVEL SECURITY;
+
+-- Helper expression: the current user is a legitimate participant of the ride
+-- (owner, assigned driver, or an accepted joined participant).
+-- Kept as a STABLE function so policies read cleanly and stay in sync.
+CREATE OR REPLACE FUNCTION public.user_can_access_ride(target_ride_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+AS $$
+    SELECT EXISTS (
+        SELECT 1 FROM rides r
+        WHERE r.id = target_ride_id
+          AND (r.user_id = auth.uid() OR r.driver_id = auth.uid())
+    ) OR EXISTS (
+        SELECT 1 FROM ride_participants rp
+        WHERE rp.ride_id = target_ride_id
+          AND rp.user_id = auth.uid()
+    );
+$$;
+
+-- SELECT: ride owner / driver / joined participant can view live locations
+CREATE POLICY "Participants can view ride live locations" ON live_locations
+    FOR SELECT USING (public.user_can_access_ride(ride_id));
+
+-- INSERT: authenticated participant can publish their own row
+CREATE POLICY "Participants can insert own live location" ON live_locations
+    FOR INSERT WITH CHECK (
+        user_id = auth.uid()
+        AND public.user_can_access_ride(ride_id)
+    );
+
+-- UPDATE: authenticated participant can update only their own row
+CREATE POLICY "Participants can update own live location" ON live_locations
+    FOR UPDATE USING (
+        user_id = auth.uid()
+        AND public.user_can_access_ride(ride_id)
+    );
+
+-- Add live_locations to the Supabase realtime publication. The table likely
+-- already exists (and may already be in the publication) on a deployed
+-- Supabase project, so guard with a DO block to avoid duplicate errors.
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables
+        WHERE pubname = 'supabase_realtime'
+          AND schemaname = 'public'
+          AND tablename = 'live_locations'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.live_locations;
+    END IF;
+END
+$$;
