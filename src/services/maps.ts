@@ -78,7 +78,7 @@ class GoogleMapsService {
     if (!await this.ensureInitialized()) return null;
 
     return new Promise((resolve) => {
-      this.geocoder?.geocode({ address }, (results, status) => {
+      this.geocoder?.geocode({ address, componentRestrictions: { country: 'IN' } }, (results, status) => {
         if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
           const location = results[0].geometry.location;
           resolve({
@@ -102,7 +102,7 @@ class GoogleMapsService {
     if (!await this.ensureInitialized()) return null;
 
     return new Promise((resolve) => {
-      this.geocoder?.geocode({ location: { lat, lng } }, (results, status) => {
+      this.geocoder?.geocode({ location: { lat, lng }, region: 'IN' }, (results, status) => {
         if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
           resolve({
             id: results[0].place_id,
@@ -142,6 +142,7 @@ class GoogleMapsService {
           input,
           sessionToken: this.sessionToken || undefined,
           includedPrimaryTypes: ['geocode', 'establishment'],
+          includedRegionCodes: ['IN'],
         };
 
         const { suggestions } = await this.placesLibrary!.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
@@ -159,7 +160,11 @@ class GoogleMapsService {
 
     return new Promise((resolve) => {
       this.autocompleteService!.getPlacePredictions(
-        { input, sessionToken: this.sessionToken || undefined },
+        {
+          input,
+          sessionToken: this.sessionToken || undefined,
+          componentRestrictions: { country: 'in' },
+        },
         (predictions, status) => {
           if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
             resolve(predictions);
