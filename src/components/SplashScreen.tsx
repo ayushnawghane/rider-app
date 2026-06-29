@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Zap } from 'lucide-react';
 import Aurora from './ui/Aurora';
 import splash1 from '../assets/images/splash1.png';
 import splash2 from '../assets/images/splash2.png';
@@ -115,17 +114,12 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, hasSeenOnboarding
                             transform: brandVisible ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.96)',
                         }}
                     >
-                        <div
-                            className="mb-6 flex h-24 w-24 items-center justify-center rounded-[28px] shadow-glow-lg"
-                            style={{ background: 'linear-gradient(135deg, var(--fire-red), var(--fire-amber) 70%, var(--fire-gold))' }}
-                        >
-                            <Zap className="h-12 w-12 text-white" strokeWidth={2.6} fill="white" />
-                        </div>
+                        <img src="/logo.png" alt="blinkcar" className="h-24 w-24 object-contain" />
                         <h1 className="font-display text-[4.5rem] font-extrabold leading-[0.9] tracking-tightest text-ink">
-                            Blinkcar
+                            blinkcar
                         </h1>
                         <p className="mt-4 font-display text-sm font-semibold uppercase tracking-[0.32em] text-ink/55">
-                            Ride the horizon
+                            India's Smartest Carpooling App
                         </p>
                     </div>
                 </Aurora>
