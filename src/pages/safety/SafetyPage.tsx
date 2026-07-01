@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { sosService, locationService } from '../../services';
+import { isUuid } from '../../utils/helpers';
 import { MapComponent } from '../../components/maps';
 import LoadingOverlay from '../../components/LoadingOverlay';
 import {
@@ -62,7 +63,10 @@ const SafetyPage: React.FC = () => {
   const [toastMessage, setToastMessage] = useState('');
 
   const queryParams = new URLSearchParams(location.search);
-  const preselectedRideId = queryParams.get('rideId');
+  // Only trust a well-formed ride id; a bad ?rideId=… must never block a
+  // safety-critical SOS with a UUID/FK error.
+  const rawRideId = queryParams.get('rideId');
+  const preselectedRideId = isUuid(rawRideId) ? rawRideId : undefined;
 
   useEffect(() => {
     const init = async () => {
@@ -179,6 +183,8 @@ const SafetyPage: React.FC = () => {
   const handleEmergencyCall = (number: string) => {
     if (number.startsWith('tel:')) {
       window.location.href = number;
+    } else if (number.includes('@')) {
+      window.location.href = `mailto:${number}`;
     } else {
       showToastMessage(`Contact: ${number}`);
     }

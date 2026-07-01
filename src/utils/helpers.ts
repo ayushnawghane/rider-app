@@ -59,6 +59,13 @@ export const getInitials = (name: string): string => {
     .slice(0, 2);
 };
 
+// True when the string is a well-formed UUID. Used to avoid sending free-text
+// into UUID foreign-key columns (e.g. disputes.ride_id, sos_alerts.ride_id),
+// which would otherwise fail with an opaque "invalid input syntax" error.
+export const isUuid = (value: string | null | undefined): boolean =>
+  typeof value === 'string' &&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
+
 export const generateReferenceId = (): string => {
   const timestamp = Date.now().toString(36);
   const randomPart = Math.random().toString(36).substring(2, 8);

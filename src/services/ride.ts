@@ -146,15 +146,11 @@ class RideService {
         return { success: false, error: bookingResult.error || 'Unable to create booking' };
       }
 
-      const { error: seatUpdateError } = await supabase
-        .from('rides')
-        .update({ booked_seats: bookedSeats + seatsBooked })
-        .eq('id', params.rideId);
-
-      if (seatUpdateError) {
-        await this.cancelParticipant(params.rideId, params.userId);
-        return { success: false, error: seatUpdateError.message };
-      }
+      // `rides.booked_seats` is maintained authoritatively by the
+      // `sync_ride_booked_seats` DB trigger (from the participant upsert above).
+      // We must NOT write it from here: a passenger can't update another user's
+      // ride (RLS), and writing a stale snapshot value would clobber the
+      // trigger's correct SUM and race concurrent joins into an oversold ride.
 
       // Notifications for both the driver and the joining passenger are raised
       // automatically by the `notify_on_ride_participation` DB trigger, so we
@@ -485,6 +481,11 @@ class RideService {
       if (error) {
         return { success: false, error: error.message };
       }
+
+      // Keep passengers' bookings in step with a driver-initiated status change
+      // (Complete / Cancel) — otherwise their booking rows stay 'pending' on a
+      // ride the driver already ended. Mirrors the time-based reconcile path.
+      await this.syncBookingsForRideStatus(rideId, status);
 
       return { success: true };
     } catch (error) {

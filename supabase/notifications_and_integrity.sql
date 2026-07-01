@@ -260,21 +260,59 @@ WHERE r.id = sub.ride_id;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS fcm_token TEXT;
 
 -- ──────────────────────────────────────────────────────────────────────────
--- 7. Realtime: make sure notifications stream to the app for live badges.
+-- 7. Realtime: notifications, ride chat, AND dispute chat stream to the app.
+--    (dispute chat replies were never received live because `messages` wasn't
+--    in the realtime publication.)
 -- ──────────────────────────────────────────────────────────────────────────
 DO $$
 BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_publication_tables
-        WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'notifications'
-    ) THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname='supabase_realtime' AND schemaname='public' AND tablename='notifications') THEN
         ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
     END IF;
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_publication_tables
-        WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'ride_messages'
-    ) THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname='supabase_realtime' AND schemaname='public' AND tablename='ride_messages') THEN
         ALTER PUBLICATION supabase_realtime ADD TABLE public.ride_messages;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname='supabase_realtime' AND schemaname='public' AND tablename='messages') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
     END IF;
 END
 $$;
+
+-- ──────────────────────────────────────────────────────────────────────────
+-- 8. Admin access. The schema deliberately has no admin RLS (a policy on
+--    `profiles` that queries `profiles` recurses). A SECURITY DEFINER helper
+--    breaks the recursion, letting the admin console actually read all data
+--    instead of silently seeing only the admin's own rows.
+-- ──────────────────────────────────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+    SELECT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin');
+$$;
+
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated;
+
+DROP POLICY IF EXISTS "Admins can view all profiles" ON profiles;
+CREATE POLICY "Admins can view all profiles" ON profiles FOR SELECT USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can view all rides" ON rides;
+CREATE POLICY "Admins can view all rides" ON rides FOR SELECT USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can view all disputes" ON disputes;
+CREATE POLICY "Admins can view all disputes" ON disputes FOR SELECT USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can update disputes" ON disputes;
+CREATE POLICY "Admins can update disputes" ON disputes FOR UPDATE USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can view all sos alerts" ON sos_alerts;
+CREATE POLICY "Admins can view all sos alerts" ON sos_alerts FOR SELECT USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can view dispute messages" ON messages;
+CREATE POLICY "Admins can view dispute messages" ON messages FOR SELECT USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can send dispute messages" ON messages;
+CREATE POLICY "Admins can send dispute messages" ON messages FOR INSERT WITH CHECK (public.is_admin());

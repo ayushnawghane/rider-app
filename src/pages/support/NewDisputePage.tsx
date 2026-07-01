@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { disputeService } from '../../services';
+import { isUuid } from '../../utils/helpers';
 import { MessageSquare, CheckCircle2, AlertCircle, Car, FileText, HelpCircle, ChevronLeft } from 'lucide-react';
 
 const FIRE = 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))';
@@ -49,6 +50,12 @@ const NewDisputePage = () => {
       return;
     }
 
+    const trimmedRideId = rideId.trim();
+    if (trimmedRideId && !isUuid(trimmedRideId)) {
+      setError('That ride ID is not valid. Leave it blank or paste a ride ID from Your Rides.');
+      return;
+    }
+
     if (!user) {
       setError('User not authenticated');
       return;
@@ -59,7 +66,7 @@ const NewDisputePage = () => {
     try {
       const result = await disputeService.createDispute({
         userId: user.id,
-        rideId: rideId || undefined,
+        rideId: trimmedRideId || undefined,
         disputeType,
         description: trimmedDescription,
       });

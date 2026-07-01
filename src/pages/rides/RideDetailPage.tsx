@@ -344,7 +344,7 @@ const RideDetailPage = () => {
                     <div className="grid grid-cols-3 gap-3 border-t border-black/5 pt-4">
                       {ride.fare && (
                         <div className="text-center">
-                          <p className="font-display text-xl font-extrabold text-fire-orange">${ride.fare.toFixed(2)}</p>
+                          <p className="font-display text-xl font-extrabold text-fire-orange">₹{ride.fare.toFixed(2)}</p>
                           <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">Fare</p>
                         </div>
                       )}
