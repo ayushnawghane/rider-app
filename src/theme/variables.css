@@ -41,7 +41,7 @@
     --text: var(--ink);
     --text-dim: rgba(26, 14, 6, 0.62);
 
-    --app-bottom-nav-height: calc(86px + env(safe-area-inset-bottom));
+    --app-bottom-nav-height: calc(58px + env(safe-area-inset-bottom));
   }
 
   [data-theme='fire-night'] {
@@ -94,7 +94,7 @@
   position: fixed; right: 0; bottom: 0; left: 0; z-index: 60;
   padding-bottom: env(safe-area-inset-bottom);
 }
-.app-bottom-nav-safe { padding-bottom: calc(var(--app-bottom-nav-height) + 20px); }
+.app-bottom-nav-safe { padding-bottom: calc(var(--app-bottom-nav-height) + 12px); }
 .app-top-safe { padding-top: calc(env(safe-area-inset-top) + 16px); }
 .app-header-top-safe { padding-top: calc(env(safe-area-inset-top) + 48px); }
 .app-toolbar-top-safe { padding-top: calc(env(safe-area-inset-top) + 12px); }

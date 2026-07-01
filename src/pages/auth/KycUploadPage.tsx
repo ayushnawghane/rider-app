@@ -95,7 +95,7 @@ const KycUploadPage = () => {
             <div className="absolute -right-16 -top-12 h-72 w-72 rounded-full animate-aurora-1" style={{ background: 'radial-gradient(circle, rgba(255,200,50,0.62) 0%, transparent 62%)', filter: 'blur(48px)' }} />
           </div>
 
-          <div className="relative z-10 mx-auto max-w-2xl px-4 pb-8 pt-5">
+          <div className="app-bottom-nav-safe relative z-10 mx-auto max-w-2xl px-4 pb-8 pt-5">
             {/* Header */}
             <div className="mb-6 flex items-center gap-3">
               <button
@@ -173,6 +173,20 @@ const KycUploadPage = () => {
                     )}
                   </div>
 
+                  {user.kycStatus !== 'approved' && (
+                    <div className="sticky bottom-4 z-20 rounded-[26px] border border-white/70 bg-white/90 p-2 shadow-soft backdrop-blur">
+                      <button
+                        onClick={handleUpload}
+                        disabled={loading || !file}
+                        className="grain grain-strong relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl py-4 font-display text-lg font-bold tracking-tight text-white shadow-glow transition-all active:scale-[0.98] disabled:opacity-70"
+                        style={{ background: FIRE }}
+                      >
+                        <Upload className="h-5 w-5" />
+                        {loading ? 'Uploading...' : file ? 'Upload Document' : 'Choose a document first'}
+                      </button>
+                    </div>
+                  )}
+
                   <div className="rounded-[28px] border border-black/5 bg-white p-6 shadow-soft">
                     <h2 className="mb-4 font-display text-lg font-extrabold tracking-tight text-ink">Requirements</h2>
                     <div className="space-y-3">
@@ -184,17 +198,6 @@ const KycUploadPage = () => {
                       ))}
                     </div>
                   </div>
-
-                  {user.kycStatus !== 'approved' && (
-                    <button
-                      onClick={handleUpload}
-                      disabled={loading || !file}
-                      className="grain grain-strong relative w-full overflow-hidden rounded-2xl py-4 font-display text-lg font-bold tracking-tight text-white shadow-glow transition-all active:scale-[0.98] disabled:opacity-70"
-                      style={{ background: FIRE }}
-                    >
-                      {loading ? 'Uploading...' : 'Upload Document'}
-                    </button>
-                  )}
                 </>
               ) : (
                 <div className="animate-fade-in rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">

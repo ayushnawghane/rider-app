@@ -40,6 +40,9 @@ resources/
 .android-sdk/
 .downloads/
 .gradle-home/
+android/keystore.properties
+*.jks
+*.keystore
 
 # Supabase
 supabase/
