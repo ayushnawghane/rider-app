@@ -12,7 +12,6 @@ import {
   FileText,
   ChevronRight,
   Bookmark,
-  CheckCircle2,
 } from 'lucide-react';
 import { hasRequiredBookingProfile } from '../../utils/profileCompletion';
 import { displayPositiveIntegerInput, normalizePositiveIntegerInput } from '../../utils/numberInput';
@@ -85,8 +84,6 @@ const PublishRidePage = () => {
   const [vehicleNumber, setVehicleNumber] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [savingVehicle, setSavingVehicle] = useState(false);
-  const [vehicleSaved, setVehicleSaved] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<PublishRideFieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [routeMeta, setRouteMeta] = useState<{ distanceKm: number; durationMinutes: number } | null>(null);
@@ -167,22 +164,6 @@ const PublishRidePage = () => {
       active = false;
     };
   }, [startLocation, endLocation]);
-
-  const handleSaveVehicle = async () => {
-    if (!user || !vehicleNumber.trim()) return;
-    setSavingVehicle(true);
-    setVehicleSaved(false);
-    try {
-      await vehicleService.saveVehicleDetails(user.id, {
-        vehicleType,
-        vehicleNumber: vehicleNumber.trim().toUpperCase(),
-      });
-      setVehicleSaved(true);
-      setTimeout(() => setVehicleSaved(false), 3000);
-    } finally {
-      setSavingVehicle(false);
-    }
-  };
 
   const handlePublish = async () => {
     const nextFieldErrors: PublishRideFieldErrors = {};
@@ -523,7 +504,6 @@ const PublishRidePage = () => {
                 onChange={(e) => {
                   setVehicleNumber(e.target.value.toUpperCase());
                   setSubmitError(null);
-                  setVehicleSaved(false);
                   setFieldErrors((prev) => {
                     if (!prev.vehicleNumber) return prev;
                     const next = { ...prev };
@@ -541,19 +521,12 @@ const PublishRidePage = () => {
               <p className="mt-2 text-xs font-semibold text-fire-red">{fieldErrors.vehicleNumber}</p>
             )}
 
-            {/* Save for Later */}
-            <button
-              type="button"
-              onClick={handleSaveVehicle}
-              disabled={savingVehicle || !vehicleNumber.trim()}
-              className="mt-3 flex items-center gap-2 rounded-xl border border-dashed border-primary-300 bg-primary-50 px-4 py-2 font-display text-sm font-bold text-primary-700 transition-all hover:bg-primary-100 disabled:opacity-50"
-            >
-              {vehicleSaved ? (
-                <><CheckCircle2 className="h-4 w-4 text-emerald-600" /><span className="text-emerald-700">Saved!</span></>
-              ) : (
-                <><Bookmark className="h-4 w-4" />{savingVehicle ? 'Saving...' : 'Save for Later'}</>
-              )}
-            </button>
+            {/* Vehicle details are saved automatically when you publish, so we
+                remember them for next time — no manual "save" step needed. */}
+            <p className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-ink/45">
+              <Bookmark className="h-3.5 w-3.5" />
+              We'll remember your vehicle for next time.
+            </p>
           </div>
 
           {/* Additional Notes */}

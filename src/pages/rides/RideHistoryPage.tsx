@@ -29,18 +29,11 @@ const RideHistoryPage = () => {
     void fetchRides();
   }, [user]);
 
-  const isCurrentRide = (ride: Ride) => {
-    if (ride.status !== 'pending' && ride.status !== 'active') return false;
-
-    const rideDate = new Date(ride.date);
-    if (Number.isNaN(rideDate.getTime())) return true;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const afterTomorrow = new Date(today);
-    afterTomorrow.setDate(today.getDate() + 2);
-    return rideDate >= today && rideDate < afterTomorrow;
-  };
+  // A ride counts as "current" (and therefore chat-enabled) whenever it is still
+  // upcoming (pending) or active. Completed/cancelled rides fall into the
+  // archived section. Chat must work for both upcoming and active rides, so we
+  // deliberately do not gate this on a narrow date window.
+  const isCurrentRide = (ride: Ride) => ride.status === 'pending' || ride.status === 'active';
 
   const getStatusLabel = (status: Ride['status']) => {
     if (status === 'active') return 'Ride Confirmed';
@@ -68,11 +61,20 @@ const RideHistoryPage = () => {
   const archivedRides = rides.filter((ride) => !isCurrentRide(ride));
 
   const renderRideCard = (ride: Ride, current: boolean) => (
-    <button
+    // A card (not a <button>) so the inner Call/Message controls are valid —
+    // nesting interactive elements inside a <button> is invalid HTML.
+    <div
       key={ride.id}
-      type="button"
+      role="button"
+      tabIndex={0}
       onClick={() => history.push(`/rides/detail/${ride.id}`)}
-      className="w-full rounded-[26px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.99]"
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          history.push(`/rides/detail/${ride.id}`);
+        }
+      }}
+      className="w-full cursor-pointer rounded-[26px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.99]"
     >
       <div className="flex gap-3">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
@@ -134,7 +136,7 @@ const RideHistoryPage = () => {
           )}
         </div>
       </div>
-    </button>
+    </div>
   );
 
   const renderSection = (title: string, items: Ride[], current = false) => (

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useIonViewWillEnter } from '@ionic/react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { locationService, rideService } from '../../services';
@@ -139,6 +140,26 @@ const FindRidePage = () => {
     autoSearchKeyRef.current = searchKey;
     void handleSearch();
   }, [dropoffLocation, handleSearch, passengerCount, pickupLocation]);
+
+  // Re-sync which rides the user has already booked whenever we return to this
+  // page (e.g. after joining a ride on the detail page). Without this the
+  // "Book" button stays visible for a ride the user just booked.
+  const refreshJoinedState = useCallback(async () => {
+    if (!user?.id) {
+      setJoinedRideIds(new Set());
+      return;
+    }
+    const rideIds = availableRides.map((ride) => ride.id);
+    if (rideIds.length === 0) return;
+    const participation = await rideService.getJoinedRideIds(rideIds, user.id);
+    if (participation.success) {
+      setJoinedRideIds(new Set(participation.rideIds || []));
+    }
+  }, [availableRides, user?.id]);
+
+  useIonViewWillEnter(() => {
+    void refreshJoinedState();
+  }, [refreshJoinedState]);
 
   const handleBookRide = (ride: PublishedRide) => {
     if (joinedRideIds.has(ride.id)) return;
@@ -302,6 +323,7 @@ const FindRidePage = () => {
             <div className="space-y-4">
               {availableRides.map((ride) => {
                 const isBooked = joinedRideIds.has(ride.id);
+                const isOwnRide = Boolean(user?.id && (ride.driverId === user.id));
                 return (
                   <div key={ride.id} className="rounded-[26px] border border-black/5 bg-white p-5 shadow-soft">
                     {/* Driver Info */}
@@ -331,7 +353,7 @@ const FindRidePage = () => {
                           <span className="truncate">{ride.vehicleType} • {ride.vehicleNumber}</span>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="flex-shrink-0 text-right">
                         <p className="font-display text-2xl font-extrabold leading-none text-fire-orange">₹{ride.pricePerSeat}</p>
                         <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">per seat</p>
                       </div>
@@ -379,16 +401,26 @@ const FindRidePage = () => {
                       </p>
                     )}
 
-                    {/* Book Button */}
-                    <button
-                      onClick={() => handleBookRide(ride)}
-                      disabled={isBooked}
-                      className={`${isBooked ? 'border-2 border-black/10 bg-paper text-ink/45' : 'grain grain-strong text-white shadow-glow'} relative flex w-full items-center justify-center gap-1.5 overflow-hidden rounded-2xl py-3.5 font-display font-bold tracking-tight transition-all active:scale-[0.98]`}
-                      style={isBooked ? undefined : { background: FIRE }}
-                    >
-                      {isBooked ? 'Booked' : `Book ${passengerCount} Seat${passengerCount > 1 ? 's' : ''}`}
-                      {!isBooked && <ChevronRight className="h-5 w-5" strokeWidth={2.5} />}
-                    </button>
+                    {/* Book Button — your own rides can't be booked; manage them instead */}
+                    {isOwnRide ? (
+                      <button
+                        onClick={() => history.push(`/rides/detail/${ride.id}`)}
+                        className="flex w-full items-center justify-center gap-1.5 rounded-2xl border-2 border-primary-200 bg-primary-50 py-3.5 font-display font-bold tracking-tight text-primary-600 transition-all active:scale-[0.98]"
+                      >
+                        Your ride · Manage
+                        <ChevronRight className="h-5 w-5" strokeWidth={2.5} />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleBookRide(ride)}
+                        disabled={isBooked}
+                        className={`${isBooked ? 'border-2 border-black/10 bg-paper text-ink/45' : 'grain grain-strong text-white shadow-glow'} relative flex w-full items-center justify-center gap-1.5 overflow-hidden rounded-2xl py-3.5 font-display font-bold tracking-tight transition-all active:scale-[0.98]`}
+                        style={isBooked ? undefined : { background: FIRE }}
+                      >
+                        {isBooked ? 'Booked' : `Book ${passengerCount} Seat${passengerCount > 1 ? 's' : ''}`}
+                        {!isBooked && <ChevronRight className="h-5 w-5" strokeWidth={2.5} />}
+                      </button>
+                    )}
                   </div>
                 );
               })}

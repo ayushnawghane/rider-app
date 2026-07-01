@@ -788,7 +788,7 @@ const ProfilePage = () => {
                     {vehicleSaved ? (
                       <><CheckCircle2 size={16} className="text-emerald-600" /><span className="text-emerald-700">Vehicle saved!</span></>
                     ) : (
-                      <><Bookmark size={16} />{savingVehicle ? 'Saving...' : 'Save for Later'}</>
+                      <><Bookmark size={16} />{savingVehicle ? 'Saving...' : 'Save vehicle'}</>
                     )}
                   </button>
                 </div>

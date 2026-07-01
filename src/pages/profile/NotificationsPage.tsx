@@ -27,9 +27,28 @@ const NotificationsPage: React.FC = () => {
     fetchNotifications();
   }, [fetchNotifications]);
 
+  // Live updates: new notifications appear without a manual refresh.
+  useEffect(() => {
+    if (!user) return;
+    const unsubscribe = notificationService.subscribeToNotifications(user.id, (notification) => {
+      setNotifications((prev) =>
+        prev.some((n) => n.id === notification.id) ? prev : [notification, ...prev],
+      );
+    });
+    return unsubscribe;
+  }, [user]);
+
   const handleRefresh = async (event: CustomEvent) => {
     await fetchNotifications();
     event.detail.complete();
+  };
+
+  const hasUnread = notifications.some((n) => !n.read);
+
+  const markAllAsRead = async () => {
+    if (!user) return;
+    await notificationService.markAllAsRead(user.id);
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
   const markAsRead = async (notificationId: string) => {
@@ -87,10 +106,18 @@ const NotificationsPage: React.FC = () => {
               >
                 <ChevronLeft size={22} strokeWidth={2.5} />
               </button>
-              <div>
+              <div className="flex-1">
                 <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Updates</p>
                 <h1 className="font-display text-[2.2rem] font-extrabold leading-[0.9] tracking-tight text-ink">Notifications</h1>
               </div>
+              {hasUnread && (
+                <button
+                  onClick={markAllAsRead}
+                  className="shrink-0 rounded-full border border-primary-200 bg-white px-3 py-1.5 font-display text-xs font-bold text-primary-600 shadow-soft transition active:scale-95"
+                >
+                  Mark all read
+                </button>
+              )}
             </div>
 
             {loading ? (

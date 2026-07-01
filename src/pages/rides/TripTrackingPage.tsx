@@ -332,12 +332,12 @@ const TripTrackingPage = () => {
                         <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl border-2 border-white bg-paper-dim shadow-soft">
                             <img src={ride.driver?.avatar || `https://ui-avatars.com/api/?name=${ride.driver?.name || 'Driver'}&background=random`} alt="Driver" className="h-full w-full object-cover" />
                         </div>
-                        <div className="ml-4 flex-1">
-                            <h3 className="font-display text-base font-bold text-ink">{ride.driver?.name || 'Your Driver'}</h3>
+                        <div className="ml-4 min-w-0 flex-1">
+                            <h3 className="truncate font-display text-base font-bold text-ink">{ride.driver?.name || 'Your Driver'}</h3>
                             <div className="mt-0.5 flex items-center text-sm text-ink/50">
-                                <span className="flex items-center gap-1 font-bold text-fire-gold">★ {ride.driver?.rating ? ride.driver.rating.toFixed(1) : '4.9'}</span>
-                                <span className="mx-2">•</span>
-                                <span className="font-medium">{ride.vehicleType}</span>
+                                <span className="flex flex-shrink-0 items-center gap-1 font-bold text-fire-gold">★ {ride.driver?.rating ? ride.driver.rating.toFixed(1) : '4.9'}</span>
+                                <span className="mx-2 flex-shrink-0">•</span>
+                                <span className="truncate font-medium">{ride.vehicleType}</span>
                             </div>
                         </div>
                         <div className="flex-shrink-0 text-right">

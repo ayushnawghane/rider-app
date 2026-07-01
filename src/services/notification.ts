@@ -4,30 +4,31 @@ import type {
 } from '../types';
 
 class NotificationService {
+  // Notifications are created through a SECURITY DEFINER RPC so the app can
+  // notify ANY user (e.g. a passenger notifying the ride owner). A direct
+  // client insert into `notifications` is blocked by RLS for other users and
+  // only works for yourself, so the RPC is the correct path. Most notifications
+  // are also raised automatically by DB triggers; this remains available for
+  // any explicit client-driven notification.
   async createNotification(params: {
     userId: string;
     title: string;
     message: string;
     type?: Notification['type'];
-  }): Promise<{ success: boolean; notification?: Notification; error?: string }> {
+  }): Promise<{ success: boolean; error?: string }> {
     try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .insert({
-          user_id: params.userId,
-          title: params.title,
-          message: params.message,
-          type: params.type ?? 'system',
-          read: false,
-        })
-        .select()
-        .single();
+      const { error } = await supabase.rpc('create_notification', {
+        target_user_id: params.userId,
+        notification_title: params.title,
+        notification_message: params.message,
+        notification_type: params.type ?? 'system',
+      });
 
       if (error) {
         return { success: false, error: error.message };
       }
 
-      return { success: true, notification: this.mapNotificationToNotification(data) };
+      return { success: true };
     } catch (error) {
       return { success: false, error: 'An unexpected error occurred' };
     }
@@ -89,9 +90,9 @@ class NotificationService {
 
   async getUnreadCount(userId: string): Promise<{ success: boolean; count?: number; error?: string }> {
     try {
-      const { data, error } = await supabase
+      const { count, error } = await supabase
         .from('notifications')
-        .select('id', { count: 'exact' })
+        .select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
         .eq('read', false);
 
@@ -99,7 +100,7 @@ class NotificationService {
         return { success: false, error: error.message };
       }
 
-      return { success: true, count: data?.length || 0 };
+      return { success: true, count: count || 0 };
     } catch (error) {
       return { success: false, error: 'An unexpected error occurred' };
     }

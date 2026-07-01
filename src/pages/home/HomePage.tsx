@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useIonViewWillEnter } from '@ionic/react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { Phone, MessageCircle, Map, Star } from 'lucide-react';
+import { Phone, MessageCircle, Map, Star, Bell } from 'lucide-react';
 import AppIcon, { type AppIconName } from '../../components/icons/AppIcon';
 import type { PublishedRide } from '../../types';
-import { locationService, mapsService } from '../../services';
+import { locationService, mapsService, notificationService } from '../../services';
 import { isProfileIncomplete, isProfileNameIncomplete } from '../../utils/profileCompletion';
 
 interface Location {
@@ -40,9 +41,34 @@ const HomePage = () => {
   const history = useHistory();
   const location = useLocation<{ pickup?: Location; dropoff?: Location }>();
 
+  const refreshUnread = async () => {
+    if (!user?.id) {
+      setUnreadCount(0);
+      return;
+    }
+    const result = await notificationService.getUnreadCount(user.id);
+    if (result.success) setUnreadCount(result.count || 0);
+  };
+
+  useEffect(() => {
+    void refreshUnread();
+    if (!user?.id) return;
+    const unsubscribe = notificationService.subscribeToNotifications(user.id, () => {
+      void refreshUnread();
+    });
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Recompute when returning to Home (e.g. after reading notifications).
+  useIonViewWillEnter(() => {
+    void refreshUnread();
+  });
+
   const [pickup, setPickup] = useState<Location | null>(null);
   const [dropoff, setDropoff] = useState<Location | null>(null);
   const [passengerCount, setPassengerCount] = useState<number>(1);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
   const [departureDate, setDepartureDate] = useState(() => toLocalDateValue(new Date()));
   const [dismissedProfilePrompt, setDismissedProfilePrompt] = useState(false);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
@@ -208,20 +234,38 @@ const HomePage = () => {
               <img src="/logo-mark.png" alt="Blinkcar" className="h-10 w-10 rounded-[14px] object-cover shadow-glow" />
               <span className="font-display text-lg font-extrabold lowercase tracking-tight text-ink">blinkcar</span>
             </div>
-            <button
-              onClick={() => history.push('/profile')}
-              className="h-11 w-11 overflow-hidden rounded-2xl border border-white/70 bg-white/50 shadow-soft backdrop-blur-sm transition active:scale-95"
-              aria-label="Open profile"
-              type="button"
-            >
-              {user?.avatarUrl ? (
-                <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <span className="flex h-full w-full items-center justify-center font-display text-base font-extrabold text-fire-orange">
-                  {greetingName.slice(0, 1).toUpperCase()}
-                </span>
-              )}
-            </button>
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => history.push('/notifications')}
+                className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/50 text-ink shadow-soft backdrop-blur-sm transition active:scale-95"
+                aria-label="Notifications"
+                type="button"
+              >
+                <Bell size={20} strokeWidth={2.4} />
+                {unreadCount > 0 && (
+                  <span
+                    className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 font-display text-[10px] font-extrabold text-white shadow-glow"
+                    style={{ background: FIRE }}
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => history.push('/profile')}
+                className="h-11 w-11 overflow-hidden rounded-2xl border border-white/70 bg-white/50 shadow-soft backdrop-blur-sm transition active:scale-95"
+                aria-label="Open profile"
+                type="button"
+              >
+                {user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center font-display text-base font-extrabold text-fire-orange">
+                    {greetingName.slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Greeting + illustration */}

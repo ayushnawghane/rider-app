@@ -205,7 +205,10 @@ describe('rideService', () => {
       total_points: 20,
       rides_taken: 3,
     }));
-    expect(notificationsQuery.insert).toHaveBeenCalledTimes(2);
+    // Join notifications are now raised by DB triggers (notify_on_ride_participation),
+    // so the client must NOT insert notifications directly (that would double-notify
+    // and fails RLS for the ride owner's row).
+    expect(notificationsQuery.insert).not.toHaveBeenCalled();
   });
 
   it('returns joined rides where the user is a passenger', async () => {
