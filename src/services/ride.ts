@@ -220,7 +220,7 @@ class RideService {
     try {
       const { data, error } = await supabase
         .from('bookings')
-        .select('*, passenger:profiles(id, full_name, first_name, last_name, avatar_url, rating_as_passenger)')
+        .select('*, passenger:profiles(id, full_name, first_name, last_name, avatar_url, phone, rating_as_passenger)')
         .eq('ride_id', rideId)
         .order('created_at', { ascending: true });
 
