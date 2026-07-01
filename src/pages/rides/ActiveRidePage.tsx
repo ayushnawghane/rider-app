@@ -148,6 +148,7 @@ const ActiveRidePage = () => {
   // Start location tracking + live_locations publishing + Realtime subscription
   useEffect(() => {
     if (!ride || !user) return;
+    let cancelled = false;
     let locationPublishInterval: ReturnType<typeof setInterval> | null = null;
     let latestPosition: {
       lat: number;
@@ -203,6 +204,11 @@ const ActiveRidePage = () => {
         }
       );
 
+      // If the component unmounted while startWatching was resolving, the
+      // cleanup already ran and would have missed this watch — stop it now so
+      // we don't leak a GPS watcher that setStates on an unmounted component.
+      if (cancelled) locationService.stopWatching();
+
       // Backup: re-publish the latest known location every 10s without
       // triggering a fresh getCurrentPosition lookup.
       locationPublishInterval = setInterval(() => {
@@ -220,11 +226,16 @@ const ActiveRidePage = () => {
     });
 
     return () => {
+      cancelled = true;
       locationService.stopWatching();
       if (locationPublishInterval) clearInterval(locationPublishInterval);
       supabase.removeChannel(channel);
     };
-  }, [ride, user]);
+    // Only re-run when the ride or user identity changes — not on every 30s
+    // poll that replaces the `ride` object, which would churn the GPS watcher
+    // and realtime channel.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ride?.id, user?.id]);
 
   const handleContactDriver = () => {
     if (ride?.driverContact) {

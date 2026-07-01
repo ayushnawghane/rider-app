@@ -4,7 +4,6 @@ import { useAuth } from '../../context/AuthContext';
 import { mapsService, rideService, vehicleService } from '../../services';
 import {
   Clock,
-  Users,
   Car,
   Plus,
   Minus,

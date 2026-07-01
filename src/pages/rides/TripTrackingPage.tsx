@@ -123,6 +123,7 @@ const TripTrackingPage = () => {
     // Start live GPS tracking + publish our location + stream remote location
     useEffect(() => {
         if (!ride || !user) return;
+        let cancelled = false;
         let locationPublishInterval: ReturnType<typeof setInterval> | null = null;
         let latestPosition: {
             lat: number;
@@ -175,6 +176,9 @@ const TripTrackingPage = () => {
                                         });
             });
 
+            // Stop a watch that resolved after the component already unmounted.
+            if (cancelled) locationService.stopWatching();
+
             // Backup: re-publish the latest known location every 10s
             locationPublishInterval = setInterval(() => {
                 if (latestPosition) {
@@ -191,11 +195,15 @@ const TripTrackingPage = () => {
         });
 
         return () => {
+            cancelled = true;
             locationService.stopWatching();
             if (locationPublishInterval) clearInterval(locationPublishInterval);
             supabase.removeChannel(channel);
         };
-    }, [ride, user, calculateProgress]);
+    // Re-run only when the ride/user identity changes, not on every 30s poll
+    // that replaces the `ride` object (which churned the GPS watch + channel).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ride?.id, user?.id]);
 
     // Refresh ETA every 30 seconds when we have a location
     useEffect(() => {

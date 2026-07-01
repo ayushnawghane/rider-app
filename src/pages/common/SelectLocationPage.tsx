@@ -80,20 +80,22 @@ const SelectLocationPage = () => {
     history.push(returnTo, nextState);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (selectedLocation) {
       applySelectionAndReturn(selectedLocation);
       return;
     }
 
+    // If the user typed a free-text address without picking a suggestion, geocode
+    // it to real coordinates. Never fall back to (0,0) — that "null island"
+    // point breaks route calculation and map centering downstream.
     if (!loadError && manualAddress.trim().length > 0) {
-      applySelectionAndReturn({
-        id: `manual-${Date.now()}`,
-        name: manualAddress.trim(),
-        address: manualAddress.trim(),
-        lat: 0,
-        lng: 0,
-      });
+      const geocoded = await mapsService.geocodeAddress(manualAddress.trim());
+      if (geocoded) {
+        applySelectionAndReturn(geocoded);
+        return;
+      }
+      setError('We couldn’t locate that address. Please pick one from the suggestions.');
       return;
     }
 

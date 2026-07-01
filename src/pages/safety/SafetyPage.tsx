@@ -20,11 +20,6 @@ import {
 const FIRE = 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))';
 const ALERT = 'linear-gradient(135deg, #FF3D00 0%, #D81E00 100%)';
 
-const emergencyContacts = [
-  { id: 1, name: 'Emergency Services', number: '112' },
-  { id: 2, name: 'Blink Car Support', number: 'support@blinkcar.com' },
-];
-
 const safetyTips = [
   {
     id: 1,

@@ -75,6 +75,7 @@ const HomePage = () => {
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [activeRide] = useState<PublishedRide | null>(null);
   const [userStats] = useState({
     level: user?.level ?? 1,
@@ -90,6 +91,11 @@ const HomePage = () => {
     if (state.pickup) setPickup(state.pickup);
     if (state.dropoff) setDropoff(state.dropoff);
   }, [location.state]);
+
+  // Clear the "add a pick-up/drop-off" hint once the user has chosen both.
+  useEffect(() => {
+    if (pickup && dropoff) setSearchError(null);
+  }, [pickup, dropoff]);
 
   useEffect(() => {
     if (!user?.id) {
@@ -122,6 +128,19 @@ const HomePage = () => {
   };
 
   const handleFindDrivers = () => {
+    // Find Ride can't search without both endpoints — guard here so the user
+    // gets a clear prompt instead of a blank results page.
+    if (!pickup || !dropoff) {
+      setSearchError(
+        !pickup && !dropoff
+          ? 'Add a pick-up and drop-off to search.'
+          : !pickup
+            ? 'Add a pick-up location to search.'
+            : 'Add a drop-off location to search.',
+      );
+      return;
+    }
+    setSearchError(null);
     const departureTime = departureDate ? new Date(`${departureDate}T00:00:00`).toISOString() : undefined;
     history.push('/find-ride', { pickup, dropoff, passengerCount, departureTime });
   };
@@ -139,14 +158,28 @@ const HomePage = () => {
         return;
       }
 
-      await mapsService.initialize();
-      const resolved = await mapsService.reverseGeocode(coords.lat, coords.lng);
-      const nextLocation = resolved
-        ? { address: resolved.address, lat: resolved.lat, lng: resolved.lng }
-        : { address: locationService.formatCoordinates(coords.lat, coords.lng), lat: coords.lat, lng: coords.lng };
+      // reverseGeocode/initialize can throw (maps not ready / network); fall back
+      // to raw coordinates instead of leaving the user with a silent failure.
+      let nextLocation = {
+        address: locationService.formatCoordinates(coords.lat, coords.lng),
+        lat: coords.lat,
+        lng: coords.lng,
+      };
+      try {
+        await mapsService.initialize();
+        const resolved = await mapsService.reverseGeocode(coords.lat, coords.lng);
+        if (resolved) {
+          nextLocation = { address: resolved.address, lat: resolved.lat, lng: resolved.lng };
+        }
+      } catch (geocodeError) {
+        console.warn('Reverse geocode failed, using raw coordinates:', geocodeError);
+      }
 
       setCurrentLocation(nextLocation);
       setPickup(nextLocation);
+    } catch (locationErr) {
+      console.error('Location detection failed:', locationErr);
+      setLocationError('Location unavailable');
     } finally {
       setIsDetectingLocation(false);
     }
@@ -412,6 +445,9 @@ const HomePage = () => {
             </div>
 
             {/* Find Drivers Button */}
+            {searchError && (
+              <p className="mb-2 text-center text-sm font-semibold text-fire-red">{searchError}</p>
+            )}
             <button
               onClick={handleFindDrivers}
               className="grain grain-strong relative w-full overflow-hidden rounded-2xl py-4 font-display text-lg font-bold tracking-tight text-white shadow-glow transition-all hover:shadow-glow-lg active:scale-[0.98]"
