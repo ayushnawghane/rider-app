@@ -18,8 +18,25 @@ import {
   AlertTriangle,
   Target,
   ChevronLeft,
+  Users,
 } from 'lucide-react';
 import type { Ride } from '../../types';
+
+interface PassengerBooking {
+  id: string;
+  passenger_id?: string;
+  passenger?: {
+    id?: string;
+    full_name?: string;
+    first_name?: string;
+    last_name?: string;
+    avatar_url?: string;
+    phone?: string;
+    rating_as_passenger?: number;
+  } | null;
+  seats_booked?: number;
+  status?: string;
+}
 
 const FIRE = 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))';
 
@@ -66,6 +83,8 @@ const ActiveRidePage = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [eta, setEta] = useState<string>('');
+  const [passengerBookings, setPassengerBookings] = useState<PassengerBooking[]>([]);
+  const [passengerListError, setPassengerListError] = useState<string | null>(null);
 
   // Driver Controls State
   const [showEndConfirm, setShowEndConfirm] = useState(false);
@@ -93,9 +112,22 @@ const ActiveRidePage = () => {
           setEta(route.duration);
         }
       }
+      if (user && (result.ride.userId === user.id || result.ride.driverId === user.id)) {
+        const bookingsResult = await rideService.getBookingsByRide(result.ride.id);
+        if (bookingsResult.success) {
+          setPassengerBookings((bookingsResult.bookings || []) as PassengerBooking[]);
+          setPassengerListError(null);
+        } else {
+          setPassengerBookings([]);
+          setPassengerListError(bookingsResult.error || 'Unable to load passengers');
+        }
+      } else {
+        setPassengerBookings([]);
+        setPassengerListError(null);
+      }
     }
     setLoading(false);
-  }, [id]);
+  }, [id, user]);
 
   // Fetch ride details
   useEffect(() => {
@@ -201,6 +233,22 @@ const ActiveRidePage = () => {
       setToastMessage('Driver contact not available');
       setShowToast(true);
     }
+  };
+
+  const handleContactPassenger = (phone?: string) => {
+    if (phone) {
+      window.location.href = `tel:${phone}`;
+    } else {
+      setToastMessage('Passenger contact not available');
+      setShowToast(true);
+    }
+  };
+
+  const getPassengerName = (booking: PassengerBooking) => {
+    const passenger = booking.passenger;
+    if (!passenger) return 'Passenger';
+    const combinedName = [passenger.first_name, passenger.last_name].filter(Boolean).join(' ').trim();
+    return passenger.full_name || combinedName || 'Passenger';
   };
 
   const handleContactSupport = () => {
@@ -429,6 +477,74 @@ const ActiveRidePage = () => {
                   })}
                 </div>
               </div>
+
+              {/* Passenger List */}
+              {isDriver && (
+                <div className="mb-6 rounded-2xl border border-black/5 bg-white p-4 shadow-soft">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-fire-orange/10 text-fire-orange">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-display text-sm font-extrabold tracking-tight text-ink">Passengers</h3>
+                        <p className="text-xs font-medium text-ink/45">
+                          {passengerBookings.length > 0
+                            ? `${passengerBookings.length} booking${passengerBookings.length > 1 ? 's' : ''} • ${passengerBookings.reduce((total, booking) => total + (booking.seats_booked || 1), 0)} seat${passengerBookings.reduce((total, booking) => total + (booking.seats_booked || 1), 0) > 1 ? 's' : ''}`
+                            : 'No passengers yet'}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="rounded-lg bg-paper px-2.5 py-1 font-display text-xs font-bold text-ink/55">
+                      {ride.bookedSeats}/{ride.availableSeats}
+                    </span>
+                  </div>
+
+                  {passengerListError && (
+                    <div className="rounded-2xl border border-fire-red/20 bg-fire-red/5 px-3 py-2 text-xs font-semibold text-fire-red">
+                      {passengerListError}
+                    </div>
+                  )}
+
+                  {!passengerListError && passengerBookings.length === 0 && (
+                    <div className="rounded-2xl border border-dashed border-black/10 bg-paper px-4 py-5 text-center">
+                      <p className="font-display text-sm font-bold text-ink/70">No passengers have joined yet.</p>
+                      <p className="mt-1 text-xs font-medium text-ink/45">New passenger bookings will appear here.</p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    {passengerBookings.map((booking) => {
+                      const name = getPassengerName(booking);
+                      const phone = booking.passenger?.phone;
+                      return (
+                        <div key={booking.id} className="flex items-center gap-3 rounded-2xl border border-black/5 bg-paper p-3">
+                          <img
+                            src={booking.passenger?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`}
+                            alt={name}
+                            className="h-11 w-11 shrink-0 rounded-2xl object-cover"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-display text-sm font-bold text-ink">{name}</p>
+                            <p className="text-xs font-medium text-ink/45">
+                              {booking.seats_booked || 1} seat{(booking.seats_booked || 1) > 1 ? 's' : ''} • {booking.status || 'booked'}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleContactPassenger(phone)}
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-fire-orange shadow-soft transition active:scale-95 disabled:opacity-50"
+                            disabled={!phone}
+                            aria-label={`Call ${name}`}
+                          >
+                            <Phone className="h-5 w-5" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Location Details */}
               <div className="mb-6 rounded-2xl border border-black/5 bg-paper p-4">
