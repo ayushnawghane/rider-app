@@ -10,7 +10,7 @@ const BootSkeleton: React.FC = () => {
   return (
     <div className="fixed inset-0 z-[60]">
       <Aurora variant="sunrise" grain="strong" className="min-h-screen">
-        <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6">
+        <div className="flex min-h-screen flex-col items-center justify-center gap-3 px-6">
           <img
             src="/logo-mark.png"
             alt="Blinkcar"

@@ -104,7 +104,7 @@ const NewDisputePage = () => {
 
           <div className="relative z-10 mx-auto max-w-2xl px-4 pb-6 pt-5">
             {/* Header */}
-            <div className="mb-6 flex items-center gap-3">
+            <div className="mb-4 flex items-center gap-3">
               <button
                 onClick={handleBack}
                 aria-label="Back"
@@ -119,7 +119,7 @@ const NewDisputePage = () => {
             </div>
 
             {!success ? (
-              <div className="animate-fade-in space-y-6 rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
+              <div className="animate-fade-in space-y-3 rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
                 <div>
                   <label className="mb-2 block font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">Dispute type</label>
                   <div className="grid grid-cols-3 gap-3">
@@ -200,13 +200,13 @@ const NewDisputePage = () => {
                 </button>
               </div>
             ) : (
-              <div className="animate-fade-in rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
+              <div className="animate-fade-in rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
                   <CheckCircle2 className="h-10 w-10 text-emerald-600" />
                 </div>
-                <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">Dispute submitted!</h2>
+                <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">Dispute submitted!</h2>
                 <p className="mt-2 text-sm font-medium text-ink/50">Your dispute has been submitted successfully. Our support team will review it shortly and get back to you.</p>
-                <div className="mt-6 rounded-2xl border border-primary-100 bg-primary-50/60 p-4 text-left">
+                <div className="mt-4 rounded-2xl border border-primary-100 bg-primary-50/60 p-4 text-left">
                   <div className="flex items-start gap-3">
                     <MessageSquare className="mt-0.5 h-5 w-5 shrink-0 text-fire-orange" />
                     <div>
@@ -219,7 +219,7 @@ const NewDisputePage = () => {
                 </div>
                 <button
                   onClick={() => history.replace('/support')}
-                  className="grain grain-strong relative mt-6 w-full overflow-hidden rounded-2xl py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+                  className="grain grain-strong relative mt-4 w-full overflow-hidden rounded-2xl py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
                   style={{ background: FIRE }}
                 >
                   View My Disputes

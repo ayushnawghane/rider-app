@@ -189,7 +189,7 @@ const RideDetailPage = () => {
   const BackBar = () => (
     <button
       onClick={() => history.goBack()}
-      className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white/70 py-2 pl-2.5 pr-4 font-display text-sm font-bold text-ink shadow-soft backdrop-blur-sm transition active:scale-95"
+      className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white/70 py-2 pl-2.5 pr-4 font-display text-sm font-bold text-ink shadow-soft backdrop-blur-sm transition active:scale-95"
       type="button"
     >
       <ChevronLeft className="h-4 w-4" strokeWidth={2.75} />
@@ -202,7 +202,7 @@ const RideDetailPage = () => {
       <IonPage>
         <IonContent>
           <div className="app-top-safe mx-auto max-w-2xl px-4 pb-6 pt-5">
-            <div className="space-y-4">
+            <div className="space-y-3">
               <Skeleton variant="rounded" height="32px" width="75%" />
               <SkeletonCard hasImage lines={2} />
             </div>
@@ -219,11 +219,11 @@ const RideDetailPage = () => {
           <div className="app-top-safe relative min-h-full overflow-hidden bg-white">
             <div className="relative z-10 mx-auto max-w-2xl px-4 pb-6 pt-5">
               <BackBar />
-              <div className="rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
+              <div className="rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-fire-red/10">
                   <AlertTriangle className="h-10 w-10 text-fire-red" />
                 </div>
-                <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">Ride not found</h2>
+                <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">Ride not found</h2>
                 <p className="mt-2 text-sm font-medium text-ink/50">
                   The ride you're looking for doesn't exist or has been deleted.
                 </p>
@@ -280,7 +280,7 @@ const RideDetailPage = () => {
 
               {/* Details Card */}
               <div className="animate-fade-in rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
-                <div className="mb-6 flex items-start gap-3">
+                <div className="mb-4 flex items-start gap-3">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
                     <AppIcon name="car" className="h-7 w-7" />
                   </div>
@@ -293,7 +293,7 @@ const RideDetailPage = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="flex items-start gap-3">
                     <Calendar className="mt-0.5 h-5 w-5 shrink-0 text-ink/35" />
                     <div>

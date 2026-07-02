@@ -116,7 +116,7 @@ const DisputeChatPage = () => {
         <IonContent>
           <div className="app-top-safe min-h-full bg-white">
             <div className="mx-auto max-w-3xl px-4 pb-6 pt-5">
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className={`flex animate-pulse gap-3 ${i === 2 ? 'flex-row-reverse' : ''}`}>
                     <div className="h-8 w-8 shrink-0 rounded-full bg-primary-50" />
@@ -167,15 +167,15 @@ const DisputeChatPage = () => {
 
             <div className="flex-1 overflow-y-auto pb-4">
               {messages.length === 0 ? (
-                <div className="mt-8 rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
+                <div className="mt-3 rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
                   <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
                     <AppIcon name="message" className="h-11 w-11" />
                   </div>
-                  <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">No messages yet</h2>
+                  <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">No messages yet</h2>
                   <p className="mt-2 text-sm font-medium text-ink/50">Start a conversation with our support team.</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {messages.map((message) => (
                     <div
                       key={message.id}

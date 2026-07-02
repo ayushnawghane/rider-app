@@ -256,10 +256,10 @@ const TripTrackingPage = () => {
                 <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-fire-red/10">
                     <AlertTriangle className="h-10 w-10 text-fire-red" />
                 </div>
-                <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">Trip not found</h2>
+                <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">Trip not found</h2>
                 <button
                     onClick={() => history.goBack()}
-                    className="grain grain-strong relative mt-6 overflow-hidden rounded-2xl px-8 py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+                    className="grain grain-strong relative mt-4 overflow-hidden rounded-2xl px-8 py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
                     style={{ background: FIRE }}
                 >
                     Go Back
@@ -328,7 +328,7 @@ const TripTrackingPage = () => {
             </div>
 
             {/* Bottom sheet */}
-            <div className="relative z-10 -mt-6 flex max-h-[50vh] flex-col rounded-t-[28px] border-t border-black/5 bg-white shadow-strong">
+            <div className="relative z-10 -mt-4 flex max-h-[50vh] flex-col rounded-t-[28px] border-t border-black/5 bg-white shadow-strong">
                 <div className="flex flex-shrink-0 justify-center pb-2 pt-3">
                     <div className="h-1 w-12 rounded-full bg-ink/15" />
                 </div>
@@ -336,7 +336,7 @@ const TripTrackingPage = () => {
                 <div className="flex-1 overflow-y-auto px-4 pb-8">
 
                     {/* Driver & Vehicle Profile */}
-                    <div className="mb-5 flex items-center border-b border-black/5 pb-4">
+                    <div className="mb-3 flex items-center border-b border-black/5 pb-4">
                         <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl border-2 border-white bg-paper-dim shadow-soft">
                             <img src={ride.driver?.avatar || `https://ui-avatars.com/api/?name=${ride.driver?.name || 'Driver'}&background=random`} alt="Driver" className="h-full w-full object-cover" />
                         </div>
@@ -355,7 +355,7 @@ const TripTrackingPage = () => {
                         </div>
                     </div>
                     {/* Progress bar */}
-                    <div className="mb-5">
+                    <div className="mb-3">
                         <div className="mb-2 flex items-center justify-between">
                             <span className="font-display text-sm font-bold text-ink">Trip progress</span>
                             <span className="font-display text-sm font-extrabold text-fire-orange">{progressPercent}%</span>
@@ -375,7 +375,7 @@ const TripTrackingPage = () => {
                     {/* Route */}
                     <div className="mb-4 rounded-2xl border border-black/5 bg-paper p-4">
                         <div className="space-y-2">
-                            <div className="flex items-start gap-4">
+                            <div className="flex items-start gap-3">
                                 <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-black/5 bg-white shadow-sm">
                                     <div className="h-2.5 w-2.5 rounded-full bg-fire-orange" />
                                 </div>
@@ -385,7 +385,7 @@ const TripTrackingPage = () => {
                                 </div>
                             </div>
                             <div className="ml-4 h-5 w-0.5 bg-gradient-to-b from-fire-orange to-fire-gold" />
-                            <div className="flex items-start gap-4">
+                            <div className="flex items-start gap-3">
                                 <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-black/5 bg-white shadow-sm">
                                     <div className="h-2.5 w-2.5 rounded-sm bg-fire-gold" />
                                 </div>

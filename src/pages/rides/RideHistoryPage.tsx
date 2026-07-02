@@ -164,9 +164,9 @@ const RideHistoryPage = () => {
         <div className="absolute -left-20 top-8 h-52 w-52 rounded-full animate-aurora-2" style={{ background: 'radial-gradient(circle, rgba(255,140,0,0.26) 0%, transparent 62%)', filter: 'blur(50px)' }} />
       </div>
 
-      <div className="relative z-10 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+20px)]">
+      <div className="relative z-10 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+12px)]">
         <div className="mx-auto max-w-2xl">
-          <header className="mb-6 flex items-end justify-between">
+          <header className="mb-4 flex items-end justify-between">
             <div>
               <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Your trips</p>
               <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">Rides</h1>
@@ -188,16 +188,16 @@ const RideHistoryPage = () => {
           {loading ? (
             <SkeletonList count={3} lines={3} />
           ) : rides.length === 0 ? (
-            <div className="rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
+            <div className="rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
               <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
                 <AppIcon name="car" className="h-12 w-12" />
               </div>
-              <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">No rides yet</h2>
+              <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">No rides yet</h2>
               <p className="mt-2 text-sm font-medium text-ink/50">Publish a ride or search from Home to get started.</p>
               <button
                 type="button"
                 onClick={() => history.push('/publish-ride')}
-                className="grain grain-strong relative mt-6 w-full overflow-hidden rounded-2xl px-4 py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+                className="grain grain-strong relative mt-4 w-full overflow-hidden rounded-2xl px-4 py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
                 style={{ background: FIRE }}
               >
                 Publish Ride

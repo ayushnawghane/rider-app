@@ -58,22 +58,22 @@ const ConversationList = () => {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <header className="mb-6">
+      <header className="mb-4">
         <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Messages</p>
         <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">Inbox</h1>
         <p className="mt-2 text-sm font-medium text-ink/50">Chat about your upcoming and active rides</p>
       </header>
 
       {loading ? (
-        <div className="rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
+        <div className="rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
           <p className="text-sm font-medium text-ink/50">Loading conversations…</p>
         </div>
       ) : rides.length === 0 ? (
-        <div className="rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
+        <div className="rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
             <AppIcon name="inbox" className="h-11 w-11" />
           </div>
-          <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">No conversations yet</h2>
+          <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">No conversations yet</h2>
           <p className="mt-2 text-sm font-medium text-ink/50">
             Book or publish a ride, then chat with the driver or your passengers here.
           </p>
@@ -228,7 +228,7 @@ const ChatThread = ({ rideId, initialPeerId }: { rideId: string; initialPeerId?:
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-2xl rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
+      <div className="mx-auto max-w-2xl rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
         <p className="text-sm font-medium text-ink/50">Loading chat…</p>
       </div>
     );
@@ -236,7 +236,7 @@ const ChatThread = ({ rideId, initialPeerId }: { rideId: string; initialPeerId?:
 
   if (error && !ride) {
     return (
-      <div className="mx-auto max-w-2xl rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
+      <div className="mx-auto max-w-2xl rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
         <h2 className="font-display text-xl font-extrabold text-ink">Chat unavailable</h2>
         <p className="mt-2 text-sm font-medium text-ink/50">{error}</p>
         <button onClick={() => history.push('/inbox')} className="mt-4 rounded-full px-4 py-2 text-sm font-bold text-white" style={{ background: FIRE }}>
@@ -383,7 +383,7 @@ const InboxPage = () => {
         />
       </div>
 
-      <div className="relative z-10 flex h-full flex-col px-4 pb-6 pt-[calc(env(safe-area-inset-top)+20px)]">
+      <div className="relative z-10 flex h-full flex-col px-4 pb-6 pt-[calc(env(safe-area-inset-top)+12px)]">
         {rideId ? <ChatThread rideId={rideId} initialPeerId={peerId} /> : <ConversationList />}
       </div>
     </div>

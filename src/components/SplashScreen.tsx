@@ -162,7 +162,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, hasSeenOnboarding
 
                     {/* Text */}
                     <div
-                        className="mb-8 transition-all duration-[350ms] ease-out"
+                        className="mb-3 transition-all duration-[350ms] ease-out"
                         style={{
                             opacity: slideVisible ? 1 : 0,
                             transform: slideVisible ? 'translateY(0)' : 'translateY(16px)',
@@ -183,7 +183,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, hasSeenOnboarding
                     </div>
 
                     {/* Dots */}
-                    <div className="mb-6 flex items-center gap-2">
+                    <div className="mb-4 flex items-center gap-2">
                         {ONBOARDING_SLIDES.map((_, i) => (
                             <button
                                 key={i}

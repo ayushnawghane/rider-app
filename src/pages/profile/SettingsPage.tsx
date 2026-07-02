@@ -24,10 +24,10 @@ const SettingsPage = () => {
         <div className="absolute -left-20 top-8 h-52 w-52 rounded-full animate-aurora-2" style={{ background: 'radial-gradient(circle, rgba(255,140,0,0.24) 0%, transparent 62%)', filter: 'blur(50px)' }} />
       </div>
 
-      <div className="relative z-10 px-4 pb-8 pt-[calc(env(safe-area-inset-top)+20px)]">
+      <div className="relative z-10 px-4 pb-8 pt-[calc(env(safe-area-inset-top)+12px)]">
         <div className="mx-auto max-w-2xl">
           {/* Header */}
-          <header className="mb-5 flex items-center gap-3">
+          <header className="mb-3 flex items-center gap-3">
             <button
               onClick={() => history.length > 1 ? history.goBack() : history.push('/profile')}
               aria-label="Back"

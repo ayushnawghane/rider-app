@@ -35,7 +35,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
           <div className="relative z-10 mx-auto max-w-3xl px-4 pt-5">
             {/* Header */}
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => history.goBack()}
@@ -55,8 +55,8 @@ const PrivacyPolicyPage: React.FC = () => {
             </div>
 
             {/* Content card */}
-            <div className="space-y-10 rounded-[20px] border border-black/5 bg-white p-5 shadow-soft md:p-10">
-              <section className="space-y-4">
+            <div className="space-y-10 rounded-[20px] border border-black/5 bg-white p-4 shadow-soft md:p-10">
+              <section className="space-y-3">
                 <div className="flex items-center gap-3 text-fire-orange">
                   <Globe size={22} />
                   <h2 className="font-display text-xl font-extrabold tracking-tight text-ink">Introduction</h2>
@@ -70,12 +70,12 @@ const PrivacyPolicyPage: React.FC = () => {
 
               <div className="h-px bg-black/5" />
 
-              <section className="space-y-4">
+              <section className="space-y-3">
                 <div className="flex items-center gap-3 text-fire-orange">
                   <Lock size={22} />
                   <h2 className="font-display text-xl font-extrabold tracking-tight text-ink">Data we collect</h2>
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-3 md:grid-cols-2">
                   {dataCards.map((card) => (
                     <div key={card.title} className="rounded-2xl border border-black/5 bg-paper p-4">
                       <h3 className="mb-2 font-display font-bold text-ink">{card.title}</h3>
@@ -85,7 +85,7 @@ const PrivacyPolicyPage: React.FC = () => {
                 </div>
               </section>
 
-              <section className="space-y-4">
+              <section className="space-y-3">
                 <div className="flex items-center gap-3 text-fire-orange">
                   <Eye size={22} />
                   <h2 className="font-display text-xl font-extrabold tracking-tight text-ink">How we use your data</h2>
@@ -100,7 +100,7 @@ const PrivacyPolicyPage: React.FC = () => {
                 </ul>
               </section>
 
-              <section className="space-y-4">
+              <section className="space-y-3">
                 <div className="flex items-center gap-3 text-fire-orange">
                   <FileText size={22} />
                   <h2 className="font-display text-xl font-extrabold tracking-tight text-ink">Your rights</h2>

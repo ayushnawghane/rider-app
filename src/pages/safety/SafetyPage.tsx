@@ -199,7 +199,7 @@ const SafetyPage: React.FC = () => {
       <div className="relative z-10 px-4 pb-6 pt-[calc(env(safe-area-inset-top)+18px)]">
         <div className="mx-auto max-w-2xl">
           {/* Header */}
-          <header className="mb-6 flex items-center gap-3">
+          <header className="mb-4 flex items-center gap-3">
             <button
               onClick={() => history.goBack()}
               aria-label="Back"
@@ -216,7 +216,7 @@ const SafetyPage: React.FC = () => {
           {!sosSent ? (
             <>
               {/* Your Location */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <h2 className="mb-3 font-display text-lg font-extrabold tracking-tight text-ink">Your location</h2>
                 <div className="relative h-44 overflow-hidden rounded-[16px] border border-black/5 bg-paper shadow-soft">
                   {currentLocation ? (
@@ -277,7 +277,7 @@ const SafetyPage: React.FC = () => {
               </div>
 
               {/* SOS Card */}
-              <div className="mb-6 rounded-[18px] p-4 text-center shadow-strong" style={{ background: ALERT }}>
+              <div className="mb-4 rounded-[18px] p-4 text-center shadow-strong" style={{ background: ALERT }}>
                 <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
                   <ShieldAlert className="h-8 w-8 text-white" strokeWidth={2.5} />
                 </div>
@@ -288,7 +288,7 @@ const SafetyPage: React.FC = () => {
                 <button
                   onClick={handleSOS}
                   disabled={loading || !currentLocation}
-                  className="mt-5 w-full rounded-2xl bg-white py-4 font-display text-lg font-extrabold tracking-tight text-[#D81E00] shadow-lg transition active:scale-[0.98] disabled:opacity-70"
+                  className="mt-3 w-full rounded-2xl bg-white py-4 font-display text-lg font-extrabold tracking-tight text-[#D81E00] shadow-lg transition active:scale-[0.98] disabled:opacity-70"
                 >
                   {loading ? 'Sending Alert...' : 'SOS EMERGENCY'}
                 </button>
@@ -298,7 +298,7 @@ const SafetyPage: React.FC = () => {
               </div>
 
               {/* Safety Tips */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <h2 className="mb-3 font-display text-lg font-extrabold tracking-tight text-ink">Safety tips</h2>
                 <div className="space-y-2.5">
                   {safetyTips.map((tip) => (
@@ -359,7 +359,7 @@ const SafetyPage: React.FC = () => {
 
               <button
                 onClick={() => history.replace('/home')}
-                className="grain grain-strong relative mt-6 w-full overflow-hidden rounded-2xl py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+                className="grain grain-strong relative mt-4 w-full overflow-hidden rounded-2xl py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
                 style={{ background: FIRE }}
               >
                 Return to Home

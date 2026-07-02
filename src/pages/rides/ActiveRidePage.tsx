@@ -351,15 +351,15 @@ const ActiveRidePage = () => {
       <IonPage>
         <IonContent>
           <div className="app-top-safe mx-auto max-w-2xl px-4 pb-6 pt-6">
-            <div className="rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
+            <div className="rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
               <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-fire-red/10">
                 <AlertTriangle className="h-10 w-10 text-fire-red" />
               </div>
-              <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">Ride not found</h2>
+              <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">Ride not found</h2>
               <p className="mt-2 text-sm font-medium text-ink/50">The ride you're looking for doesn't exist.</p>
               <button
                 onClick={() => history.push('/home')}
-                className="grain grain-strong relative mt-6 w-full overflow-hidden rounded-2xl py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+                className="grain grain-strong relative mt-4 w-full overflow-hidden rounded-2xl py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
                 style={{ background: FIRE }}
               >
                 Go Home
@@ -425,7 +425,7 @@ const ActiveRidePage = () => {
           </div>
 
           {/* Bottom Sheet */}
-          <div className="relative z-10 -mt-6 flex max-h-[60vh] flex-col rounded-t-[28px] border-t border-black/5 bg-white shadow-strong">
+          <div className="relative z-10 -mt-4 flex max-h-[60vh] flex-col rounded-t-[28px] border-t border-black/5 bg-white shadow-strong">
             {/* Handle bar */}
             <div className="flex flex-shrink-0 justify-center pb-2 pt-3">
               <div className="h-1 w-12 rounded-full bg-ink/15" />
@@ -454,7 +454,7 @@ const ActiveRidePage = () => {
               </div>
 
               {/* Status Timeline */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="font-display text-xs font-bold uppercase tracking-[0.18em] text-ink/55">Ride status</h3>
                   <span className="rounded-md bg-primary-50 px-2 py-1 font-display text-xs font-bold text-primary-700">
@@ -491,7 +491,7 @@ const ActiveRidePage = () => {
 
               {/* Passenger List */}
               {isDriver && (
-                <div className="mb-6 rounded-2xl border border-black/5 bg-white p-4 shadow-soft">
+                <div className="mb-4 rounded-2xl border border-black/5 bg-white p-4 shadow-soft">
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-fire-orange/10 text-fire-orange">
@@ -558,9 +558,9 @@ const ActiveRidePage = () => {
               )}
 
               {/* Location Details */}
-              <div className="mb-6 rounded-2xl border border-black/5 bg-paper p-4">
+              <div className="mb-4 rounded-2xl border border-black/5 bg-paper p-4">
                 <div className="space-y-2">
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-3">
                     <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-black/5 bg-white shadow-sm">
                       <div className="h-2.5 w-2.5 rounded-full bg-fire-orange" />
                     </div>
@@ -570,7 +570,7 @@ const ActiveRidePage = () => {
                     </div>
                   </div>
                   <div className="ml-4 h-5 w-0.5 bg-gradient-to-b from-fire-orange to-fire-gold" />
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-3">
                     <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-black/5 bg-white shadow-sm">
                       <div className="h-2.5 w-2.5 rounded-sm bg-fire-gold" />
                     </div>
@@ -648,7 +648,7 @@ const ActiveRidePage = () => {
                 <CheckCircle2 className="h-7 w-7" />
               </div>
               <h2 className="mb-2 text-center font-display text-xl font-extrabold tracking-tight text-ink">Complete Trip</h2>
-              <p className="mb-6 text-center text-sm font-medium text-ink/55">Are you sure you want to end this trip? This will mark the ride as successfully completed.</p>
+              <p className="mb-4 text-center text-sm font-medium text-ink/55">Are you sure you want to end this trip? This will mark the ride as successfully completed.</p>
               <div className="grid grid-cols-2 gap-3">
                 <button onClick={() => setShowEndConfirm(false)} className="rounded-2xl border-2 border-black/10 bg-white py-3 font-display font-bold text-ink/70 transition hover:bg-paper">Go Back</button>
                 <button onClick={() => { setShowEndConfirm(false); handleUpdateStatus('completed'); }} className="grain grain-strong relative overflow-hidden rounded-2xl py-3 font-display font-bold text-white shadow-glow transition active:scale-[0.98]" style={{ background: FIRE }}>Complete Trip</button>
@@ -664,7 +664,7 @@ const ActiveRidePage = () => {
                 <AlertTriangle className="h-7 w-7 text-fire-red" />
               </div>
               <h2 className="mb-2 text-center font-display text-xl font-extrabold tracking-tight text-ink">Cancel Trip</h2>
-              <p className="mb-6 text-center text-sm font-medium text-ink/55">Are you sure you want to cancel this trip? This action cannot be undone.</p>
+              <p className="mb-4 text-center text-sm font-medium text-ink/55">Are you sure you want to cancel this trip? This action cannot be undone.</p>
               <div className="grid grid-cols-2 gap-3">
                 <button onClick={() => setShowCancelConfirm(false)} className="rounded-2xl border-2 border-black/10 bg-white py-3 font-display font-bold text-ink/70 transition hover:bg-paper">Go Back</button>
                 <button onClick={() => { setShowCancelConfirm(false); handleUpdateStatus('cancelled'); }} className="rounded-2xl py-3 font-display font-bold text-white shadow-strong transition active:scale-[0.98]" style={{ background: 'linear-gradient(135deg, #FF3D00 0%, #D81E00 100%)' }}>Cancel Trip</button>

@@ -109,7 +109,7 @@ const NotificationsPage: React.FC = () => {
          
           <div className="relative z-10 mx-auto max-w-2xl px-4 pb-8 pt-5">
             {/* Header */}
-            <div className="mb-6 flex items-center gap-3">
+            <div className="mb-4 flex items-center gap-3">
               <button
                 onClick={() => history.goBack()}
                 aria-label="Back"
@@ -138,11 +138,11 @@ const NotificationsPage: React.FC = () => {
                 ))}
               </div>
             ) : notifications.length === 0 ? (
-              <div className="rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
+              <div className="rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
                   <AppIcon name="bell" className="h-11 w-11" />
                 </div>
-                <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">No notifications</h2>
+                <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">No notifications</h2>
                 <p className="mt-2 text-sm font-medium text-ink/50">You don't have any notifications yet.</p>
               </div>
             ) : (

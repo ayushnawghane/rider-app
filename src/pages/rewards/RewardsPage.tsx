@@ -322,7 +322,7 @@ const RewardsPage = () => {
 
       <div className="relative z-10">
         {/* Header */}
-        <div className="px-5 pb-3 pt-[calc(env(safe-area-inset-top)+20px)]">
+        <div className="px-5 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
           <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Your rewards</p>
           <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">Rewards</h1>
         </div>
@@ -341,7 +341,7 @@ const RewardsPage = () => {
                 </div>
               </div>
 
-              <div className="mt-6">
+              <div className="mt-4">
                 <div className="mb-2 flex items-center justify-between font-display text-sm font-bold">
                   <span>Level {userStats.level}</span>
                   <span className="text-white/80">{progress}%</span>
@@ -354,7 +354,7 @@ const RewardsPage = () => {
                 </p>
               </div>
 
-              <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
+              <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
                 <span className="font-display text-sm font-extrabold uppercase tracking-wide">{tierName} Member</span>
               </div>
             </div>
@@ -412,7 +412,7 @@ const RewardsPage = () => {
           )}
 
           {/* Tabs */}
-          <div className="mt-5 grid grid-cols-3 gap-1 rounded-[20px] border border-black/5 bg-white/80 p-1.5 shadow-soft backdrop-blur-md">
+          <div className="mt-3 grid grid-cols-3 gap-1 rounded-[20px] border border-black/5 bg-white/80 p-1.5 shadow-soft backdrop-blur-md">
             {(['overview', 'achievements', 'history'] as const).map((tab) => {
               const isActive = activeTab === tab;
               return (
@@ -428,10 +428,10 @@ const RewardsPage = () => {
             })}
           </div>
 
-          <div className="mt-5">
+          <div className="mt-3">
             {activeTab === 'overview' && (
-              <div className="space-y-4">
-                <div className="rounded-[18px] border border-black/5 bg-white p-5 shadow-soft">
+              <div className="space-y-3">
+                <div className="rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
                   <h2 className="mb-4 font-display text-xl font-extrabold tracking-tight text-ink">Ways to earn</h2>
                   <div className="space-y-3">
                     {waysToEarn.map((way) => (
@@ -454,7 +454,7 @@ const RewardsPage = () => {
                   </p>
                 </div>
 
-                <div className="rounded-[18px] border border-black/5 bg-white p-5 shadow-soft">
+                <div className="rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
                   <h2 className="mb-4 font-display text-xl font-extrabold tracking-tight text-ink">{tierName} benefits</h2>
                   <div className="space-y-3">
                     {benefits.map((benefit) => (
@@ -471,10 +471,10 @@ const RewardsPage = () => {
             )}
 
             {activeTab === 'achievements' && (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {achievements.map((achievement) => (
-                  <div key={achievement.id} className="rounded-[18px] border border-black/5 bg-white p-5 shadow-soft">
-                    <div className="flex items-center gap-4">
+                  <div key={achievement.id} className="rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
+                    <div className="flex items-center gap-3">
                       <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
                         <AppIcon name={achievementIconName(achievement.badgeIcon)} className="h-8 w-8" />
                       </div>
@@ -490,8 +490,8 @@ const RewardsPage = () => {
                   </div>
                 ))}
 
-                <div className="rounded-[18px] border border-black/5 bg-paper p-5 opacity-70">
-                  <div className="flex items-center gap-4">
+                <div className="rounded-[18px] border border-black/5 bg-paper p-4 opacity-70">
+                  <div className="flex items-center gap-3">
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-black/5 bg-white grayscale">
                       <AppIcon name="star" className="h-8 w-8" />
                     </div>

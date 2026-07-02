@@ -78,8 +78,8 @@ const SupportPage = () => {
         <IonContent fullscreen forceOverscroll={false}>
           <div className="relative min-h-full overflow-hidden bg-white">
             <Aura />
-            <div className="relative z-10 mx-auto max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+20px)]">
-              <header className="mb-5 flex items-center gap-3">
+            <div className="relative z-10 mx-auto max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+12px)]">
+              <header className="mb-3 flex items-center gap-3">
                 <button onClick={() => history.length > 1 ? history.goBack() : history.push('/home')} aria-label="Back" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-black/10 bg-white/70 text-ink shadow-soft backdrop-blur-sm transition active:scale-95">
                   <ChevronLeft size={22} strokeWidth={2.5} />
                 </button>
@@ -101,8 +101,8 @@ const SupportPage = () => {
       <IonContent fullscreen forceOverscroll={false}>
         <div className="relative min-h-full overflow-hidden bg-white">
           <Aura />
-          <div className="relative z-10 mx-auto max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+20px)]">
-            <header className="mb-5 flex items-center justify-between gap-3">
+          <div className="relative z-10 mx-auto max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+12px)]">
+            <header className="mb-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <button onClick={() => history.length > 1 ? history.goBack() : history.push('/home')} aria-label="Back" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-black/10 bg-white/70 text-ink shadow-soft backdrop-blur-sm transition active:scale-95">
                   <ChevronLeft size={22} strokeWidth={2.5} />
@@ -138,15 +138,15 @@ const SupportPage = () => {
             )}
 
             {disputes.length === 0 ? (
-              <div className="animate-fade-in rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
+              <div className="animate-fade-in rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
                   <AppIcon name="message" className="h-11 w-11" />
                 </div>
-                <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">Need help?</h2>
+                <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">Need help?</h2>
                 <p className="mt-2 text-sm font-medium text-ink/50">You have no disputes yet. Start one and our support team will respond.</p>
                 <button
                   onClick={() => history.push('/support/dispute/new')}
-                  className="grain grain-strong relative mt-6 w-full overflow-hidden rounded-2xl px-4 py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+                  className="grain grain-strong relative mt-4 w-full overflow-hidden rounded-2xl px-4 py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
                   style={{ background: FIRE }}
                 >
                   Raise New Dispute
@@ -178,7 +178,7 @@ const SupportPage = () => {
                         onClick={() => history.push(`/support/dispute/${dispute.id}`)}
                         className="w-full animate-fade-in rounded-[16px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.99]"
                       >
-                        <div className="flex items-start gap-4">
+                        <div className="flex items-start gap-3">
                           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
                             <MessageSquare className="h-6 w-6 text-fire-orange" />
                           </div>

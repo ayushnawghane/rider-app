@@ -292,9 +292,9 @@ const HomePage = () => {
       {/* Content */}
       <div className="relative z-10">
         {/* Header */}
-        <div className="px-5 pb-2 pt-[calc(env(safe-area-inset-top)+20px)]">
+        <div className="px-5 pb-2 pt-[calc(env(safe-area-inset-top)+12px)]">
           {/* Top row: brand + profile */}
-          <div className="mb-5 flex items-center justify-between">
+          <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <img src="/logo-mark.png" alt="Blinkcar" className="h-10 w-10 rounded-[14px] object-cover shadow-glow" />
               <span className="font-display text-lg font-extrabold lowercase tracking-tight text-ink">blinkcar</span>
@@ -366,7 +366,7 @@ const HomePage = () => {
             </div>
 
             <div className="-mb-1 -mr-1 flex-shrink-0">
-              <img src="/home.png" alt="Car illustration" className="h-40 w-48 object-contain object-bottom drop-shadow-xl" />
+              <img src="/home.png" alt="Car illustration" className="h-28 w-40 object-contain object-bottom drop-shadow-xl" />
             </div>
           </div>
         </div>
@@ -400,9 +400,9 @@ const HomePage = () => {
           {/* Search & Route Card */}
           <div className="mb-4 rounded-[16px] border border-black/5 bg-white/80 p-4 shadow-strong backdrop-blur-md">
             {/* From/To Selection */}
-            <div className="mb-4 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-3">
+            <div className="mb-3 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-3">
               <div className="min-w-0">
-                <label className="mb-1.5 block font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">From</label>
+                <label className="mb-1 block font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">From</label>
                 <button
                   onClick={() => history.push('/select-location', {
                     type: 'pickup',
@@ -410,7 +410,7 @@ const HomePage = () => {
                     pickup: pickup || undefined,
                     dropoff: dropoff || undefined,
                   })}
-                  className="h-14 w-full min-w-0 rounded-2xl border-2 border-primary-100 bg-primary-50/40 px-3 text-left transition-colors hover:border-primary-300"
+                  className="h-11 w-full min-w-0 rounded-xl border-2 border-primary-100 bg-primary-50/40 px-3 text-left transition-colors hover:border-primary-300"
                   title={pickup?.address || 'Pick Up'}
                 >
                   <span className="block w-full overflow-hidden text-ellipsis whitespace-nowrap font-display font-bold text-primary-700">
@@ -421,14 +421,14 @@ const HomePage = () => {
 
               <button
                 onClick={handleSwapLocations}
-                className="mt-5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-primary-100 bg-white shadow-soft transition-transform active:scale-90"
+                className="mt-2.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary-100 bg-white shadow-soft transition-transform active:scale-90"
                 aria-label="Swap locations"
               >
                 <AppIcon name="swap" className="h-5 w-5" />
               </button>
 
               <div className="min-w-0">
-                <label className="mb-1.5 block font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">To</label>
+                <label className="mb-1 block font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">To</label>
                 <button
                   onClick={() => history.push('/select-location', {
                     type: 'dropoff',
@@ -436,7 +436,7 @@ const HomePage = () => {
                     pickup: pickup || undefined,
                     dropoff: dropoff || undefined,
                   })}
-                  className="h-14 w-full min-w-0 rounded-2xl border-2 border-primary-100 bg-primary-50/40 px-3 text-left transition-colors hover:border-primary-300"
+                  className="h-11 w-full min-w-0 rounded-xl border-2 border-primary-100 bg-primary-50/40 px-3 text-left transition-colors hover:border-primary-300"
                   title={dropoff?.address || 'Drop Off'}
                 >
                   <span className="block w-full overflow-hidden text-ellipsis whitespace-nowrap font-display font-bold text-primary-700">
@@ -447,13 +447,13 @@ const HomePage = () => {
             </div>
 
             {/* Passengers + Date */}
-            <div className="mb-4 space-y-3">
-              <div className="flex items-center gap-3 rounded-2xl border border-black/5 bg-paper p-3">
+            <div className="mb-3 space-y-2">
+              <div className="flex items-center gap-2.5 rounded-xl border border-black/5 bg-paper p-2.5">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary-100 bg-white">
                   <AppIcon name="users" className="h-5 w-5" />
                 </div>
                 <span className="font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">Seats</span>
-                <div className="flex flex-1 items-center justify-end gap-4">
+                <div className="flex flex-1 items-center justify-end gap-3">
                   <button
                     onClick={() => setPassengerCount(Math.max(1, passengerCount - 1))}
                     className="flex h-9 w-9 items-center justify-center rounded-xl border border-black/10 bg-white font-bold text-ink transition hover:bg-paper active:scale-90"
@@ -469,7 +469,7 @@ const HomePage = () => {
                   </button>
                 </div>
               </div>
-              <label className="flex items-center gap-3 rounded-2xl border border-black/5 bg-paper p-3">
+              <label className="flex items-center gap-2.5 rounded-xl border border-black/5 bg-paper p-2.5">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary-100 bg-white">
                   <AppIcon name="clock" className="h-5 w-5" />
                 </div>
@@ -490,14 +490,14 @@ const HomePage = () => {
             )}
             <button
               onClick={handleFindDrivers}
-              className="grain grain-strong relative w-full overflow-hidden rounded-2xl py-4 font-display text-lg font-bold tracking-tight text-white shadow-glow transition-all hover:shadow-glow-lg active:scale-[0.98]"
+              className="grain grain-strong relative w-full overflow-hidden rounded-xl py-3 font-display text-base font-bold tracking-tight text-white shadow-glow transition-all hover:shadow-glow-lg active:scale-[0.98]"
               style={{ background: FIRE }}
             >
               Find Drivers
             </button>
             <button
               onClick={() => history.push('/rides')}
-              className="mt-3 w-full rounded-2xl border-2 border-primary-200 py-3.5 font-display font-bold text-primary-700 transition-colors hover:border-primary-300 hover:bg-primary-50"
+              className="mt-2 w-full rounded-xl border-2 border-primary-200 py-2.5 font-display font-bold text-primary-700 transition-colors hover:border-primary-300 hover:bg-primary-50"
             >
               View Your Rides
             </button>
@@ -506,7 +506,7 @@ const HomePage = () => {
           {/* Active Ride Card */}
           {activeRide && (
             <div className="mb-4 rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
-              <div className="mb-4 flex items-start gap-4">
+              <div className="mb-4 flex items-start gap-3">
                 <div className="relative">
                   <div className="h-16 w-16 overflow-hidden rounded-2xl bg-paper-dim">
                     <img src={activeRide.driver?.avatar || 'https://via.placeholder.com/64'} alt="Driver" className="h-full w-full object-cover" />
@@ -530,7 +530,7 @@ const HomePage = () => {
                 </div>
               </div>
 
-              <div className="mb-4 flex items-center gap-4 text-sm text-ink/60">
+              <div className="mb-4 flex items-center gap-3 text-sm text-ink/60">
                 <span>Pickup : {activeRide.startLocation}</span>
                 <span className="text-ink/30">|</span>
                 <span>Drop Off : {activeRide.endLocation}</span>
@@ -578,7 +578,7 @@ const HomePage = () => {
             <h2 className="mb-1 font-display text-2xl font-extrabold tracking-tight text-ink">Popular routes</h2>
             <p className="mb-4 text-sm font-medium text-ink/50">Top picks for your next trip</p>
 
-            <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 scrollbar-hide">
+            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
               {popularRoutes.map((route) => (
                 <button
                   key={route.city}
@@ -608,8 +608,8 @@ const HomePage = () => {
           </div>
 
           {/* Promotional Banner */}
-          <div className="relative mb-6 overflow-hidden rounded-[18px] border border-black/5 bg-white p-5 shadow-soft">
-            <div className="flex items-center gap-4">
+          <div className="relative mb-4 overflow-hidden rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
+            <div className="flex items-center gap-3">
               <div className="flex-1">
                 <h3 className="mb-1.5 font-display text-2xl font-extrabold leading-[0.95] tracking-tight text-ink">Earn while<br />you travel</h3>
                 <p className="mb-4 text-sm font-medium text-ink/55">Get 2x points on your first 3 rides this month</p>
@@ -636,7 +636,7 @@ const HomePage = () => {
             <p className="mt-2 text-sm text-ink/60">
               Add your name, email, and mobile number to finish setup and make your account easier to identify.
             </p>
-            <div className="mt-6 flex items-center gap-3">
+            <div className="mt-4 flex items-center gap-3">
               <button
                 onClick={handleDismissProfilePrompt}
                 className="flex-1 rounded-2xl border border-black/10 px-4 py-3 font-display text-sm font-bold text-ink/70 transition hover:bg-paper"

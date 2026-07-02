@@ -215,7 +215,7 @@ const FindRidePage = () => {
         <div className="absolute -left-20 top-8 h-52 w-52 rounded-full animate-aurora-2" style={{ background: 'radial-gradient(circle, rgba(255,140,0,0.26) 0%, transparent 62%)', filter: 'blur(50px)' }} />
       </div>
 
-      <div className="relative z-10 px-4 pb-24 pt-[calc(env(safe-area-inset-top)+20px)]">
+      <div className="relative z-10 px-4 pb-24 pt-[calc(env(safe-area-inset-top)+12px)]">
         {/* Header */}
         <div className="mb-4 flex items-center gap-3">
           <button
@@ -232,7 +232,7 @@ const FindRidePage = () => {
         </div>
 
         {/* Search Form */}
-        <div className="mb-5 rounded-[18px] border border-black/5 bg-white/80 p-4 shadow-strong backdrop-blur-md">
+        <div className="mb-3 rounded-[18px] border border-black/5 bg-white/80 p-4 shadow-strong backdrop-blur-md">
           {/* Pickup */}
           <button
             onClick={() => history.push('/select-location', {
@@ -330,14 +330,14 @@ const FindRidePage = () => {
             )}
 
             {/* Ride Cards */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               {availableRides.map((ride) => {
                 const isBooked = joinedRideIds.has(ride.id);
                 const isOwnRide = Boolean(user?.id && (ride.driverId === user.id));
                 return (
-                  <div key={ride.id} className="rounded-[16px] border border-black/5 bg-white p-5 shadow-soft">
+                  <div key={ride.id} className="rounded-[16px] border border-black/5 bg-white p-4 shadow-soft">
                     {/* Driver Info */}
-                    <div className="mb-4 flex items-start gap-4">
+                    <div className="mb-4 flex items-start gap-3">
                       <div className="relative">
                         <div className="h-14 w-14 overflow-hidden rounded-2xl border border-black/5 bg-paper-dim">
                           <img
@@ -440,17 +440,17 @@ const FindRidePage = () => {
 
         {/* Empty State */}
         {!loading && hasSearched && availableRides.length === 0 && (pickupLocation || dropoffLocation) && (
-          <div className="mt-8 rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
+          <div className="mt-3 rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
               <AppIcon name="car" className="h-12 w-12" />
             </div>
-            <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">No rides found</h2>
+            <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">No rides found</h2>
             <p className="mt-2 text-sm font-medium text-ink/50">
               We couldn't find any rides for your route. Try adjusting your search or publish your own ride!
             </p>
             <button
               onClick={handlePublishFromSearch}
-              className="grain grain-strong relative mt-6 w-full overflow-hidden rounded-2xl px-4 py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+              className="grain grain-strong relative mt-4 w-full overflow-hidden rounded-2xl px-4 py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
               style={{ background: FIRE }}
             >
               Publish a Ride
