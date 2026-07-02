@@ -153,7 +153,7 @@ const RegisterPage = () => {
                 type="tel"
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
-                placeholder="+91 9876543210"
+                placeholder="+91 9999999999"
                 autoComplete="tel"
                 disabled={isSubmitting || otpSent}
                 className={inputClass}

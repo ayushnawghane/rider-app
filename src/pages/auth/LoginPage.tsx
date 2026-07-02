@@ -168,7 +168,7 @@ const LoginPage = () => {
                         setIsOtpSent(false);
                         setOtp('');
                       }}
-                      placeholder="9730156154"
+                      placeholder="9999999999"
                       autoComplete="tel-national"
                       inputMode="numeric"
                       maxLength={10}
