@@ -5,8 +5,12 @@ import { Trophy, Check } from 'lucide-react';
 import type { Reward, Achievement, UserStats } from '../../types';
 import { PageLoader } from '../../components/ui';
 import AppIcon, { type AppIconName } from '../../components/icons/AppIcon';
+import { MONTHLY_REWARD_POINTS_CAP, getRewardMonthWindow } from '../../services/rewards/rules';
 
 const FIRE = 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))';
+
+// Ride rewards (publish / join / complete) are the ones subject to the monthly cap.
+const CAPPED_ACTIONS = ['publish_ride', 'join_ride', 'complete_ride'];
 
 type RewardAction = Reward['action'];
 
@@ -142,6 +146,7 @@ const RewardsPage = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'history'>('overview');
   const [userStats, setUserStats] = useState<UserStats>(DEFAULT_STATS);
   const [pointsHistory, setPointsHistory] = useState<Reward[]>([]);
+  const [monthlyPoints, setMonthlyPoints] = useState(0);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loadingRewards, setLoadingRewards] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -205,8 +210,15 @@ const RewardsPage = () => {
           rating: 0,
         };
 
+        // Points earned this month from ride activity (subject to the cap).
+        const { startIso, endIso } = getRewardMonthWindow();
+        const monthly = mappedRewards
+          .filter((r) => CAPPED_ACTIONS.includes(r.action) && r.createdAt >= startIso && r.createdAt < endIso)
+          .reduce((sum, r) => sum + r.points, 0);
+
         if (!isMounted) return;
         setPointsHistory(mappedRewards);
+        setMonthlyPoints(Math.min(monthly, MONTHLY_REWARD_POINTS_CAP));
         setUserStats(stats);
         setAchievements(buildAchievements(user.id, mappedRewards, ridesPublished, ridesTaken));
       } catch (error) {
@@ -284,7 +296,7 @@ const RewardsPage = () => {
 
   const waysToEarn: { name: AppIconName; title: string; subtitle: string; pts: number }[] = [
     { name: 'car', title: 'Publish a ride', subtitle: 'Share your journey', pts: 50 },
-    { name: 'users', title: 'Join a ride', subtitle: 'As a passenger', pts: 30 },
+    { name: 'users', title: 'Join a ride', subtitle: 'As a passenger', pts: 50 },
     { name: 'zap', title: 'Weekly streak', subtitle: '3+ rides in a week', pts: 40 },
     { name: 'star', title: 'Refer a friend', subtitle: 'They join and ride', pts: 100 },
   ];
@@ -346,6 +358,27 @@ const RewardsPage = () => {
                 <span className="font-display text-sm font-extrabold uppercase tracking-wide">{tierName} Member</span>
               </div>
             </div>
+          </div>
+
+          {/* Monthly reward cap */}
+          <div className="mt-4 rounded-[24px] border border-black/5 bg-white p-4 shadow-soft">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="font-display text-sm font-extrabold tracking-tight text-ink">This month</p>
+              <p className="font-display text-sm font-bold text-ink/55">
+                {monthlyPoints}/{MONTHLY_REWARD_POINTS_CAP} pts
+              </p>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-primary-50">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(100, Math.round((monthlyPoints / MONTHLY_REWARD_POINTS_CAP) * 100))}%`, background: FIRE }}
+              />
+            </div>
+            <p className="mt-2 text-xs font-medium text-ink/50">
+              {monthlyPoints >= MONTHLY_REWARD_POINTS_CAP
+                ? "You've hit this month's reward cap. It resets on the 1st."
+                : `You can earn ${MONTHLY_REWARD_POINTS_CAP - monthlyPoints} more reward points from rides this month.`}
+            </p>
           </div>
 
           {/* Stats */}
@@ -416,6 +449,9 @@ const RewardsPage = () => {
                       </div>
                     ))}
                   </div>
+                  <p className="mt-3 text-xs font-medium text-ink/45">
+                    Ride rewards are capped at {MONTHLY_REWARD_POINTS_CAP} points per month.
+                  </p>
                 </div>
 
                 <div className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">

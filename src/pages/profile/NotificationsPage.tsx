@@ -106,10 +106,7 @@ const NotificationsPage: React.FC = () => {
             <div className="absolute -right-16 -top-12 h-72 w-72 rounded-full animate-aurora-1" style={{ background: 'radial-gradient(circle, rgba(255,200,50,0.62) 0%, transparent 62%)', filter: 'blur(48px)' }} />
           </div>
 
-          <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
-            <IonRefresherContent />
-          </IonRefresher>
-
+         
           <div className="relative z-10 mx-auto max-w-2xl px-4 pb-8 pt-5">
             {/* Header */}
             <div className="mb-6 flex items-center gap-3">
