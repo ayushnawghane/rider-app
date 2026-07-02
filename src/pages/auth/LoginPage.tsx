@@ -128,7 +128,7 @@ const LoginPage = () => {
   return (
     <Aurora variant="sunrise" grain="strong" className="min-h-screen">
       <div className="flex min-h-screen w-full items-center justify-center px-5 py-10 app-top-safe">
-        <div className="w-full max-w-sm animate-rise rounded-[32px] border border-white/60 bg-white/35 p-6 shadow-strong backdrop-blur-sm sm:p-7">
+        <div className="w-full max-w-sm animate-rise rounded-[20px] border border-white/60 bg-white/35 p-4 shadow-strong backdrop-blur-sm sm:p-5">
           {/* Brand — centered */}
           <div className="mb-6 flex flex-col items-center text-center">
             <img

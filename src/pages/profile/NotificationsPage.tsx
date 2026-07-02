@@ -134,11 +134,11 @@ const NotificationsPage: React.FC = () => {
             {loading ? (
               <div className="space-y-3">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-20 animate-pulse rounded-[22px] bg-primary-50" />
+                  <div key={i} className="h-20 animate-pulse rounded-[14px] bg-primary-50" />
                 ))}
               </div>
             ) : notifications.length === 0 ? (
-              <div className="rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+              <div className="rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
                   <AppIcon name="bell" className="h-11 w-11" />
                 </div>
@@ -152,7 +152,7 @@ const NotificationsPage: React.FC = () => {
                     key={notification.id}
                     type="button"
                     onClick={() => !notification.read && markAsRead(notification.id)}
-                    className={`flex w-full items-start gap-3 rounded-[22px] border p-4 text-left shadow-soft transition active:scale-[0.99] ${
+                    className={`flex w-full items-start gap-3 rounded-[14px] border p-4 text-left shadow-soft transition active:scale-[0.99] ${
                       notification.read ? 'border-black/5 bg-white' : 'border-primary-200 bg-primary-50/50'
                     }`}
                   >

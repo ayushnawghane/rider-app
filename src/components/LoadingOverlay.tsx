@@ -56,7 +56,7 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   return (
     <div className={`fixed inset-0 flex items-center justify-center z-[9999] ${className}`}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-      <div className="relative bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center gap-4 mx-4 animate-in fade-in zoom-in duration-200">
+      <div className="relative bg-white rounded-2xl shadow-2xl p-5 flex flex-col items-center gap-4 mx-4 animate-in fade-in zoom-in duration-200">
         <Spinner />
         {message && <span className={`text-gray-800 font-semibold ${sizeConfig[size].text}`}>{message}</span>}
       </div>

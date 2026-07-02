@@ -351,7 +351,7 @@ const ActiveRidePage = () => {
       <IonPage>
         <IonContent>
           <div className="app-top-safe mx-auto max-w-2xl px-4 pb-6 pt-6">
-            <div className="rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+            <div className="rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
               <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-fire-red/10">
                 <AlertTriangle className="h-10 w-10 text-fire-red" />
               </div>
@@ -643,7 +643,7 @@ const ActiveRidePage = () => {
         {/* Custom Tailwind Confirmation Modals */}
         {showEndConfirm && (
           <div className="fixed inset-0 z-50 flex animate-fade-in items-center justify-center bg-ink/50 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-sm rounded-[28px] border border-black/5 bg-white p-6 shadow-strong">
+            <div className="w-full max-w-sm rounded-[18px] border border-black/5 bg-white p-4 shadow-strong">
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-glow" style={{ background: FIRE }}>
                 <CheckCircle2 className="h-7 w-7" />
               </div>
@@ -659,7 +659,7 @@ const ActiveRidePage = () => {
 
         {showCancelConfirm && (
           <div className="fixed inset-0 z-50 flex animate-fade-in items-center justify-center bg-ink/50 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-sm rounded-[28px] border border-black/5 bg-white p-6 shadow-strong">
+            <div className="w-full max-w-sm rounded-[18px] border border-black/5 bg-white p-4 shadow-strong">
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-fire-red/10">
                 <AlertTriangle className="h-7 w-7 text-fire-red" />
               </div>

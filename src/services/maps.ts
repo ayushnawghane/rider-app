@@ -115,20 +115,48 @@ class GoogleMapsService {
     return new Promise((resolve) => {
       this.geocoder?.geocode({ location: { lat, lng }, region: 'IN' }, (results, status) => {
         if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
-          resolve({
-            id: results[0].place_id,
-            name: results[0].formatted_address.split(',')[0],
-            address: results[0].formatted_address,
-            lat,
-            lng,
-            placeId: results[0].place_id,
-          });
+          resolve(this.toCityLocation(results, lat, lng));
         } else {
           console.warn('Reverse geocoding failed:', status);
           resolve(null);
         }
       });
     });
+  }
+
+  // People think in cities, not doorsteps. Prefer the locality/city component
+  // (e.g. "Pune, Maharashtra") for the display name/address, while keeping the
+  // exact lat/lng for routing. Falls back to the most specific result only if
+  // no city-level component is present.
+  private toCityLocation(
+    results: google.maps.GeocoderResult[],
+    lat: number,
+    lng: number,
+  ): Location {
+    const CITY_TYPES = ['locality', 'postal_town', 'administrative_area_level_2', 'sublocality'];
+    const cityResult =
+      results.find((r) => r.types?.some((t) => CITY_TYPES.includes(t))) || results[0];
+    const components = cityResult.address_components || [];
+    const pick = (type: string) =>
+      components.find((c) => c.types.includes(type))?.long_name;
+
+    const city =
+      pick('locality') ||
+      pick('postal_town') ||
+      pick('administrative_area_level_2') ||
+      pick('sublocality') ||
+      cityResult.formatted_address.split(',')[0].trim();
+    const state = pick('administrative_area_level_1');
+    const address = [city, state].filter(Boolean).join(', ') || cityResult.formatted_address;
+
+    return {
+      id: cityResult.place_id,
+      name: city,
+      address,
+      lat,
+      lng,
+      placeId: cityResult.place_id,
+    };
   }
 
   // Get autocomplete predictions using new AutocompleteSuggestion API

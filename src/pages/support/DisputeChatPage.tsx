@@ -167,7 +167,7 @@ const DisputeChatPage = () => {
 
             <div className="flex-1 overflow-y-auto pb-4">
               {messages.length === 0 ? (
-                <div className="mt-8 rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+                <div className="mt-8 rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
                   <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
                     <AppIcon name="message" className="h-11 w-11" />
                   </div>
@@ -208,7 +208,7 @@ const DisputeChatPage = () => {
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="sticky bottom-0 mt-2 rounded-[22px] border border-black/5 bg-white/90 p-2.5 shadow-strong backdrop-blur-md">
+            <div className="sticky bottom-0 mt-2 rounded-[14px] border border-black/5 bg-white/90 p-2.5 shadow-strong backdrop-blur-md">
               <div className="flex gap-2.5">
                 <input
                   type="text"

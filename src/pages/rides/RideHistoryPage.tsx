@@ -74,7 +74,7 @@ const RideHistoryPage = () => {
           history.push(`/rides/detail/${ride.id}`);
         }
       }}
-      className="w-full cursor-pointer rounded-[26px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.99]"
+      className="w-full cursor-pointer rounded-[16px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.99]"
     >
       <div className="flex gap-3">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
@@ -143,7 +143,7 @@ const RideHistoryPage = () => {
     <section className="space-y-3">
       <h2 className="font-display text-lg font-extrabold tracking-tight text-ink">{title}</h2>
       {items.length === 0 ? (
-        <div className="rounded-[22px] border border-black/5 bg-white p-4 text-sm font-medium text-ink/50 shadow-soft">
+        <div className="rounded-[14px] border border-black/5 bg-white p-4 text-sm font-medium text-ink/50 shadow-soft">
           No {title.toLowerCase()}.
         </div>
       ) : (
@@ -188,7 +188,7 @@ const RideHistoryPage = () => {
           {loading ? (
             <SkeletonList count={3} lines={3} />
           ) : rides.length === 0 ? (
-            <div className="rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+            <div className="rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
               <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
                 <AppIcon name="car" className="h-12 w-12" />
               </div>

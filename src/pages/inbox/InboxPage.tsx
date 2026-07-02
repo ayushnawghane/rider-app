@@ -65,11 +65,11 @@ const ConversationList = () => {
       </header>
 
       {loading ? (
-        <div className="rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+        <div className="rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
           <p className="text-sm font-medium text-ink/50">Loading conversations…</p>
         </div>
       ) : rides.length === 0 ? (
-        <div className="rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+        <div className="rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
             <AppIcon name="inbox" className="h-11 w-11" />
           </div>
@@ -86,7 +86,7 @@ const ConversationList = () => {
               <button
                 key={ride.id}
                 onClick={() => history.push('/inbox', { rideId: ride.id })}
-                className="flex w-full items-center gap-3 rounded-[22px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.99]"
+                className="flex w-full items-center gap-3 rounded-[14px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.99]"
               >
                 <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl text-white shadow-glow" style={{ background: FIRE }}>
                   <AppIcon name="message" className="h-6 w-6 text-white" />
@@ -228,7 +228,7 @@ const ChatThread = ({ rideId, initialPeerId }: { rideId: string; initialPeerId?:
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-2xl rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+      <div className="mx-auto max-w-2xl rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
         <p className="text-sm font-medium text-ink/50">Loading chat…</p>
       </div>
     );
@@ -236,7 +236,7 @@ const ChatThread = ({ rideId, initialPeerId }: { rideId: string; initialPeerId?:
 
   if (error && !ride) {
     return (
-      <div className="mx-auto max-w-2xl rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+      <div className="mx-auto max-w-2xl rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
         <h2 className="font-display text-xl font-extrabold text-ink">Chat unavailable</h2>
         <p className="mt-2 text-sm font-medium text-ink/50">{error}</p>
         <button onClick={() => history.push('/inbox')} className="mt-4 rounded-full px-4 py-2 text-sm font-bold text-white" style={{ background: FIRE }}>
@@ -255,7 +255,7 @@ const ChatThread = ({ rideId, initialPeerId }: { rideId: string; initialPeerId?:
         </button>
         <h2 className="mb-3 font-display text-xl font-extrabold text-ink">Choose a passenger</h2>
         {passengerPeers.length === 0 ? (
-          <div className="rounded-[22px] border border-dashed border-primary-200 bg-paper p-6 text-center text-sm font-medium text-ink/50">
+          <div className="rounded-[14px] border border-dashed border-primary-200 bg-paper p-4 text-center text-sm font-medium text-ink/50">
             No passengers have joined this ride yet. You can chat here once someone books.
           </div>
         ) : (
@@ -301,7 +301,7 @@ const ChatThread = ({ rideId, initialPeerId }: { rideId: string; initialPeerId?:
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto rounded-[22px] border border-black/5 bg-white/70 p-3">
+      <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto rounded-[14px] border border-black/5 bg-white/70 p-3">
         {messages.length === 0 ? (
           <div className="flex h-full min-h-[160px] items-center justify-center text-center">
             <p className="text-sm font-medium text-ink/40">

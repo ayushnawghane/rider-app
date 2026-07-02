@@ -300,7 +300,7 @@ const PublishRidePage = () => {
         </div>
 
         {/* Form */}
-        <div className="rounded-[28px] border border-black/5 bg-white/85 p-5 shadow-strong backdrop-blur-md">
+        <div className="rounded-[18px] border border-black/5 bg-white/85 p-5 shadow-strong backdrop-blur-md">
           {Object.keys(fieldErrors).length > 0 && (
             <div className="mb-4 rounded-2xl border border-fire-red/20 bg-fire-red/5 px-3 py-2 text-sm font-medium text-fire-red">
               Please complete all required fields highlighted below.
@@ -544,7 +544,7 @@ const PublishRidePage = () => {
           </div>
 
           {/* Points Preview */}
-          <div className="grain grain-strong relative mb-6 overflow-hidden rounded-[24px] p-4 text-white shadow-glow" style={{ background: FIRE }}>
+          <div className="grain grain-strong relative mb-6 overflow-hidden rounded-[16px] p-4 text-white shadow-glow" style={{ background: FIRE }}>
             <div className="relative z-10 flex items-center justify-between">
               <div>
                 <p className="font-display text-xs font-bold uppercase tracking-wide text-white/80">You'll earn</p>

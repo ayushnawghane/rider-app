@@ -1,4 +1,4 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonList, IonItem, IonLabel, IonCard, IonCardContent } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonButtons, IonBackButton, IonIcon, IonList, IonItem, IonLabel, IonCard, IonCardContent } from '@ionic/react';
 import LoadingOverlay from '../../components/LoadingOverlay';
 import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
@@ -51,6 +51,9 @@ const AdminDashboardPage: React.FC = () => {
       <IonPage>
         <IonHeader>
           <IonToolbar>
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/home" />
+            </IonButtons>
             <IonTitle>Admin Panel</IonTitle>
           </IonToolbar>
         </IonHeader>
@@ -78,6 +81,9 @@ const AdminDashboardPage: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/home" />
+          </IonButtons>
           <IonTitle>Admin Dashboard</IonTitle>
           <IonButton slot="end" fill="clear">
             <IonIcon icon={settingsOutline} />

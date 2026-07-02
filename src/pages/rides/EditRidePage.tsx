@@ -163,7 +163,7 @@ const EditRidePage = () => {
 
     if (submitError && !startLocation) {
         return (
-            <div className="h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
+            <div className="h-screen bg-gray-50 flex flex-col items-center justify-center p-4 text-center">
                 <EmptyState
                     icon={<AlertTriangle className="h-16 w-16 text-gray-300" />}
                     title="Notice"

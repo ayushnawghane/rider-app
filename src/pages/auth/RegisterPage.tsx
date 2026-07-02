@@ -101,7 +101,7 @@ const RegisterPage = () => {
   return (
     <Aurora variant="sunrise" grain="strong" className="min-h-screen">
       <div className="app-top-safe flex min-h-screen w-full items-center justify-center px-5 py-10">
-        <div className="w-full max-w-md animate-rise rounded-[32px] border border-white/60 bg-white/80 p-6 shadow-strong backdrop-blur-md sm:p-7">
+        <div className="w-full max-w-md animate-rise rounded-[20px] border border-white/60 bg-white/80 p-4 shadow-strong backdrop-blur-md sm:p-5">
           {/* Brand */}
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-3">

@@ -159,7 +159,7 @@ const SelectLocationPage = () => {
             </div>
           </div>
 
-          <div className="space-y-4 rounded-[28px] border border-black/5 bg-white/85 p-4 shadow-strong backdrop-blur-md">
+          <div className="space-y-4 rounded-[18px] border border-black/5 bg-white/85 p-4 shadow-strong backdrop-blur-md">
             {!loadError ? (
               <LocationSearch
                 placeholder={placeholder}

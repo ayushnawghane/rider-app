@@ -2,6 +2,7 @@ import { useHistory } from 'react-router';
 import {
   Bell,
   ChevronRight,
+  ChevronLeft,
   Globe2,
   ShieldCheck,
   UserRound,
@@ -26,13 +27,21 @@ const SettingsPage = () => {
       <div className="relative z-10 px-4 pb-8 pt-[calc(env(safe-area-inset-top)+20px)]">
         <div className="mx-auto max-w-2xl">
           {/* Header */}
-          <header className="mb-6">
-            <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Preferences</p>
-            <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">Settings</h1>
-            <p className="mt-2 text-sm font-medium text-ink/50">App preferences</p>
+          <header className="mb-5 flex items-center gap-3">
+            <button
+              onClick={() => history.length > 1 ? history.goBack() : history.push('/profile')}
+              aria-label="Back"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-black/10 bg-white/70 text-ink shadow-soft backdrop-blur-sm transition active:scale-95"
+            >
+              <ChevronLeft size={22} strokeWidth={2.5} />
+            </button>
+            <div>
+              <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Preferences</p>
+              <h1 className="font-display text-[1.7rem] font-extrabold leading-[0.95] tracking-tight text-ink">Settings</h1>
+            </div>
           </header>
 
-          <section className="rounded-[28px] border border-black/5 bg-white p-2 shadow-soft">
+          <section className="rounded-[18px] border border-black/5 bg-white p-2 shadow-soft">
             <button
               type="button"
               onClick={() => history.push('/profile')}
@@ -85,7 +94,7 @@ const SettingsPage = () => {
           </section>
 
           {/* Account */}
-          <section className="mt-4 rounded-[28px] border border-black/5 bg-white p-2 shadow-soft">
+          <section className="mt-4 rounded-[18px] border border-black/5 bg-white p-2 shadow-soft">
             <button
               type="button"
               onClick={() => history.push('/delete-account')}

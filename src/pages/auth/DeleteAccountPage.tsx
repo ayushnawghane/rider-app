@@ -41,10 +41,10 @@ const DeleteAccountPage: React.FC = () => {
 
   return (
     <IonContent>
-      <div className="flex min-h-full flex-col items-center justify-center bg-white p-6">
-        <div className="w-full max-w-md overflow-hidden rounded-[32px] border border-black/5 bg-white shadow-strong">
+      <div className="flex min-h-full flex-col items-center justify-center bg-white p-4">
+        <div className="w-full max-w-md overflow-hidden rounded-[20px] border border-black/5 bg-white shadow-strong">
           {/* Header */}
-          <div className="relative overflow-hidden p-8 text-center" style={{ background: ALERT }}>
+          <div className="relative overflow-hidden p-5 text-center" style={{ background: ALERT }}>
             <ShieldAlert size={120} className="absolute -bottom-8 -right-8 text-white/10" />
             <div className="relative z-10">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/30 bg-white/20 backdrop-blur-sm">
@@ -58,7 +58,7 @@ const DeleteAccountPage: React.FC = () => {
           </div>
 
           {/* Content */}
-          <div className="space-y-6 p-8">
+          <div className="space-y-6 p-5">
             <div className="space-y-4">
               <div className="flex items-start gap-4 rounded-2xl border border-fire-gold/30 bg-fire-gold/10 p-4">
                 <AlertTriangle className="shrink-0 text-fire-orange" size={20} />

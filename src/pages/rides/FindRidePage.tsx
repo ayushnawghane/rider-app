@@ -10,6 +10,7 @@ import {
   Car,
   Filter,
   ChevronRight,
+  ChevronLeft,
   Navigation,
 } from 'lucide-react';
 import type { PublishedRide } from '../../types';
@@ -216,13 +217,22 @@ const FindRidePage = () => {
 
       <div className="relative z-10 px-4 pb-24 pt-[calc(env(safe-area-inset-top)+20px)]">
         {/* Header */}
-        <div className="mb-5">
-          <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Find a ride</p>
-          <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">Search</h1>
+        <div className="mb-4 flex items-center gap-3">
+          <button
+            onClick={() => history.length > 1 ? history.goBack() : history.push('/home')}
+            aria-label="Back"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-black/10 bg-white/70 text-ink shadow-soft backdrop-blur-sm transition active:scale-95"
+          >
+            <ChevronLeft size={22} strokeWidth={2.5} />
+          </button>
+          <div>
+            <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Find a ride</p>
+            <h1 className="font-display text-[1.7rem] font-extrabold leading-[0.95] tracking-tight text-ink">Search</h1>
+          </div>
         </div>
 
         {/* Search Form */}
-        <div className="mb-5 rounded-[28px] border border-black/5 bg-white/80 p-4 shadow-strong backdrop-blur-md">
+        <div className="mb-5 rounded-[18px] border border-black/5 bg-white/80 p-4 shadow-strong backdrop-blur-md">
           {/* Pickup */}
           <button
             onClick={() => history.push('/select-location', {
@@ -325,7 +335,7 @@ const FindRidePage = () => {
                 const isBooked = joinedRideIds.has(ride.id);
                 const isOwnRide = Boolean(user?.id && (ride.driverId === user.id));
                 return (
-                  <div key={ride.id} className="rounded-[26px] border border-black/5 bg-white p-5 shadow-soft">
+                  <div key={ride.id} className="rounded-[16px] border border-black/5 bg-white p-5 shadow-soft">
                     {/* Driver Info */}
                     <div className="mb-4 flex items-start gap-4">
                       <div className="relative">
@@ -430,7 +440,7 @@ const FindRidePage = () => {
 
         {/* Empty State */}
         {!loading && hasSearched && availableRides.length === 0 && (pickupLocation || dropoffLocation) && (
-          <div className="mt-8 rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+          <div className="mt-8 rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
               <AppIcon name="car" className="h-12 w-12" />
             </div>

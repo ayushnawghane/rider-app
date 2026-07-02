@@ -14,7 +14,7 @@ const BootSkeleton: React.FC = () => {
           <img
             src="/logo-mark.png"
             alt="Blinkcar"
-            className="h-20 w-20 animate-pulse rounded-[24px] object-cover shadow-glow"
+            className="h-20 w-20 animate-pulse rounded-[16px] object-cover shadow-glow"
           />
           <span className="font-display text-2xl font-extrabold lowercase tracking-tight text-ink">
             blinkcar

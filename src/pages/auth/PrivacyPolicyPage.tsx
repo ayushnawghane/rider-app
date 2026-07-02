@@ -55,7 +55,7 @@ const PrivacyPolicyPage: React.FC = () => {
             </div>
 
             {/* Content card */}
-            <div className="space-y-10 rounded-[32px] border border-black/5 bg-white p-7 shadow-soft md:p-10">
+            <div className="space-y-10 rounded-[20px] border border-black/5 bg-white p-5 shadow-soft md:p-10">
               <section className="space-y-4">
                 <div className="flex items-center gap-3 text-fire-orange">
                   <Globe size={22} />

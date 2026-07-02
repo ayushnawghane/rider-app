@@ -219,7 +219,7 @@ const RideDetailPage = () => {
           <div className="app-top-safe relative min-h-full overflow-hidden bg-white">
             <div className="relative z-10 mx-auto max-w-2xl px-4 pb-6 pt-5">
               <BackBar />
-              <div className="rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+              <div className="rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-fire-red/10">
                   <AlertTriangle className="h-10 w-10 text-fire-red" />
                 </div>
@@ -258,7 +258,7 @@ const RideDetailPage = () => {
             <div className="app-bottom-nav-safe space-y-5">
               {/* Map Section */}
               {hasMapData && (
-                <div className="overflow-hidden rounded-[26px] border border-black/5 bg-white shadow-soft">
+                <div className="overflow-hidden rounded-[16px] border border-black/5 bg-white shadow-soft">
                   <div className="h-64">
                     <MapComponent
                       center={mapCenter}
@@ -279,7 +279,7 @@ const RideDetailPage = () => {
               )}
 
               {/* Details Card */}
-              <div className="animate-fade-in rounded-[28px] border border-black/5 bg-white p-6 shadow-soft">
+              <div className="animate-fade-in rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
                 <div className="mb-6 flex items-start gap-3">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
                     <AppIcon name="car" className="h-7 w-7" />
@@ -373,7 +373,7 @@ const RideDetailPage = () => {
 
               {/* Join Card */}
               {canJoinRide && (
-                <div className="rounded-[28px] border border-black/5 bg-white p-4 shadow-soft">
+                <div className="rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
                   <button
                     onClick={handleJoinRide}
                     disabled={isJoining || isJoined}
@@ -420,7 +420,7 @@ const RideDetailPage = () => {
                 <button
                   onClick={handleContactDriver}
                   disabled={!ride.driverContact}
-                  className="rounded-[22px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-[14px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-fire-orange">
                     <Phone className="h-5 w-5" strokeWidth={2.5} />
@@ -431,7 +431,7 @@ const RideDetailPage = () => {
 
                 <button
                   onClick={handleRaiseDispute}
-                  className="rounded-[22px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.98]"
+                  className="rounded-[14px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.98]"
                 >
                   <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-fire-gold/20 text-[#9a5b00]">
                     <MessageSquare className="h-5 w-5" strokeWidth={2.5} />

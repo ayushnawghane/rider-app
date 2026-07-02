@@ -130,7 +130,7 @@ const KycUploadPage = () => {
 
               {!success ? (
                 <>
-                  <div className="rounded-[28px] border border-black/5 bg-white p-6 shadow-soft">
+                  <div className="rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
                     <div className="mb-5">
                       <h2 className="mb-2 font-display text-lg font-extrabold tracking-tight text-ink">Upload document</h2>
                       <p className="text-sm font-medium text-ink/50">
@@ -140,7 +140,7 @@ const KycUploadPage = () => {
 
                     <label
                       htmlFor="file-upload"
-                      className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-all ${
+                      className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-5 transition-all ${
                         file ? 'border-primary-500 bg-primary-50' : 'border-black/15 hover:border-primary-400 hover:bg-paper'
                       }`}
                     >
@@ -174,7 +174,7 @@ const KycUploadPage = () => {
                   </div>
 
                   {user.kycStatus !== 'approved' && (
-                    <div className="sticky bottom-4 z-20 rounded-[26px] border border-white/70 bg-white/90 p-2 shadow-soft backdrop-blur">
+                    <div className="sticky bottom-4 z-20 rounded-[16px] border border-white/70 bg-white/90 p-2 shadow-soft backdrop-blur">
                       <button
                         onClick={handleUpload}
                         disabled={loading || !file}
@@ -187,7 +187,7 @@ const KycUploadPage = () => {
                     </div>
                   )}
 
-                  <div className="rounded-[28px] border border-black/5 bg-white p-6 shadow-soft">
+                  <div className="rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
                     <h2 className="mb-4 font-display text-lg font-extrabold tracking-tight text-ink">Requirements</h2>
                     <div className="space-y-3">
                       {requirements.map((req) => (
@@ -200,7 +200,7 @@ const KycUploadPage = () => {
                   </div>
                 </>
               ) : (
-                <div className="animate-fade-in rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+                <div className="animate-fade-in rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
                   <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
                     <CheckCircle2 className="h-10 w-10 text-emerald-600" />
                   </div>

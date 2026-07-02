@@ -39,7 +39,7 @@ const HomeSkeleton: React.FC = () => {
 
         {/* Search card */}
         <div className="mt-2 px-4">
-          <div className="rounded-[28px] border border-black/5 bg-white/80 p-4 shadow-strong backdrop-blur-md">
+          <div className="rounded-[18px] border border-black/5 bg-white/80 p-4 shadow-strong backdrop-blur-md">
             <Skeleton variant="rounded" height="50px" className="mb-4" />
             <div className="mb-4 grid grid-cols-[1fr_auto_1fr] items-end gap-3">
               <Skeleton variant="rounded" height="56px" />

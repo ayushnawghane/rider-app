@@ -29,7 +29,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
 
   if (!card) return content;
 
-  return <AppCard className="p-8">{content}</AppCard>;
+  return <AppCard className="p-5">{content}</AppCard>;
 };
 
 export default EmptyState;

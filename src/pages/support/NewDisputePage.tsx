@@ -119,7 +119,7 @@ const NewDisputePage = () => {
             </div>
 
             {!success ? (
-              <div className="animate-fade-in space-y-6 rounded-[28px] border border-black/5 bg-white p-6 shadow-soft">
+              <div className="animate-fade-in space-y-6 rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
                 <div>
                   <label className="mb-2 block font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">Dispute type</label>
                   <div className="grid grid-cols-3 gap-3">
@@ -200,7 +200,7 @@ const NewDisputePage = () => {
                 </button>
               </div>
             ) : (
-              <div className="animate-fade-in rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+              <div className="animate-fade-in rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
                   <CheckCircle2 className="h-10 w-10 text-emerald-600" />
                 </div>

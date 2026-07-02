@@ -306,9 +306,9 @@ const ProfilePage = () => {
     return (
       <div className="app-top-safe min-h-screen bg-white px-4 pb-20 pt-6">
         <div className="mx-auto max-w-2xl animate-pulse space-y-4">
-          <div className="h-36 rounded-[28px] bg-primary-50" />
-          <div className="h-48 rounded-[28px] bg-primary-50" />
-          <div className="h-40 rounded-[28px] bg-primary-50" />
+          <div className="h-36 rounded-[18px] bg-primary-50" />
+          <div className="h-48 rounded-[18px] bg-primary-50" />
+          <div className="h-40 rounded-[18px] bg-primary-50" />
         </div>
       </div>
     );
@@ -344,7 +344,7 @@ const ProfilePage = () => {
           </div>
 
           <div className="mx-auto mt-6 max-w-2xl space-y-4">
-            <section className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
+            <section className="rounded-[18px] border border-black/5 bg-white p-5 shadow-soft">
               <div className="mb-5">
                 <div className="mb-3 flex items-center justify-between">
                   <p className="font-display text-sm font-bold text-ink/60">
@@ -545,7 +545,7 @@ const ProfilePage = () => {
 
           <div className="space-y-4">
             {/* Identity card */}
-            <section className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
+            <section className="rounded-[18px] border border-black/5 bg-white p-5 shadow-soft">
               <div className="flex items-start gap-4">
                 <div className="relative">
                   <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-3xl font-display text-4xl font-extrabold text-white shadow-glow" style={{ background: FIRE }}>
@@ -632,7 +632,7 @@ const ProfilePage = () => {
             </section>
 
             {editing && (
-              <section className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
+              <section className="rounded-[18px] border border-black/5 bg-white p-5 shadow-soft">
                 <h3 className="mb-4 font-display text-lg font-extrabold tracking-tight text-ink">Edit profile</h3>
                 <div className="space-y-4">
                   <label className="block">
@@ -714,7 +714,7 @@ const ProfilePage = () => {
             )}
 
             {editing && !requiresProfileCompletion && (
-              <section className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
+              <section className="rounded-[18px] border border-black/5 bg-white p-5 shadow-soft">
                 <div className="mb-4 flex items-center gap-2">
                   <Car size={18} className="text-fire-orange" />
                   <h3 className="font-display text-lg font-extrabold tracking-tight text-ink">Vehicle details</h3>
@@ -796,7 +796,7 @@ const ProfilePage = () => {
             )}
 
             {!requiresProfileCompletion && (
-              <section className="rounded-[28px] border border-black/5 bg-white p-2 shadow-soft">
+              <section className="rounded-[18px] border border-black/5 bg-white p-2 shadow-soft">
                 {[
                   { onClick: () => history.push('/profile/kyc'), Icon: FileText, title: 'KYC verification', subtitle: kycStatus.label },
                   { onClick: () => history.push('/safety'), Icon: Shield, title: 'Safety center', subtitle: 'SOS and emergency tools' },

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { disputeService } from '../../services';
-import { Plus, MessageSquare, CheckCircle2, Clock2, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Plus, MessageSquare, CheckCircle2, Clock2, ChevronRight, ChevronLeft, AlertTriangle } from 'lucide-react';
 import { SkeletonList } from '../../components/Skeleton';
 import AppIcon from '../../components/icons/AppIcon';
 import type { Dispute } from '../../types';
@@ -79,9 +79,14 @@ const SupportPage = () => {
           <div className="relative min-h-full overflow-hidden bg-white">
             <Aura />
             <div className="relative z-10 mx-auto max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+20px)]">
-              <header className="mb-6">
-                <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Help center</p>
-                <h1 className="font-display text-[2.4rem] font-extrabold leading-[0.9] tracking-tight text-ink">Support</h1>
+              <header className="mb-5 flex items-center gap-3">
+                <button onClick={() => history.length > 1 ? history.goBack() : history.push('/home')} aria-label="Back" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-black/10 bg-white/70 text-ink shadow-soft backdrop-blur-sm transition active:scale-95">
+                  <ChevronLeft size={22} strokeWidth={2.5} />
+                </button>
+                <div>
+                  <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Help center</p>
+                  <h1 className="font-display text-[1.7rem] font-extrabold leading-[0.95] tracking-tight text-ink">Support</h1>
+                </div>
               </header>
               <SkeletonList count={3} lines={3} />
             </div>
@@ -97,11 +102,16 @@ const SupportPage = () => {
         <div className="relative min-h-full overflow-hidden bg-white">
           <Aura />
           <div className="relative z-10 mx-auto max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+20px)]">
-            <header className="mb-5 flex items-end justify-between">
-              <div>
-                <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Help center</p>
-                <h1 className="font-display text-[2.4rem] font-extrabold leading-[0.9] tracking-tight text-ink">Support</h1>
-                <p className="mt-2 text-sm font-medium text-ink/50">{disputes.length} dispute{disputes.length !== 1 ? 's' : ''}</p>
+            <header className="mb-5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <button onClick={() => history.length > 1 ? history.goBack() : history.push('/home')} aria-label="Back" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-black/10 bg-white/70 text-ink shadow-soft backdrop-blur-sm transition active:scale-95">
+                  <ChevronLeft size={22} strokeWidth={2.5} />
+                </button>
+                <div>
+                  <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Help center</p>
+                  <h1 className="font-display text-[1.7rem] font-extrabold leading-[0.95] tracking-tight text-ink">Support</h1>
+                  <p className="mt-0.5 text-sm font-medium text-ink/50">{disputes.length} dispute{disputes.length !== 1 ? 's' : ''}</p>
+                </div>
               </div>
               <button
                 onClick={() => history.push('/support/dispute/new')}
@@ -128,7 +138,7 @@ const SupportPage = () => {
             )}
 
             {disputes.length === 0 ? (
-              <div className="animate-fade-in rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+              <div className="animate-fade-in rounded-[18px] border border-black/5 bg-white p-5 text-center shadow-soft">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
                   <AppIcon name="message" className="h-11 w-11" />
                 </div>
@@ -144,7 +154,7 @@ const SupportPage = () => {
               </div>
             ) : (
               <>
-                <div className="mb-4 animate-fade-in rounded-[28px] border border-black/5 bg-white p-6 text-center shadow-soft">
+                <div className="mb-4 animate-fade-in rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
                     <AppIcon name="message" className="h-8 w-8" />
                   </div>
@@ -166,7 +176,7 @@ const SupportPage = () => {
                       <button
                         key={dispute.id}
                         onClick={() => history.push(`/support/dispute/${dispute.id}`)}
-                        className="w-full animate-fade-in rounded-[26px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.99]"
+                        className="w-full animate-fade-in rounded-[16px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.99]"
                       >
                         <div className="flex items-start gap-4">
                           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">

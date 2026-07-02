@@ -218,7 +218,7 @@ const SafetyPage: React.FC = () => {
               {/* Your Location */}
               <div className="mb-6">
                 <h2 className="mb-3 font-display text-lg font-extrabold tracking-tight text-ink">Your location</h2>
-                <div className="relative h-44 overflow-hidden rounded-[24px] border border-black/5 bg-paper shadow-soft">
+                <div className="relative h-44 overflow-hidden rounded-[16px] border border-black/5 bg-paper shadow-soft">
                   {currentLocation ? (
                     <>
                       <MapComponent
@@ -277,7 +277,7 @@ const SafetyPage: React.FC = () => {
               </div>
 
               {/* SOS Card */}
-              <div className="mb-6 rounded-[28px] p-6 text-center shadow-strong" style={{ background: ALERT }}>
+              <div className="mb-6 rounded-[18px] p-4 text-center shadow-strong" style={{ background: ALERT }}>
                 <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
                   <ShieldAlert className="h-8 w-8 text-white" strokeWidth={2.5} />
                 </div>
@@ -302,7 +302,7 @@ const SafetyPage: React.FC = () => {
                 <h2 className="mb-3 font-display text-lg font-extrabold tracking-tight text-ink">Safety tips</h2>
                 <div className="space-y-2.5">
                   {safetyTips.map((tip) => (
-                    <div key={tip.id} className="flex items-start gap-3 rounded-[22px] border border-black/5 bg-white p-3.5 shadow-soft">
+                    <div key={tip.id} className="flex items-start gap-3 rounded-[14px] border border-black/5 bg-white p-3.5 shadow-soft">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white text-fire-orange">
                         {tipIcon(tip.id)}
                       </div>
@@ -339,7 +339,7 @@ const SafetyPage: React.FC = () => {
               </div>
             </>
           ) : (
-            <div className="rounded-[28px] border border-black/5 bg-white p-6 text-center shadow-strong">
+            <div className="rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-strong">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
                 <CheckCircle2 className="h-9 w-9 text-emerald-600" />
               </div>
