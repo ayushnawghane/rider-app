@@ -27,6 +27,18 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
   const [showPredictions, setShowPredictions] = useState(false);
   const [mapsError, setMapsError] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const requestIdRef = useRef(0);
+  const mountedRef = useRef(true);
+
+  // Clean up the pending debounce timer and stop any late async callback from
+  // updating state after the component unmounts.
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   const getIconConfig = () => {
     switch (icon) {
@@ -60,18 +72,22 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
       return;
     }
 
+    const requestId = ++requestIdRef.current;
     setIsLoading(true);
     setMapsError(false);
-    
+
     try {
       const results = await mapsService.getPlacePredictions(input);
+      // Ignore results from a superseded keystroke or after unmount so the
+      // dropdown never shows stale, out-of-order predictions.
+      if (!mountedRef.current || requestId !== requestIdRef.current) return;
       setPredictions(results);
       setShowPredictions(true);
     } catch (error) {
       console.error('Error fetching predictions:', error);
+    } finally {
+      if (mountedRef.current && requestId === requestIdRef.current) setIsLoading(false);
     }
-    
-    setIsLoading(false);
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

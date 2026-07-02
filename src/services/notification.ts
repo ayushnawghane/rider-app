@@ -3,31 +3,35 @@ import type {
   Notification,
 } from '../types';
 
+// Monotonic counter so each realtime subscription gets a unique channel topic.
+let subscriptionSeq = 0;
+
 class NotificationService {
+  // Notifications are created through a SECURITY DEFINER RPC so the app can
+  // notify ANY user (e.g. a passenger notifying the ride owner). A direct
+  // client insert into `notifications` is blocked by RLS for other users and
+  // only works for yourself, so the RPC is the correct path. Most notifications
+  // are also raised automatically by DB triggers; this remains available for
+  // any explicit client-driven notification.
   async createNotification(params: {
     userId: string;
     title: string;
     message: string;
     type?: Notification['type'];
-  }): Promise<{ success: boolean; notification?: Notification; error?: string }> {
+  }): Promise<{ success: boolean; error?: string }> {
     try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .insert({
-          user_id: params.userId,
-          title: params.title,
-          message: params.message,
-          type: params.type ?? 'system',
-          read: false,
-        })
-        .select()
-        .single();
+      const { error } = await supabase.rpc('create_notification', {
+        target_user_id: params.userId,
+        notification_title: params.title,
+        notification_message: params.message,
+        notification_type: params.type ?? 'system',
+      });
 
       if (error) {
         return { success: false, error: error.message };
       }
 
-      return { success: true, notification: this.mapNotificationToNotification(data) };
+      return { success: true };
     } catch (error) {
       return { success: false, error: 'An unexpected error occurred' };
     }
@@ -89,9 +93,9 @@ class NotificationService {
 
   async getUnreadCount(userId: string): Promise<{ success: boolean; count?: number; error?: string }> {
     try {
-      const { data, error } = await supabase
+      const { count, error } = await supabase
         .from('notifications')
-        .select('id', { count: 'exact' })
+        .select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
         .eq('read', false);
 
@@ -99,15 +103,20 @@ class NotificationService {
         return { success: false, error: error.message };
       }
 
-      return { success: true, count: data?.length || 0 };
+      return { success: true, count: count || 0 };
     } catch (error) {
       return { success: false, error: 'An unexpected error occurred' };
     }
   }
 
   subscribeToNotifications(userId: string, callback: (notification: Notification) => void): () => void {
+    // Unique channel name per subscription. Supabase reuses a channel by its
+    // topic, so if two components (e.g. the home bell AND the Notifications
+    // screen) subscribed to the same `notifications:<userId>` topic, the second
+    // `.on()` would throw "cannot add postgres_changes callbacks after
+    // subscribe()" and blank the page. A per-instance suffix avoids the clash.
     const channel = supabase
-      .channel(`notifications:${userId}`)
+      .channel(`notifications:${userId}:${++subscriptionSeq}`)
       .on(
         'postgres_changes',
         {

@@ -113,7 +113,7 @@ const ActiveRidePage = () => {
         }
       }
       if (user && (result.ride.userId === user.id || result.ride.driverId === user.id)) {
-        const bookingsResult = await rideService.getBookingsByRide(result.ride.id);
+        const bookingsResult = await rideService.getRideParticipants(result.ride.id);
         if (bookingsResult.success) {
           setPassengerBookings((bookingsResult.bookings || []) as PassengerBooking[]);
           setPassengerListError(null);
@@ -148,6 +148,7 @@ const ActiveRidePage = () => {
   // Start location tracking + live_locations publishing + Realtime subscription
   useEffect(() => {
     if (!ride || !user) return;
+    let cancelled = false;
     let locationPublishInterval: ReturnType<typeof setInterval> | null = null;
     let latestPosition: {
       lat: number;
@@ -203,6 +204,11 @@ const ActiveRidePage = () => {
         }
       );
 
+      // If the component unmounted while startWatching was resolving, the
+      // cleanup already ran and would have missed this watch — stop it now so
+      // we don't leak a GPS watcher that setStates on an unmounted component.
+      if (cancelled) locationService.stopWatching();
+
       // Backup: re-publish the latest known location every 10s without
       // triggering a fresh getCurrentPosition lookup.
       locationPublishInterval = setInterval(() => {
@@ -220,11 +226,16 @@ const ActiveRidePage = () => {
     });
 
     return () => {
+      cancelled = true;
       locationService.stopWatching();
       if (locationPublishInterval) clearInterval(locationPublishInterval);
       supabase.removeChannel(channel);
     };
-  }, [ride, user]);
+    // Only re-run when the ride or user identity changes — not on every 30s
+    // poll that replaces the `ride` object, which would churn the GPS watcher
+    // and realtime channel.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ride?.id, user?.id]);
 
   const handleContactDriver = () => {
     if (ride?.driverContact) {
@@ -427,12 +438,12 @@ const ActiveRidePage = () => {
                 <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl border-2 border-white bg-paper-dim shadow-soft">
                   <img src={ride.driver?.avatar || `https://ui-avatars.com/api/?name=${isDriver ? user?.fullName || 'Driver' : (ride.driver?.name || 'Driver')}&background=random`} alt="Driver" className="h-full w-full object-cover" />
                 </div>
-                <div className="ml-4 flex-1">
-                  <h3 className="font-display text-base font-bold text-ink">{isDriver ? 'You (Driver)' : (ride.driver?.name || 'Your Driver')}</h3>
+                <div className="ml-4 min-w-0 flex-1">
+                  <h3 className="truncate font-display text-base font-bold text-ink">{isDriver ? 'You (Driver)' : (ride.driver?.name || 'Your Driver')}</h3>
                   <div className="mt-0.5 flex items-center text-sm text-ink/50">
-                    <span className="flex items-center gap-1 font-bold text-fire-gold">★ {ride.driver?.rating ? ride.driver.rating.toFixed(1) : '4.9'}</span>
-                    <span className="mx-2">•</span>
-                    <span className="font-medium">{ride.vehicleType}</span>
+                    <span className="flex flex-shrink-0 items-center gap-1 font-bold text-fire-gold">★ {ride.driver?.rating ? ride.driver.rating.toFixed(1) : '4.9'}</span>
+                    <span className="mx-2 flex-shrink-0">•</span>
+                    <span className="truncate font-medium">{ride.vehicleType}</span>
                   </div>
                 </div>
                 <div className="flex-shrink-0 text-right">

@@ -16,6 +16,7 @@ const ProfileCompletionBanner = () => {
   if (
     location.pathname === '/login' ||
     location.pathname === '/register' ||
+    location.pathname === '/home' || // Home shows its own completion prompt; avoid a double UI.
     location.pathname.startsWith('/profile')
   ) {
     return null;

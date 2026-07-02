@@ -7,7 +7,11 @@ import RegisterPage from './RegisterPage';
 
 const mocks = vi.hoisted(() => ({
   useAuth: vi.fn(),
-  signUpWithEmailPassword: vi.fn(),
+  refreshUser: vi.fn(),
+  sendOtp: vi.fn(),
+  verifyOtp: vi.fn(),
+  updateProfile: vi.fn(),
+  getUser: vi.fn(),
 }));
 
 vi.mock('../../context/AuthContext', () => ({
@@ -16,8 +20,19 @@ vi.mock('../../context/AuthContext', () => ({
 
 vi.mock('../../services/auth', () => ({
   authService: {
-    signUpWithEmailPassword: mocks.signUpWithEmailPassword,
+    updateProfile: mocks.updateProfile,
   },
+}));
+
+vi.mock('../../services/phoneOtpAuth', () => ({
+  phoneOtpAuthService: {
+    sendOtp: mocks.sendOtp,
+    verifyOtp: mocks.verifyOtp,
+  },
+}));
+
+vi.mock('../../lib/supabase', () => ({
+  supabase: { auth: { getUser: mocks.getUser } },
 }));
 
 const renderRegister = () => {
@@ -32,54 +47,45 @@ const renderRegister = () => {
 
 describe('RegisterPage', () => {
   it('does not show third-party signup options', async () => {
-    mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true });
+    mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true, refreshUser: mocks.refreshUser });
     renderRegister();
 
     expect(screen.queryByRole('button', { name: /google/i })).not.toBeInTheDocument();
   });
 
-  it('validates required profile fields before signup', async () => {
-    mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true });
+  it('validates required profile fields before sending a code', async () => {
+    mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true, refreshUser: mocks.refreshUser });
     renderRegister();
 
-    await userEvent.click(screen.getByRole('button', { name: /^create account$/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^send code$/i }));
 
     expect(await screen.findByText('Enter your full name.')).toBeInTheDocument();
-    expect(mocks.signUpWithEmailPassword).not.toHaveBeenCalled();
+    expect(mocks.sendOtp).not.toHaveBeenCalled();
   });
 
-  it('submits a complete email signup and redirects when a session exists', async () => {
-    mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true });
-    mocks.signUpWithEmailPassword.mockResolvedValue({ success: true, requiresEmailVerification: false });
+  it('registers via phone OTP, saves the profile, and redirects home', async () => {
+    mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true, refreshUser: mocks.refreshUser });
+    mocks.sendOtp.mockResolvedValue(undefined);
+    mocks.verifyOtp.mockResolvedValue(undefined);
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } });
+    mocks.updateProfile.mockResolvedValue({ success: true });
     const history = renderRegister();
 
     await userEvent.type(screen.getByLabelText(/full name/i), 'Mann Jadwani');
     await userEvent.type(screen.getByLabelText(/email/i), 'mann@example.com');
     await userEvent.type(screen.getByLabelText(/mobile/i), '+919730156154');
-    await userEvent.type(screen.getByLabelText(/password/i), 'secret123');
+    await userEvent.click(screen.getByRole('button', { name: /^send code$/i }));
+
+    await waitFor(() => expect(mocks.sendOtp).toHaveBeenCalledWith('+919730156154'));
+
+    await userEvent.type(await screen.findByLabelText(/verification code/i), '123456');
     await userEvent.click(screen.getByRole('button', { name: /^create account$/i }));
 
     await waitFor(() => expect(history.location.pathname).toBe('/home'));
-    expect(mocks.signUpWithEmailPassword).toHaveBeenCalledWith({
-      fullName: 'Mann Jadwani',
-      email: 'mann@example.com',
-      phone: '+919730156154',
-      password: 'secret123',
-    });
-  });
-
-  it('shows email verification message without navigating', async () => {
-    mocks.useAuth.mockReturnValue({ user: null, isAuthLoaded: true });
-    mocks.signUpWithEmailPassword.mockResolvedValue({ success: true, requiresEmailVerification: true });
-    const history = renderRegister();
-
-    await userEvent.type(screen.getByLabelText(/full name/i), 'Mann Jadwani');
-    await userEvent.type(screen.getByLabelText(/email/i), 'mann@example.com');
-    await userEvent.type(screen.getByLabelText(/mobile/i), '+919730156154');
-    await userEvent.type(screen.getByLabelText(/password/i), 'secret123');
-    await userEvent.click(screen.getByRole('button', { name: /^create account$/i }));
-
-    expect(await screen.findByText('Account created. Please verify your email, then sign in.')).toBeInTheDocument();
-    expect(history.location.pathname).toBe('/register');
+    expect(mocks.verifyOtp).toHaveBeenCalledWith('+919730156154', '123456');
+    expect(mocks.updateProfile).toHaveBeenCalledWith(
+      { fullName: 'Mann Jadwani', email: 'mann@example.com' },
+      'user-1',
+    );
   });
 });

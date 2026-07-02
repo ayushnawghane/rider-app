@@ -1,5 +1,5 @@
 import { IonContent, IonPage } from '@ionic/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { locationService, rideService, mapsService } from '../../services';
@@ -8,10 +8,8 @@ import {
   Phone,
   MessageSquare,
   ShieldAlert,
-  Navigation,
   Calendar,
   Car,
-  Clock,
   CheckCircle2,
   AlertTriangle,
   Route,
@@ -165,8 +163,13 @@ const RideDetailPage = () => {
     return statusMap[status as keyof typeof statusMap] || statusMap.pending;
   };
 
-  // Prepare markers for map
-  const markers = ride ? [
+  // Prepare markers for map. Memoized on the actual coordinates so we don't
+  // hand MapComponent a fresh array every render — that made it re-fit bounds
+  // continuously and fight the user's pan/zoom.
+  // Depend on the coordinate values, not the `ride` object identity, so the
+  // memo stays stable across re-renders that don't move the pins (which would
+  // otherwise make the map continuously re-fit and fight the user's pan/zoom).
+  const markers = useMemo(() => (ride ? [
     ...(ride.startLocationCoords ? [{
       position: { lat: ride.startLocationCoords.lat, lng: ride.startLocationCoords.lng },
       title: 'Pickup',
@@ -175,7 +178,10 @@ const RideDetailPage = () => {
       position: { lat: ride.endLocationCoords.lat, lng: ride.endLocationCoords.lng },
       title: 'Drop',
     }] : []),
-  ] : [];
+  ] : []), [
+    ride?.startLocationCoords?.lat, ride?.startLocationCoords?.lng,
+    ride?.endLocationCoords?.lat, ride?.endLocationCoords?.lng,
+  ]);
 
   // Calculate map center
   const mapCenter = ride?.startLocationCoords || { lat: 28.6139, lng: 77.2090 };
@@ -344,7 +350,7 @@ const RideDetailPage = () => {
                     <div className="grid grid-cols-3 gap-3 border-t border-black/5 pt-4">
                       {ride.fare && (
                         <div className="text-center">
-                          <p className="font-display text-xl font-extrabold text-fire-orange">${ride.fare.toFixed(2)}</p>
+                          <p className="font-display text-xl font-extrabold text-fire-orange">₹{ride.fare.toFixed(2)}</p>
                           <p className="text-[11px] font-bold uppercase tracking-wide text-ink/40">Fare</p>
                         </div>
                       )}

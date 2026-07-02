@@ -123,6 +123,7 @@ const TripTrackingPage = () => {
     // Start live GPS tracking + publish our location + stream remote location
     useEffect(() => {
         if (!ride || !user) return;
+        let cancelled = false;
         let locationPublishInterval: ReturnType<typeof setInterval> | null = null;
         let latestPosition: {
             lat: number;
@@ -175,6 +176,9 @@ const TripTrackingPage = () => {
                                         });
             });
 
+            // Stop a watch that resolved after the component already unmounted.
+            if (cancelled) locationService.stopWatching();
+
             // Backup: re-publish the latest known location every 10s
             locationPublishInterval = setInterval(() => {
                 if (latestPosition) {
@@ -191,11 +195,15 @@ const TripTrackingPage = () => {
         });
 
         return () => {
+            cancelled = true;
             locationService.stopWatching();
             if (locationPublishInterval) clearInterval(locationPublishInterval);
             supabase.removeChannel(channel);
         };
-    }, [ride, user, calculateProgress]);
+    // Re-run only when the ride/user identity changes, not on every 30s poll
+    // that replaces the `ride` object (which churned the GPS watch + channel).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ride?.id, user?.id]);
 
     // Refresh ETA every 30 seconds when we have a location
     useEffect(() => {
@@ -332,12 +340,12 @@ const TripTrackingPage = () => {
                         <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl border-2 border-white bg-paper-dim shadow-soft">
                             <img src={ride.driver?.avatar || `https://ui-avatars.com/api/?name=${ride.driver?.name || 'Driver'}&background=random`} alt="Driver" className="h-full w-full object-cover" />
                         </div>
-                        <div className="ml-4 flex-1">
-                            <h3 className="font-display text-base font-bold text-ink">{ride.driver?.name || 'Your Driver'}</h3>
+                        <div className="ml-4 min-w-0 flex-1">
+                            <h3 className="truncate font-display text-base font-bold text-ink">{ride.driver?.name || 'Your Driver'}</h3>
                             <div className="mt-0.5 flex items-center text-sm text-ink/50">
-                                <span className="flex items-center gap-1 font-bold text-fire-gold">★ {ride.driver?.rating ? ride.driver.rating.toFixed(1) : '4.9'}</span>
-                                <span className="mx-2">•</span>
-                                <span className="font-medium">{ride.vehicleType}</span>
+                                <span className="flex flex-shrink-0 items-center gap-1 font-bold text-fire-gold">★ {ride.driver?.rating ? ride.driver.rating.toFixed(1) : '4.9'}</span>
+                                <span className="mx-2 flex-shrink-0">•</span>
+                                <span className="truncate font-medium">{ride.vehicleType}</span>
                             </div>
                         </div>
                         <div className="flex-shrink-0 text-right">

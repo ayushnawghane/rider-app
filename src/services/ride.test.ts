@@ -186,7 +186,9 @@ describe('rideService', () => {
       }),
       { onConflict: 'ride_id,user_id' },
     );
-    expect(ridesQuery.update).toHaveBeenCalledWith({ booked_seats: 1 });
+    // booked_seats is maintained by the sync_ride_booked_seats DB trigger, so the
+    // client must NOT write it (a passenger can't update another user's ride).
+    expect(ridesQuery.update).not.toHaveBeenCalled();
     expect(bookingsQuery.insert).toHaveBeenCalledWith(expect.objectContaining({
       ride_id: 'ride-1',
       passenger_id: 'passenger-1',
@@ -205,7 +207,10 @@ describe('rideService', () => {
       total_points: 20,
       rides_taken: 3,
     }));
-    expect(notificationsQuery.insert).toHaveBeenCalledTimes(2);
+    // Join notifications are now raised by DB triggers (notify_on_ride_participation),
+    // so the client must NOT insert notifications directly (that would double-notify
+    // and fails RLS for the ride owner's row).
+    expect(notificationsQuery.insert).not.toHaveBeenCalled();
   });
 
   it('returns joined rides where the user is a passenger', async () => {

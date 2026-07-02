@@ -49,7 +49,12 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ### 3. Set Up Supabase
 
 1. Create a new Supabase project at https://supabase.com
-2. Go to the SQL Editor and run the contents of `supabase/schema.sql`
+2. Go to the SQL Editor and run, in order:
+   - `supabase/schema.sql`
+   - `supabase/rewards_schema.sql`
+   - `supabase/ride_messages.sql`
+   - `supabase/notifications_and_integrity.sql` — notification triggers, seat-count
+     integrity, and push/email support (see `docs/notifications_setup.md`)
 3. Create storage buckets:
    - `kyc-documents` for KYC document uploads
    - `ride-images` for ride-related images (optional)

@@ -62,7 +62,7 @@ const ProfilePage = () => {
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone?.startsWith('temp_') || user?.phone?.startsWith('phone-') ? '' : user?.phone || '');
   const [language, setLanguage] = useState(user?.language || 'en');
-  const [notifications, setNotifications] = useState<boolean>(user?.notificationPreferences || true);
+  const [notifications, setNotifications] = useState<boolean>(user?.notificationPreferences ?? true);
   const [saveError, setSaveError] = useState('');
   const [setupStep, setSetupStep] = useState(0);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -788,7 +788,7 @@ const ProfilePage = () => {
                     {vehicleSaved ? (
                       <><CheckCircle2 size={16} className="text-emerald-600" /><span className="text-emerald-700">Vehicle saved!</span></>
                     ) : (
-                      <><Bookmark size={16} />{savingVehicle ? 'Saving...' : 'Save for Later'}</>
+                      <><Bookmark size={16} />{savingVehicle ? 'Saving...' : 'Save vehicle'}</>
                     )}
                   </button>
                 </div>

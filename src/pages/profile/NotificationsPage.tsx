@@ -14,22 +14,55 @@ const NotificationsPage: React.FC = () => {
   const history = useHistory();
 
   const fetchNotifications = useCallback(async () => {
-    if (!user) return;
-
-    const result = await notificationService.getNotifications(user.id);
-    if (result.success && result.notifications) {
-      setNotifications(result.notifications);
+    // Always resolve the loading state — even with no user — so the screen can
+    // never get stuck on the loading skeleton.
+    if (!user) {
+      setNotifications([]);
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+    try {
+      const result = await notificationService.getNotifications(user.id);
+      if (result.success && result.notifications) {
+        setNotifications(result.notifications);
+      }
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
 
   useEffect(() => {
-    fetchNotifications();
+    void fetchNotifications();
   }, [fetchNotifications]);
+
+  // Live updates: new notifications appear without a manual refresh. Guarded so
+  // a realtime failure can never crash/blank the screen.
+  useEffect(() => {
+    if (!user) return;
+    let unsubscribe: (() => void) | undefined;
+    try {
+      unsubscribe = notificationService.subscribeToNotifications(user.id, (notification) => {
+        setNotifications((prev) =>
+          prev.some((n) => n.id === notification.id) ? prev : [notification, ...prev],
+        );
+      });
+    } catch (error) {
+      console.warn('Notification realtime subscription failed:', error);
+    }
+    return () => unsubscribe?.();
+  }, [user]);
 
   const handleRefresh = async (event: CustomEvent) => {
     await fetchNotifications();
-    event.detail.complete();
+    (event.target as HTMLIonRefresherElement).complete();
+  };
+
+  const hasUnread = notifications.some((n) => !n.read);
+
+  const markAllAsRead = async () => {
+    if (!user) return;
+    await notificationService.markAllAsRead(user.id);
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
   const markAsRead = async (notificationId: string) => {
@@ -73,10 +106,7 @@ const NotificationsPage: React.FC = () => {
             <div className="absolute -right-16 -top-12 h-72 w-72 rounded-full animate-aurora-1" style={{ background: 'radial-gradient(circle, rgba(255,200,50,0.62) 0%, transparent 62%)', filter: 'blur(48px)' }} />
           </div>
 
-          <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
-            <IonRefresherContent />
-          </IonRefresher>
-
+         
           <div className="relative z-10 mx-auto max-w-2xl px-4 pb-8 pt-5">
             {/* Header */}
             <div className="mb-6 flex items-center gap-3">
@@ -87,10 +117,18 @@ const NotificationsPage: React.FC = () => {
               >
                 <ChevronLeft size={22} strokeWidth={2.5} />
               </button>
-              <div>
+              <div className="flex-1">
                 <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Updates</p>
                 <h1 className="font-display text-[2.2rem] font-extrabold leading-[0.9] tracking-tight text-ink">Notifications</h1>
               </div>
+              {hasUnread && (
+                <button
+                  onClick={markAllAsRead}
+                  className="shrink-0 rounded-full border border-primary-200 bg-white px-3 py-1.5 font-display text-xs font-bold text-primary-600 shadow-soft transition active:scale-95"
+                >
+                  Mark all read
+                </button>
+              )}
             </div>
 
             {loading ? (

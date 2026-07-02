@@ -1,7 +1,7 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { ChevronLeft, ShieldCheck, Lock, Eye, FileText, Globe } from 'lucide-react';
-import { IonContent, IonPage } from '@ionic/react';
+import { IonContent } from '@ionic/react';
 
 const dataCards = [
   { title: 'Personal info', text: 'Name, email address, phone number, and profile picture provided during registration.' },
@@ -22,7 +22,6 @@ const PrivacyPolicyPage: React.FC = () => {
   const history = useHistory();
 
   return (
-    <IonPage>
       <IonContent>
         <div className="app-top-safe relative min-h-full overflow-hidden bg-white pb-12">
           {/* Grainy orange aura */}
@@ -134,7 +133,6 @@ const PrivacyPolicyPage: React.FC = () => {
           </div>
         </div>
       </IonContent>
-    </IonPage>
   );
 };
 

@@ -43,7 +43,9 @@ const navItems: NavItem[] = [
       pathname === '/rides' ||
       pathname.startsWith('/rides/history') ||
       pathname.startsWith('/rides/detail') ||
-      pathname.startsWith('/trips/tracking'),
+      pathname.startsWith('/trips/tracking') ||
+      // bare-UUID ride detail (/rides/<uuid>) — was previously unmatched
+      /^\/rides\/[0-9a-fA-F-]{36}$/.test(pathname),
   },
   {
     key: 'inbox',

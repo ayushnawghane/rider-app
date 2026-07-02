@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useIonViewWillEnter } from '@ionic/react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { Phone, MessageCircle, Map, Star } from 'lucide-react';
+import { Phone, MessageCircle, Map, Star, Bell } from 'lucide-react';
 import AppIcon, { type AppIconName } from '../../components/icons/AppIcon';
 import type { PublishedRide } from '../../types';
-import { locationService, mapsService } from '../../services';
+import { locationService, mapsService, notificationService } from '../../services';
 import { isProfileIncomplete, isProfileNameIncomplete } from '../../utils/profileCompletion';
 
 interface Location {
@@ -40,15 +41,41 @@ const HomePage = () => {
   const history = useHistory();
   const location = useLocation<{ pickup?: Location; dropoff?: Location }>();
 
+  const refreshUnread = async () => {
+    if (!user?.id) {
+      setUnreadCount(0);
+      return;
+    }
+    const result = await notificationService.getUnreadCount(user.id);
+    if (result.success) setUnreadCount(result.count || 0);
+  };
+
+  useEffect(() => {
+    void refreshUnread();
+    if (!user?.id) return;
+    const unsubscribe = notificationService.subscribeToNotifications(user.id, () => {
+      void refreshUnread();
+    });
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Recompute when returning to Home (e.g. after reading notifications).
+  useIonViewWillEnter(() => {
+    void refreshUnread();
+  });
+
   const [pickup, setPickup] = useState<Location | null>(null);
   const [dropoff, setDropoff] = useState<Location | null>(null);
   const [passengerCount, setPassengerCount] = useState<number>(1);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
   const [departureDate, setDepartureDate] = useState(() => toLocalDateValue(new Date()));
   const [dismissedProfilePrompt, setDismissedProfilePrompt] = useState(false);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [activeRide] = useState<PublishedRide | null>(null);
   const [userStats] = useState({
     level: user?.level ?? 1,
@@ -64,6 +91,11 @@ const HomePage = () => {
     if (state.pickup) setPickup(state.pickup);
     if (state.dropoff) setDropoff(state.dropoff);
   }, [location.state]);
+
+  // Clear the "add a pick-up/drop-off" hint once the user has chosen both.
+  useEffect(() => {
+    if (pickup && dropoff) setSearchError(null);
+  }, [pickup, dropoff]);
 
   useEffect(() => {
     if (!user?.id) {
@@ -96,6 +128,19 @@ const HomePage = () => {
   };
 
   const handleFindDrivers = () => {
+    // Find Ride can't search without both endpoints — guard here so the user
+    // gets a clear prompt instead of a blank results page.
+    if (!pickup || !dropoff) {
+      setSearchError(
+        !pickup && !dropoff
+          ? 'Add a pick-up and drop-off to search.'
+          : !pickup
+            ? 'Add a pick-up location to search.'
+            : 'Add a drop-off location to search.',
+      );
+      return;
+    }
+    setSearchError(null);
     const departureTime = departureDate ? new Date(`${departureDate}T00:00:00`).toISOString() : undefined;
     history.push('/find-ride', { pickup, dropoff, passengerCount, departureTime });
   };
@@ -113,14 +158,28 @@ const HomePage = () => {
         return;
       }
 
-      await mapsService.initialize();
-      const resolved = await mapsService.reverseGeocode(coords.lat, coords.lng);
-      const nextLocation = resolved
-        ? { address: resolved.address, lat: resolved.lat, lng: resolved.lng }
-        : { address: locationService.formatCoordinates(coords.lat, coords.lng), lat: coords.lat, lng: coords.lng };
+      // reverseGeocode/initialize can throw (maps not ready / network); fall back
+      // to raw coordinates instead of leaving the user with a silent failure.
+      let nextLocation = {
+        address: locationService.formatCoordinates(coords.lat, coords.lng),
+        lat: coords.lat,
+        lng: coords.lng,
+      };
+      try {
+        await mapsService.initialize();
+        const resolved = await mapsService.reverseGeocode(coords.lat, coords.lng);
+        if (resolved) {
+          nextLocation = { address: resolved.address, lat: resolved.lat, lng: resolved.lng };
+        }
+      } catch (geocodeError) {
+        console.warn('Reverse geocode failed, using raw coordinates:', geocodeError);
+      }
 
       setCurrentLocation(nextLocation);
       setPickup(nextLocation);
+    } catch (locationErr) {
+      console.error('Location detection failed:', locationErr);
+      setLocationError('Location unavailable');
     } finally {
       setIsDetectingLocation(false);
     }
@@ -208,20 +267,38 @@ const HomePage = () => {
               <img src="/logo-mark.png" alt="Blinkcar" className="h-10 w-10 rounded-[14px] object-cover shadow-glow" />
               <span className="font-display text-lg font-extrabold lowercase tracking-tight text-ink">blinkcar</span>
             </div>
-            <button
-              onClick={() => history.push('/profile')}
-              className="h-11 w-11 overflow-hidden rounded-2xl border border-white/70 bg-white/50 shadow-soft backdrop-blur-sm transition active:scale-95"
-              aria-label="Open profile"
-              type="button"
-            >
-              {user?.avatarUrl ? (
-                <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <span className="flex h-full w-full items-center justify-center font-display text-base font-extrabold text-fire-orange">
-                  {greetingName.slice(0, 1).toUpperCase()}
-                </span>
-              )}
-            </button>
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => history.push('/notifications')}
+                className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/50 text-ink shadow-soft backdrop-blur-sm transition active:scale-95"
+                aria-label="Notifications"
+                type="button"
+              >
+                <Bell size={20} strokeWidth={2.4} />
+                {unreadCount > 0 && (
+                  <span
+                    className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 font-display text-[10px] font-extrabold text-white shadow-glow"
+                    style={{ background: FIRE }}
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => history.push('/profile')}
+                className="h-11 w-11 overflow-hidden rounded-2xl border border-white/70 bg-white/50 shadow-soft backdrop-blur-sm transition active:scale-95"
+                aria-label="Open profile"
+                type="button"
+              >
+                {user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center font-display text-base font-extrabold text-fire-orange">
+                    {greetingName.slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Greeting + illustration */}
@@ -368,6 +445,9 @@ const HomePage = () => {
             </div>
 
             {/* Find Drivers Button */}
+            {searchError && (
+              <p className="mb-2 text-center text-sm font-semibold text-fire-red">{searchError}</p>
+            )}
             <button
               onClick={handleFindDrivers}
               className="grain grain-strong relative w-full overflow-hidden rounded-2xl py-4 font-display text-lg font-bold tracking-tight text-white shadow-glow transition-all hover:shadow-glow-lg active:scale-[0.98]"

@@ -36,9 +36,20 @@ class GoogleMapsService {
       // Initialize services
       this.geocoder = new google.maps.Geocoder();
       this.directionsService = new google.maps.DirectionsService();
-      this.autocompleteService = new google.maps.places.AutocompleteService();
-      this.placesService = new google.maps.places.PlacesService(document.createElement('div'));
-      
+
+      // The legacy AutocompleteService/PlacesService constructors throw on
+      // Google Cloud projects provisioned with only "Places API (New)" (the
+      // default for keys created since 2025). Guard them so a new-API-only key
+      // doesn't abort the whole initialization — geocoding/directions still work.
+      try {
+        this.autocompleteService = new google.maps.places.AutocompleteService();
+        this.placesService = new google.maps.places.PlacesService(document.createElement('div'));
+      } catch (legacyError) {
+        console.warn('Legacy Places services unavailable (new Places API key?):', legacyError);
+        this.autocompleteService = null;
+        this.placesService = null;
+      }
+
       // Create session token for billing optimization
       if (this.placesLibrary) {
         this.sessionToken = new this.placesLibrary.AutocompleteSessionToken();
@@ -386,11 +397,14 @@ class GoogleMapsService {
       let shift = 0;
       let result = 0;
 
+      // The `index < encoded.length` guards prevent an infinite loop on a
+      // truncated/malformed polyline: without them, charCodeAt past the end
+      // returns NaN, the continuation bit never clears, and the UI thread hangs.
       do {
         const b = encoded.charCodeAt(index++) - 63;
         result |= (b & 0x1f) << shift;
         shift += 5;
-      } while (result & 0x20);
+      } while (result & 0x20 && index < encoded.length);
 
       const dlat = result & 1 ? ~(result >> 1) : result >> 1;
       lat += dlat;
@@ -402,7 +416,7 @@ class GoogleMapsService {
         const b = encoded.charCodeAt(index++) - 63;
         result |= (b & 0x1f) << shift;
         shift += 5;
-      } while (result & 0x20);
+      } while (result & 0x20 && index < encoded.length);
 
       const dlng = result & 1 ? ~(result >> 1) : result >> 1;
       lng += dlng;

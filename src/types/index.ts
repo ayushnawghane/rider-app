@@ -83,9 +83,18 @@ export interface Booking {
   seatsBooked: number;
   totalPrice: number;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  bookingTime: string;
+  bookingTime?: string;
   pickupLocation?: string;
   dropLocation?: string;
+  // Ratings
+  driverRating?: number;
+  driverReview?: string;
+  passengerRating?: number;
+  passengerReview?: string;
+  // Timestamps
+  confirmationTime?: string;
+  completionTime?: string;
+  cancellationTime?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -163,28 +172,6 @@ export interface Ride {
   distance?: number;
   driverContact?: string;
   userRole?: 'driver' | 'passenger';
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Booking {
-  id: string;
-  rideId: string;
-  passengerId: string;
-  seatsBooked: number;
-  totalPrice: number;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  pickupLocation?: string;
-  dropLocation?: string;
-  // Ratings
-  driverRating?: number;
-  driverReview?: string;
-  passengerRating?: number;
-  passengerReview?: string;
-  // Timestamps
-  confirmationTime?: string;
-  completionTime?: string;
-  cancellationTime?: string;
   createdAt: string;
   updatedAt: string;
 }

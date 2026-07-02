@@ -21,6 +21,7 @@ import {
 type EditRideFieldErrors = {
     departureTime?: string;
     vehicleNumber?: string;
+    availableSeats?: string;
 };
 
 const lightFieldClass =
@@ -36,6 +37,7 @@ const EditRidePage = () => {
     const [endLocation, setEndLocation] = useState<string>('');
     const [departureTime, setDepartureTime] = useState<string>('');
     const [availableSeats, setAvailableSeats] = useState<number>(3);
+    const [bookedSeats, setBookedSeats] = useState<number>(0);
     const [pricePerSeat, setPricePerSeat] = useState<number>(150);
     const [vehicleType, setVehicleType] = useState<string>('Sedan');
     const [vehicleNumber, setVehicleNumber] = useState<string>('');
@@ -78,6 +80,7 @@ const EditRidePage = () => {
                 setDepartureTime(localIso);
 
                 setAvailableSeats(ride.availableSeats ?? 3);
+                setBookedSeats(ride.bookedSeats ?? 0);
                 setPricePerSeat(ride.pricePerSeat ?? 150);
                 setVehicleType(ride.vehicleType || 'Sedan');
                 setVehicleNumber(ride.vehicleNumber || '');
@@ -104,6 +107,9 @@ const EditRidePage = () => {
         }
         if (!trimmedVehicleNumber) {
             nextFieldErrors.vehicleNumber = 'Please enter your vehicle number.';
+        }
+        if (bookedSeats > 0 && availableSeats < bookedSeats) {
+            nextFieldErrors.availableSeats = `You already have ${bookedSeats} seat${bookedSeats > 1 ? 's' : ''} booked, so seats can't go below ${bookedSeats}.`;
         }
 
         setFieldErrors(nextFieldErrors);
@@ -266,8 +272,9 @@ const EditRidePage = () => {
                             <Users className="w-5 h-5 text-primary-500" />
                             <div className="flex items-center gap-6">
                                 <button
-                                    onClick={() => setAvailableSeats(Math.max(1, availableSeats - 1))}
-                                    className="w-12 h-12 rounded-xl bg-white border-2 border-gray-200 flex items-center justify-center hover:border-primary-300 transition-colors"
+                                    onClick={() => setAvailableSeats(Math.max(Math.max(1, bookedSeats), availableSeats - 1))}
+                                    disabled={availableSeats <= Math.max(1, bookedSeats)}
+                                    className="w-12 h-12 rounded-xl bg-white border-2 border-gray-200 flex items-center justify-center hover:border-primary-300 transition-colors disabled:opacity-40"
                                 >
                                     <Minus className="w-5 h-5 text-gray-600" />
                                 </button>
@@ -280,6 +287,12 @@ const EditRidePage = () => {
                                 </button>
                             </div>
                         </div>
+                        {bookedSeats > 0 && (
+                            <p className="mt-2 text-xs font-medium text-ink/50">{bookedSeats} seat{bookedSeats > 1 ? 's' : ''} already booked.</p>
+                        )}
+                        {fieldErrors.availableSeats && (
+                            <p className="mt-2 text-xs font-semibold text-fire-red">{fieldErrors.availableSeats}</p>
+                        )}
                     </div>
 
                     {/* Price Per Seat */}

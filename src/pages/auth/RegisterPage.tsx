@@ -4,9 +4,15 @@ import { useHistory } from 'react-router';
 import Aurora from '../../components/ui/Aurora';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/auth';
+import { phoneOtpAuthService } from '../../services/phoneOtpAuth';
+import { supabase } from '../../lib/supabase';
 
 const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 const isValidPhone = (value: string) => /^\+?[1-9]\d{7,14}$/.test(value.trim().replace(/[\s-]/g, ''));
+const normalizePhone = (value: string) => {
+  const compact = value.trim().replace(/[\s()-]/g, '');
+  return compact.startsWith('+') ? compact : `+91${compact}`;
+};
 
 const labelClass = 'mb-1.5 block font-display text-[11px] font-bold uppercase tracking-wide text-ink/45';
 const inputClass =
@@ -14,11 +20,12 @@ const inputClass =
 
 const RegisterPage = () => {
   const history = useHistory();
-  const { user, isAuthLoaded } = useAuth();
+  const { user, isAuthLoaded, refreshUser } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -29,10 +36,12 @@ const RegisterPage = () => {
     }
   }, [isAuthLoaded, user, history]);
 
-  const handleRegister = async (event: FormEvent<HTMLFormElement>) => {
+  // Step 1 — validate details and send a verification code to the phone. The
+  // account is created by the phone-OTP flow (the only login the app supports),
+  // so registration and login stay consistent and no one gets locked out.
+  const handleSendCode = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (isSubmitting) return;
-
     setError(null);
     setInfo(null);
 
@@ -40,44 +49,50 @@ const RegisterPage = () => {
       setError('Enter your full name.');
       return;
     }
-
     if (!isValidEmail(email)) {
       setError('Enter a valid email address.');
       return;
     }
-
     if (!isValidPhone(phone)) {
       setError('Enter a valid mobile number.');
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+    try {
+      setIsSubmitting(true);
+      await phoneOtpAuthService.sendOtp(normalizePhone(phone));
+      setOtpSent(true);
+      setInfo('We sent a verification code to your mobile number.');
+    } catch (sendError: unknown) {
+      setError(sendError instanceof Error ? sendError.message : 'Could not send the code. Try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Step 2 — verify the code (this creates + signs in the account), then save
+  // the name and email the user entered onto their new profile.
+  const handleVerify = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+    setError(null);
+
+    if (!/^\d{4,8}$/.test(otp.trim())) {
+      setError('Enter the verification code sent to your phone.');
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const result = await authService.signUpWithEmailPassword({
-        fullName,
-        email,
-        phone,
-        password,
-      });
-
-      if (!result.success) {
-        setError(result.error || 'Registration failed.');
-        return;
+      await phoneOtpAuthService.verifyOtp(normalizePhone(phone), otp.trim());
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        await authService.updateProfile({ fullName: fullName.trim(), email: email.trim() }, data.user.id);
+        await refreshUser();
       }
-
-      if (result.requiresEmailVerification) {
-        setInfo('Account created. Please verify your email, then sign in.');
-        return;
-      }
-
       history.replace('/home');
-    } catch (registerError: unknown) {
-      setError(registerError instanceof Error ? registerError.message : 'Registration failed.');
+    } catch (verifyError: unknown) {
+      setError(verifyError instanceof Error ? verifyError.message : 'Verification failed.');
     } finally {
       setIsSubmitting(false);
     }
@@ -100,10 +115,12 @@ const RegisterPage = () => {
           </div>
 
           <p className="mb-6 text-sm font-medium leading-relaxed text-ink/55">
-            Register with your name, email, mobile number, and password.
+            {otpSent
+              ? 'Enter the verification code we sent to your mobile number.'
+              : 'Register with your name, email, and mobile number — we’ll verify with a one-time code.'}
           </p>
 
-          <form onSubmit={handleRegister} className="space-y-4">
+          <form onSubmit={otpSent ? handleVerify : handleSendCode} className="space-y-4">
             <label className="block">
               <span className={labelClass}>Full name</span>
               <input
@@ -112,7 +129,7 @@ const RegisterPage = () => {
                 onChange={(event) => setFullName(event.target.value)}
                 placeholder="Ayush Sharma"
                 autoComplete="name"
-                disabled={isSubmitting}
+                disabled={isSubmitting || otpSent}
                 className={inputClass}
               />
             </label>
@@ -125,7 +142,7 @@ const RegisterPage = () => {
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="you@example.com"
                 autoComplete="email"
-                disabled={isSubmitting}
+                disabled={isSubmitting || otpSent}
                 className={inputClass}
               />
             </label>
@@ -138,23 +155,26 @@ const RegisterPage = () => {
                 onChange={(event) => setPhone(event.target.value)}
                 placeholder="+91 9876543210"
                 autoComplete="tel"
-                disabled={isSubmitting}
+                disabled={isSubmitting || otpSent}
                 className={inputClass}
               />
             </label>
 
-            <label className="block">
-              <span className={labelClass}>Password</span>
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Create a password"
-                autoComplete="new-password"
-                disabled={isSubmitting}
-                className={inputClass}
-              />
-            </label>
+            {otpSent && (
+              <label className="block">
+                <span className={labelClass}>Verification code</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={otp}
+                  onChange={(event) => setOtp(event.target.value)}
+                  placeholder="Enter the code"
+                  autoComplete="one-time-code"
+                  disabled={isSubmitting}
+                  className={inputClass}
+                />
+              </label>
+            )}
 
             <button
               type="submit"
@@ -162,8 +182,21 @@ const RegisterPage = () => {
               className="grain grain-strong relative w-full overflow-hidden rounded-2xl py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
               style={{ background: 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))' }}
             >
-              {isSubmitting ? 'Creating account...' : 'Create account'}
+              {isSubmitting
+                ? (otpSent ? 'Verifying...' : 'Sending code...')
+                : (otpSent ? 'Create account' : 'Send code')}
             </button>
+
+            {otpSent && (
+              <button
+                type="button"
+                onClick={() => { setOtpSent(false); setOtp(''); setError(null); setInfo(null); }}
+                disabled={isSubmitting}
+                className="w-full text-center font-display text-sm font-bold text-ink/50 transition hover:text-ink"
+              >
+                Change details
+              </button>
+            )}
           </form>
 
           {info && (

@@ -59,3 +59,7 @@ Thumbs.db
 # Cypress artifacts
 cypress/screenshots/
 cypress/videos/
+
+# agent-browser testing tooling
+.agents/
+skills-lock.json

@@ -1,8 +1,9 @@
 export { authService } from './auth';
 export { rideService } from './ride';
-export { carpoolService } from './carpool';
 export { disputeService } from './dispute';
 export { messageService } from './message';
+export { rideChatService } from './rideChat';
+export type { RideMessage } from './rideChat';
 export { notificationService } from './notification';
 export { sosService } from './sos';
 export { mapsService } from './maps';

@@ -146,16 +146,16 @@ class RideService {
         return { success: false, error: bookingResult.error || 'Unable to create booking' };
       }
 
-      const { error: seatUpdateError } = await supabase
-        .from('rides')
-        .update({ booked_seats: bookedSeats + seatsBooked })
-        .eq('id', params.rideId);
+      // `rides.booked_seats` is maintained authoritatively by the
+      // `sync_ride_booked_seats` DB trigger (from the participant upsert above).
+      // We must NOT write it from here: a passenger can't update another user's
+      // ride (RLS), and writing a stale snapshot value would clobber the
+      // trigger's correct SUM and race concurrent joins into an oversold ride.
 
-      if (seatUpdateError) {
-        await this.cancelParticipant(params.rideId, params.userId);
-        return { success: false, error: seatUpdateError.message };
-      }
-
+      // Notifications for both the driver and the joining passenger are raised
+      // automatically by the `notify_on_ride_participation` DB trigger, so we
+      // deliberately do not create them here (that would double-notify and,
+      // for the driver's row, fail RLS from the client).
       await Promise.allSettled([
         this.createReward({
           userId: params.userId,
@@ -165,18 +165,6 @@ class RideService {
         }),
         this.updateProfileStats(params.userId, {
           ridesTakenDelta: 1,
-        }),
-        this.createNotification({
-          userId: rideRow.user_id,
-          title: 'New rider joined',
-          message: `A passenger joined your ride from ${rideRow.start_location} to ${rideRow.end_location}.`,
-          type: 'ride',
-        }),
-        this.createNotification({
-          userId: params.userId,
-          title: 'Ride joined',
-          message: `You joined the ride from ${rideRow.start_location} to ${rideRow.end_location}.`,
-          type: 'ride',
         }),
       ]);
 
@@ -226,6 +214,36 @@ class RideService {
 
       if (error) return { success: false, error: error.message };
       return { success: true, bookings: data || [] };
+    } catch {
+      return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
+  // Driver-facing passenger list. Reads from `ride_participants` (the table the
+  // join flow actually writes to) rather than `bookings`, because the deployed
+  // RLS on ride_participants explicitly lets the ride owner see every joined
+  // participant — so a driver reliably sees their passengers. Shaped to match
+  // what the ride console renders (passenger_id + passenger profile + seats).
+  async getRideParticipants(rideId: string): Promise<{ success: boolean; bookings?: any[]; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .from('ride_participants')
+        .select('id, user_id, seats_booked, status, created_at, passenger:profiles!ride_participants_user_id_fkey(id, full_name, first_name, last_name, avatar_url, phone, rating_as_passenger)')
+        .eq('ride_id', rideId)
+        .eq('status', 'joined')
+        .order('created_at', { ascending: true });
+
+      if (error) return { success: false, error: error.message };
+
+      const bookings = (data || []).map((row: any) => ({
+        id: row.id,
+        passenger_id: row.user_id,
+        passenger: row.passenger || null,
+        seats_booked: row.seats_booked,
+        status: 'confirmed',
+      }));
+
+      return { success: true, bookings };
     } catch {
       return { success: false, error: 'An unexpected error occurred' };
     }
@@ -464,6 +482,11 @@ class RideService {
         return { success: false, error: error.message };
       }
 
+      // Keep passengers' bookings in step with a driver-initiated status change
+      // (Complete / Cancel) — otherwise their booking rows stay 'pending' on a
+      // ride the driver already ended. Mirrors the time-based reconcile path.
+      await this.syncBookingsForRideStatus(rideId, status);
+
       return { success: true };
     } catch (error) {
       return { success: false, error: 'An unexpected error occurred' };
@@ -656,26 +679,6 @@ class RideService {
     }
   }
 
-  private async createNotification(params: {
-    userId: string;
-    title: string;
-    message: string;
-    type: 'ride' | 'dispute' | 'system';
-  }) {
-    const { error } = await supabase
-      .from('notifications')
-      .insert({
-        user_id: params.userId,
-        title: params.title,
-        message: params.message,
-        type: params.type,
-        read: false,
-      });
-
-    if (error) {
-      console.warn('Notification write failed:', error.message);
-    }
-  }
 
   private async updateProfileStats(userId: string, deltas: {
     pointsDelta?: number;
