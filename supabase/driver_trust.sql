@@ -56,3 +56,26 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.get_driver_rating_summary(UUID) TO authenticated, anon;
 GRANT EXECUTE ON FUNCTION public.get_driver_reviews(UUID, INT) TO authenticated, anon;
+
+-- Let passengers view any ride they joined or booked, regardless of status.
+-- The existing rides SELECT policies only cover own rides + joinable
+-- (pending/active) rides, so a passenger could not open a COMPLETED ride they
+-- were on — breaking their ride history and the post-ride rating flow. A
+-- SECURITY DEFINER helper avoids RLS recursion between rides <-> participants.
+CREATE OR REPLACE FUNCTION public.is_my_ride(target_ride_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+    SELECT
+        EXISTS (SELECT 1 FROM ride_participants rp WHERE rp.ride_id = target_ride_id AND rp.user_id = auth.uid())
+        OR EXISTS (SELECT 1 FROM bookings b WHERE b.ride_id = target_ride_id AND b.passenger_id = auth.uid());
+$$;
+
+GRANT EXECUTE ON FUNCTION public.is_my_ride(UUID) TO authenticated;
+
+DROP POLICY IF EXISTS "Participants can view their rides" ON rides;
+CREATE POLICY "Participants can view their rides" ON rides
+    FOR SELECT USING (public.is_my_ride(id));

@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   BadgeCheck,
+  Star,
 } from 'lucide-react';
 import type { Ride, DriverProfile } from '../../types';
 import { hasRequiredBookingProfile } from '../../utils/profileCompletion';
@@ -34,6 +35,12 @@ const RideDetailPage = () => {
   const { user } = useAuth();
   const [ride, setRide] = useState<Ride | null>(null);
   const [driverProfile, setDriverProfile] = useState<DriverProfile | null>(null);
+  const [myBooking, setMyBooking] = useState<{ id: string; driverRating: number | null } | null>(null);
+  const [showRatePrompt, setShowRatePrompt] = useState(false);
+  const [ratingValue, setRatingValue] = useState(0);
+  const [ratingReview, setRatingReview] = useState('');
+  const [submittingRating, setSubmittingRating] = useState(false);
+  const [ratedNow, setRatedNow] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
   const [isJoined, setIsJoined] = useState(false);
@@ -95,8 +102,12 @@ const RideDetailPage = () => {
           if (participation.success) {
             setIsJoined(participation.joined);
           }
+          // Whether this passenger has already reviewed the driver.
+          const booking = await rideService.getMyBooking(result.ride.id, user.id);
+          if (booking.success) setMyBooking(booking.booking || null);
         } else {
           setIsJoined(false);
+          setMyBooking(null);
         }
       }
       setLoading(false);
@@ -163,6 +174,27 @@ const RideDetailPage = () => {
       setIsJoining(false);
     }
   };
+
+  const handleSubmitRating = async () => {
+    if (!myBooking || ratingValue < 1 || submittingRating) return;
+    setSubmittingRating(true);
+    const result = await rideService.submitRating({
+      bookingId: myBooking.id,
+      isDriverRating: true,
+      rating: ratingValue,
+      review: ratingReview.trim() || undefined,
+    });
+    setSubmittingRating(false);
+    if (result.success) {
+      setRatedNow(true);
+      setShowRatePrompt(false);
+      setMyBooking({ ...myBooking, driverRating: ratingValue });
+    }
+  };
+
+  const canRate =
+    !!ride && ride.status === 'completed' && !!myBooking && myBooking.driverRating == null && !ratedNow;
+  const alreadyRated = !!myBooking && (myBooking.driverRating != null || ratedNow);
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -324,6 +356,29 @@ const RideDetailPage = () => {
                   </div>
                   <ChevronRight className="h-5 w-5 shrink-0 text-ink/30" />
                 </button>
+              )}
+
+              {/* Post-ride: rate the driver */}
+              {canRate && (
+                <div className="app-card">
+                  <p className="font-display font-bold text-ink">How was your ride?</p>
+                  <p className="mt-1 text-sm font-medium text-ink/50">Rate {ride.driver?.name || 'your driver'} to help other riders.</p>
+                  <button
+                    onClick={() => { setRatingValue(0); setRatingReview(''); setShowRatePrompt(true); }}
+                    className="mt-3 rounded-xl px-4 py-2.5 font-display text-sm font-bold text-white shadow-glow transition active:scale-95"
+                    style={{ background: FIRE }}
+                  >
+                    Rate your driver
+                  </button>
+                </div>
+              )}
+              {alreadyRated && (
+                <div className="app-card flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <p className="text-sm font-medium text-ink/60">
+                    Thanks — you rated this ride{myBooking?.driverRating ? ` ★ ${myBooking.driverRating}` : ''}.
+                  </p>
+                </div>
               )}
 
               {/* Details Card */}
@@ -501,6 +556,43 @@ const RideDetailPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Rating modal */}
+        {showRatePrompt && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 px-4 pb-8 backdrop-blur-sm sm:items-center sm:pb-0">
+            <div className="w-full max-w-md app-card" role="dialog" aria-modal="true">
+              <h2 className="app-section-title">Rate your ride</h2>
+              <p className="mt-1 text-sm font-medium text-ink/50">with {ride?.driver?.name || 'your driver'}</p>
+              <div className="mt-4 flex justify-center gap-2">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button key={n} type="button" onClick={() => setRatingValue(n)} aria-label={`${n} star${n > 1 ? 's' : ''}`} className="transition active:scale-90">
+                    <Star className={`h-9 w-9 ${n <= ratingValue ? 'fill-fire-gold text-fire-gold' : 'fill-ink/10 text-ink/20'}`} />
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={ratingReview}
+                onChange={(e) => setRatingReview(e.target.value)}
+                placeholder="Add a short review (optional)"
+                rows={3}
+                maxLength={500}
+                className="mt-4 w-full resize-none rounded-xl border-2 border-black/10 p-3 text-sm font-medium focus:border-fire-orange focus:outline-none"
+              />
+              <div className="mt-4 flex gap-3">
+                <button type="button" onClick={() => setShowRatePrompt(false)} className="flex-1 rounded-xl border-2 border-black/10 py-2.5 font-display font-bold text-ink/60 transition active:scale-95">Cancel</button>
+                <button
+                  type="button"
+                  onClick={handleSubmitRating}
+                  disabled={ratingValue < 1 || submittingRating}
+                  className="flex-1 rounded-xl py-2.5 font-display font-bold text-white shadow-glow transition active:scale-95 disabled:opacity-50"
+                  style={{ background: FIRE }}
+                >
+                  {submittingRating ? 'Submitting…' : 'Submit'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </IonContent>
     </IonPage>
   );

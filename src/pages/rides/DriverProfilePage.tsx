@@ -5,8 +5,6 @@ import { rideService } from '../../services';
 import type { DriverProfile } from '../../types';
 import { PageLoader } from '../../components/ui';
 
-const FIRE = 'linear-gradient(100deg, var(--fire-red), var(--fire-amber))';
-
 const memberSinceLabel = (iso: string) => {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;

@@ -250,6 +250,30 @@ class RideService {
     }
   }
 
+  // The current user's own booking on a ride (readable under RLS) — used to
+  // know whether they've already left the driver a review.
+  async getMyBooking(
+    rideId: string,
+    userId: string,
+  ): Promise<{ success: boolean; booking?: { id: string; driverRating: number | null }; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('id, driver_rating')
+        .eq('ride_id', rideId)
+        .eq('passenger_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) return { success: false, error: error.message };
+      if (!data) return { success: true, booking: undefined };
+      return { success: true, booking: { id: data.id as string, driverRating: (data.driver_rating as number | null) ?? null } };
+    } catch {
+      return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
   async submitRating(params: {
     bookingId: string;
     isDriverRating: boolean;
