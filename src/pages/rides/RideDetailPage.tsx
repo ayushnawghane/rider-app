@@ -223,7 +223,7 @@ const RideDetailPage = () => {
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-fire-red/10">
                   <AlertTriangle className="h-10 w-10 text-fire-red" />
                 </div>
-                <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">Ride not found</h2>
+                <h2 className="mt-3 app-section-title">Ride not found</h2>
                 <p className="mt-2 text-sm font-medium text-ink/50">
                   The ride you're looking for doesn't exist or has been deleted.
                 </p>
@@ -279,13 +279,13 @@ const RideDetailPage = () => {
               )}
 
               {/* Details Card */}
-              <div className="animate-fade-in rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
+              <div className="animate-fade-in app-card">
                 <div className="mb-4 flex items-start gap-3">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
                     <AppIcon name="car" className="h-7 w-7" />
                   </div>
                   <div>
-                    <h1 className="font-display text-xl font-extrabold tracking-tight text-ink">Ride details</h1>
+                    <h1 className="app-section-title">Ride details</h1>
                     <span className={`mt-1.5 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-display text-[11px] font-bold ${status.cls}`}>
                       <status.icon className="h-3.5 w-3.5" />
                       {status.label}
@@ -373,7 +373,7 @@ const RideDetailPage = () => {
 
               {/* Join Card */}
               {canJoinRide && (
-                <div className="rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
+                <div className="app-card">
                   <button
                     onClick={handleJoinRide}
                     disabled={isJoining || isJoined}

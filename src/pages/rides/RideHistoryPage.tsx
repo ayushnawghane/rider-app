@@ -169,7 +169,7 @@ const RideHistoryPage = () => {
           <header className="mb-4 flex items-end justify-between">
             <div>
               <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Your trips</p>
-              <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">Rides</h1>
+              <h1 className="app-page-title">Rides</h1>
               <p className="mt-2 text-sm font-medium text-ink/50">
                 {rides.length} ride{rides.length === 1 ? '' : 's'} found
               </p>
@@ -192,7 +192,7 @@ const RideHistoryPage = () => {
               <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
                 <AppIcon name="car" className="h-12 w-12" />
               </div>
-              <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">No rides yet</h2>
+              <h2 className="mt-3 app-section-title">No rides yet</h2>
               <p className="mt-2 text-sm font-medium text-ink/50">Publish a ride or search from Home to get started.</p>
               <button
                 type="button"

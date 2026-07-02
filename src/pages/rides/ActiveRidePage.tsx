@@ -355,7 +355,7 @@ const ActiveRidePage = () => {
               <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-fire-red/10">
                 <AlertTriangle className="h-10 w-10 text-fire-red" />
               </div>
-              <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">Ride not found</h2>
+              <h2 className="mt-3 app-section-title">Ride not found</h2>
               <p className="mt-2 text-sm font-medium text-ink/50">The ride you're looking for doesn't exist.</p>
               <button
                 onClick={() => history.push('/home')}
@@ -647,7 +647,7 @@ const ActiveRidePage = () => {
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-glow" style={{ background: FIRE }}>
                 <CheckCircle2 className="h-7 w-7" />
               </div>
-              <h2 className="mb-2 text-center font-display text-xl font-extrabold tracking-tight text-ink">Complete Trip</h2>
+              <h2 className="mb-2 text-center app-section-title">Complete Trip</h2>
               <p className="mb-4 text-center text-sm font-medium text-ink/55">Are you sure you want to end this trip? This will mark the ride as successfully completed.</p>
               <div className="grid grid-cols-2 gap-3">
                 <button onClick={() => setShowEndConfirm(false)} className="rounded-2xl border-2 border-black/10 bg-white py-3 font-display font-bold text-ink/70 transition hover:bg-paper">Go Back</button>
@@ -663,7 +663,7 @@ const ActiveRidePage = () => {
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-fire-red/10">
                 <AlertTriangle className="h-7 w-7 text-fire-red" />
               </div>
-              <h2 className="mb-2 text-center font-display text-xl font-extrabold tracking-tight text-ink">Cancel Trip</h2>
+              <h2 className="mb-2 text-center app-section-title">Cancel Trip</h2>
               <p className="mb-4 text-center text-sm font-medium text-ink/55">Are you sure you want to cancel this trip? This action cannot be undone.</p>
               <div className="grid grid-cols-2 gap-3">
                 <button onClick={() => setShowCancelConfirm(false)} className="rounded-2xl border-2 border-black/10 bg-white py-3 font-display font-bold text-ink/70 transition hover:bg-paper">Go Back</button>

@@ -130,7 +130,7 @@ const KycUploadPage = () => {
 
               {!success ? (
                 <>
-                  <div className="rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
+                  <div className="app-card">
                     <div className="mb-3">
                       <h2 className="mb-2 font-display text-lg font-extrabold tracking-tight text-ink">Upload document</h2>
                       <p className="text-sm font-medium text-ink/50">
@@ -187,7 +187,7 @@ const KycUploadPage = () => {
                     </div>
                   )}
 
-                  <div className="rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
+                  <div className="app-card">
                     <h2 className="mb-4 font-display text-lg font-extrabold tracking-tight text-ink">Requirements</h2>
                     <div className="space-y-3">
                       {requirements.map((req) => (
@@ -204,7 +204,7 @@ const KycUploadPage = () => {
                   <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
                     <CheckCircle2 className="h-10 w-10 text-emerald-600" />
                   </div>
-                  <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">Document uploaded!</h2>
+                  <h2 className="mt-3 app-section-title">Document uploaded!</h2>
                   <p className="mt-2 text-sm font-medium text-ink/50">Your KYC document has been uploaded successfully and is now under review.</p>
                   <div className="mt-4 rounded-2xl border border-fire-gold/30 bg-fire-gold/10 p-4 text-left">
                     <div className="flex items-start gap-3">

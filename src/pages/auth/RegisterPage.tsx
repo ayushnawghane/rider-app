@@ -108,7 +108,7 @@ const RegisterPage = () => {
               <img src="/logo-mark.png" alt="Blinkcar" className="h-11 w-11 rounded-[16px] object-cover shadow-glow" />
               <div>
                 <p className="font-display text-[11px] font-extrabold lowercase tracking-tight text-fire-orange">blinkcar</p>
-                <h1 className="font-display text-xl font-extrabold tracking-tight text-ink">Create account</h1>
+                <h1 className="app-section-title">Create account</h1>
               </div>
             </div>
             <span className="rounded-full bg-fire-gold/25 px-3 py-1 font-display text-xs font-bold text-[#9a5b00]">Free</span>

@@ -60,7 +60,7 @@ const ConversationList = () => {
     <div className="mx-auto max-w-2xl">
       <header className="mb-4">
         <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Messages</p>
-        <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">Inbox</h1>
+        <h1 className="app-page-title">Inbox</h1>
         <p className="mt-2 text-sm font-medium text-ink/50">Chat about your upcoming and active rides</p>
       </header>
 
@@ -73,7 +73,7 @@ const ConversationList = () => {
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
             <AppIcon name="inbox" className="h-11 w-11" />
           </div>
-          <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">No conversations yet</h2>
+          <h2 className="mt-3 app-section-title">No conversations yet</h2>
           <p className="mt-2 text-sm font-medium text-ink/50">
             Book or publish a ride, then chat with the driver or your passengers here.
           </p>

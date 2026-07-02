@@ -59,7 +59,7 @@ const PrivacyPolicyPage: React.FC = () => {
               <section className="space-y-3">
                 <div className="flex items-center gap-3 text-fire-orange">
                   <Globe size={22} />
-                  <h2 className="font-display text-xl font-extrabold tracking-tight text-ink">Introduction</h2>
+                  <h2 className="app-section-title">Introduction</h2>
                 </div>
                 <p className="font-medium leading-relaxed text-ink/65">
                   Welcome to BlinkCar. We value your privacy and are committed to protecting your personal data.
@@ -73,7 +73,7 @@ const PrivacyPolicyPage: React.FC = () => {
               <section className="space-y-3">
                 <div className="flex items-center gap-3 text-fire-orange">
                   <Lock size={22} />
-                  <h2 className="font-display text-xl font-extrabold tracking-tight text-ink">Data we collect</h2>
+                  <h2 className="app-section-title">Data we collect</h2>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   {dataCards.map((card) => (
@@ -88,7 +88,7 @@ const PrivacyPolicyPage: React.FC = () => {
               <section className="space-y-3">
                 <div className="flex items-center gap-3 text-fire-orange">
                   <Eye size={22} />
-                  <h2 className="font-display text-xl font-extrabold tracking-tight text-ink">How we use your data</h2>
+                  <h2 className="app-section-title">How we use your data</h2>
                 </div>
                 <ul className="space-y-3">
                   {usageList.map((item) => (
@@ -103,7 +103,7 @@ const PrivacyPolicyPage: React.FC = () => {
               <section className="space-y-3">
                 <div className="flex items-center gap-3 text-fire-orange">
                   <FileText size={22} />
-                  <h2 className="font-display text-xl font-extrabold tracking-tight text-ink">Your rights</h2>
+                  <h2 className="app-section-title">Your rights</h2>
                 </div>
                 <p className="font-medium leading-relaxed text-ink/65">
                   You have the right to access, update, or delete your personal information directly within the app settings.

@@ -256,7 +256,7 @@ const TripTrackingPage = () => {
                 <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-fire-red/10">
                     <AlertTriangle className="h-10 w-10 text-fire-red" />
                 </div>
-                <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">Trip not found</h2>
+                <h2 className="mt-3 app-section-title">Trip not found</h2>
                 <button
                     onClick={() => history.goBack()}
                     className="grain grain-strong relative mt-4 overflow-hidden rounded-2xl px-8 py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"

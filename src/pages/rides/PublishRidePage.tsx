@@ -295,7 +295,7 @@ const PublishRidePage = () => {
         {/* Header */}
         <div className="mb-3">
           <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Publish</p>
-          <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">Offer a ride</h1>
+          <h1 className="app-page-title">Offer a ride</h1>
           <p className="mt-2 text-sm font-medium text-ink/50">Share your journey and earn points</p>
         </div>
 
@@ -432,7 +432,7 @@ const PublishRidePage = () => {
                 >
                   <Minus className="h-5 w-5 text-ink" strokeWidth={2.5} />
                 </button>
-                <span className="w-8 text-center font-display text-2xl font-extrabold text-ink">{availableSeats}</span>
+                <span className="w-8 text-center font-display text-xl font-extrabold text-ink">{availableSeats}</span>
                 <button
                   onClick={() => setAvailableSeats(Math.min(6, availableSeats + 1))}
                   className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-primary-200 bg-white transition active:scale-90 hover:bg-primary-50"
@@ -454,7 +454,7 @@ const PublishRidePage = () => {
                 pattern="[0-9]*"
                 value={displayPositiveIntegerInput(pricePerSeat)}
                 onChange={(e) => setPricePerSeat(normalizePositiveIntegerInput(e.target.value))}
-                className={`flex-1 bg-transparent font-display text-2xl font-extrabold text-ink focus:outline-none ${lightFieldClass}`}
+                className={`flex-1 bg-transparent font-display text-xl font-extrabold text-ink focus:outline-none ${lightFieldClass}`}
                 placeholder="0"
               />
             </div>

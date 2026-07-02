@@ -281,7 +281,7 @@ const SafetyPage: React.FC = () => {
                 <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
                   <ShieldAlert className="h-8 w-8 text-white" strokeWidth={2.5} />
                 </div>
-                <h2 className="font-display text-2xl font-extrabold tracking-tight text-white">Emergency SOS</h2>
+                <h2 className="font-display text-xl font-extrabold tracking-tight text-white">Emergency SOS</h2>
                 <p className="mx-auto mt-2 max-w-sm text-sm font-medium text-white/90">
                   In case of emergency, tap the button below to alert our support team with your live location.
                 </p>
@@ -343,7 +343,7 @@ const SafetyPage: React.FC = () => {
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
                 <CheckCircle2 className="h-9 w-9 text-emerald-600" />
               </div>
-              <h2 className="mt-4 font-display text-2xl font-extrabold tracking-tight text-emerald-600">SOS Alert Sent!</h2>
+              <h2 className="mt-4 font-display text-xl font-extrabold tracking-tight text-emerald-600">SOS Alert Sent!</h2>
               <p className="mt-2 text-sm font-medium text-ink/55">
                 Our support team has been notified with your live location and will contact you immediately.
               </p>

@@ -364,7 +364,7 @@ const FindRidePage = () => {
                         </div>
                       </div>
                       <div className="flex-shrink-0 text-right">
-                        <p className="font-display text-2xl font-extrabold leading-none text-fire-orange">₹{ride.pricePerSeat}</p>
+                        <p className="font-display text-xl font-extrabold leading-none text-fire-orange">₹{ride.pricePerSeat}</p>
                         <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">per seat</p>
                       </div>
                     </div>
@@ -444,7 +444,7 @@ const FindRidePage = () => {
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
               <AppIcon name="car" className="h-12 w-12" />
             </div>
-            <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">No rides found</h2>
+            <h2 className="mt-3 app-section-title">No rides found</h2>
             <p className="mt-2 text-sm font-medium text-ink/50">
               We couldn't find any rides for your route. Try adjusting your search or publish your own ride!
             </p>

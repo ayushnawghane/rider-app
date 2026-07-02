@@ -505,7 +505,7 @@ const HomePage = () => {
 
           {/* Active Ride Card */}
           {activeRide && (
-            <div className="mb-4 rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
+            <div className="mb-4 app-card">
               <div className="mb-4 flex items-start gap-3">
                 <div className="relative">
                   <div className="h-16 w-16 overflow-hidden rounded-2xl bg-paper-dim">
@@ -575,7 +575,7 @@ const HomePage = () => {
 
           {/* Popular Routes Section */}
           <div className="mb-7">
-            <h2 className="mb-1 font-display text-2xl font-extrabold tracking-tight text-ink">Popular routes</h2>
+            <h2 className="mb-1 app-section-title">Popular routes</h2>
             <p className="mb-4 text-sm font-medium text-ink/50">Top picks for your next trip</p>
 
             <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
@@ -608,10 +608,10 @@ const HomePage = () => {
           </div>
 
           {/* Promotional Banner */}
-          <div className="relative mb-4 overflow-hidden rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
+          <div className="relative mb-4 overflow-hidden app-card">
             <div className="flex items-center gap-3">
               <div className="flex-1">
-                <h3 className="mb-1.5 font-display text-2xl font-extrabold leading-[0.95] tracking-tight text-ink">Earn while<br />you travel</h3>
+                <h3 className="mb-1.5 font-display text-xl font-extrabold leading-[0.95] tracking-tight text-ink">Earn while<br />you travel</h3>
                 <p className="mb-4 text-sm font-medium text-ink/55">Get 2x points on your first 3 rides this month</p>
                 <button
                   onClick={() => history.push('/rewards')}
@@ -632,7 +632,7 @@ const HomePage = () => {
       {showProfilePrompt && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 px-4 pb-8 backdrop-blur-sm sm:items-center sm:pb-0">
           <div className="w-full max-w-md rounded-[18px] border border-black/5 bg-white p-4 shadow-strong" aria-modal="true" role="dialog">
-            <h2 className="font-display text-2xl font-extrabold tracking-tight text-ink">Complete your profile</h2>
+            <h2 className="app-section-title">Complete your profile</h2>
             <p className="mt-2 text-sm text-ink/60">
               Add your name, email, and mobile number to finish setup and make your account easier to identify.
             </p>

@@ -155,7 +155,7 @@ const DisputeChatPage = () => {
               </button>
               <div>
                 <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Support chat</p>
-                <h1 className="font-display text-xl font-extrabold tracking-tight text-ink">Dispute #{id.slice(0, 8)}</h1>
+                <h1 className="app-section-title">Dispute #{id.slice(0, 8)}</h1>
               </div>
             </header>
 
@@ -171,7 +171,7 @@ const DisputeChatPage = () => {
                   <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
                     <AppIcon name="message" className="h-11 w-11" />
                   </div>
-                  <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">No messages yet</h2>
+                  <h2 className="mt-3 app-section-title">No messages yet</h2>
                   <p className="mt-2 text-sm font-medium text-ink/50">Start a conversation with our support team.</p>
                 </div>
               ) : (

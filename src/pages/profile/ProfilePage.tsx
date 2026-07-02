@@ -335,7 +335,7 @@ const ProfilePage = () => {
         <div className="relative z-10 px-4 pb-[calc(env(safe-area-inset-bottom)+112px)] pt-[calc(env(safe-area-inset-top)+24px)]">
           <div className="mx-auto max-w-2xl">
             <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Profile setup</p>
-            <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink sm:text-5xl">
+            <h1 className="app-page-title sm:text-5xl">
               Complete your profile
             </h1>
             <p className="mt-3 text-sm font-medium text-ink/55 sm:text-base">
@@ -344,7 +344,7 @@ const ProfilePage = () => {
           </div>
 
           <div className="mx-auto mt-4 max-w-2xl space-y-3">
-            <section className="rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
+            <section className="app-card">
               <div className="mb-3">
                 <div className="mb-3 flex items-center justify-between">
                   <p className="font-display text-sm font-bold text-ink/60">
@@ -529,7 +529,7 @@ const ProfilePage = () => {
               </button>
               <div>
                 <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Account</p>
-                <h1 className="font-display text-[2.4rem] font-extrabold leading-[0.9] tracking-tight text-ink">Profile</h1>
+                <h1 className="app-page-title">Profile</h1>
               </div>
             </div>
 
@@ -545,7 +545,7 @@ const ProfilePage = () => {
 
           <div className="space-y-3">
             {/* Identity card */}
-            <section className="rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
+            <section className="app-card">
               <div className="flex items-start gap-3">
                 <div className="relative">
                   <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-3xl font-display text-4xl font-extrabold text-white shadow-glow" style={{ background: FIRE }}>
@@ -632,7 +632,7 @@ const ProfilePage = () => {
             </section>
 
             {editing && (
-              <section className="rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
+              <section className="app-card">
                 <h3 className="mb-4 font-display text-lg font-extrabold tracking-tight text-ink">Edit profile</h3>
                 <div className="space-y-3">
                   <label className="block">
@@ -714,7 +714,7 @@ const ProfilePage = () => {
             )}
 
             {editing && !requiresProfileCompletion && (
-              <section className="rounded-[18px] border border-black/5 bg-white p-4 shadow-soft">
+              <section className="app-card">
                 <div className="mb-4 flex items-center gap-2">
                   <Car size={18} className="text-fire-orange" />
                   <h3 className="font-display text-lg font-extrabold tracking-tight text-ink">Vehicle details</h3>

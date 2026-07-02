@@ -1,4 +1,4 @@
-import { IonContent, IonPage, IonRefresher, IonRefresherContent } from '@ionic/react';
+import { IonContent, IonPage } from '@ionic/react';
 import { useCallback, useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { ChevronLeft } from 'lucide-react';
@@ -51,11 +51,6 @@ const NotificationsPage: React.FC = () => {
     }
     return () => unsubscribe?.();
   }, [user]);
-
-  const handleRefresh = async (event: CustomEvent) => {
-    await fetchNotifications();
-    (event.target as HTMLIonRefresherElement).complete();
-  };
 
   const hasUnread = notifications.some((n) => !n.read);
 
@@ -119,7 +114,7 @@ const NotificationsPage: React.FC = () => {
               </button>
               <div className="flex-1">
                 <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Updates</p>
-                <h1 className="font-display text-[2.2rem] font-extrabold leading-[0.9] tracking-tight text-ink">Notifications</h1>
+                <h1 className="font-display text-[1.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">Notifications</h1>
               </div>
               {hasUnread && (
                 <button
@@ -142,7 +137,7 @@ const NotificationsPage: React.FC = () => {
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
                   <AppIcon name="bell" className="h-11 w-11" />
                 </div>
-                <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">No notifications</h2>
+                <h2 className="mt-3 app-section-title">No notifications</h2>
                 <p className="mt-2 text-sm font-medium text-ink/50">You don't have any notifications yet.</p>
               </div>
             ) : (

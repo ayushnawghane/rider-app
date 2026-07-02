@@ -142,7 +142,7 @@ const SupportPage = () => {
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
                   <AppIcon name="message" className="h-11 w-11" />
                 </div>
-                <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-ink">Need help?</h2>
+                <h2 className="mt-3 app-section-title">Need help?</h2>
                 <p className="mt-2 text-sm font-medium text-ink/50">You have no disputes yet. Start one and our support team will respond.</p>
                 <button
                   onClick={() => history.push('/support/dispute/new')}

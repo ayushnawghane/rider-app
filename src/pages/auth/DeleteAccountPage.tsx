@@ -50,7 +50,7 @@ const DeleteAccountPage: React.FC = () => {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/30 bg-white/20 backdrop-blur-sm">
                 <Trash2 className="text-white" size={32} />
               </div>
-              <h1 className="font-display text-2xl font-extrabold tracking-tight text-white">Delete Account</h1>
+              <h1 className="font-display text-xl font-extrabold tracking-tight text-white">Delete Account</h1>
               <p className="mt-2 text-sm font-medium text-white/90">
                 This action is permanent and cannot be undone.
               </p>
