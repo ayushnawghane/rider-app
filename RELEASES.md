@@ -4,6 +4,21 @@ Keep track of all production builds, database migrations, and major feature upda
 
 ---
 
+## v1.0.6 - 2026-07-02
+
+### Overview
+Version bump for App Store resubmission (the `1.0.4` train was closed for new
+builds — CFBundleShortVersionString must exceed the last approved version).
+`MARKETING_VERSION` (iOS) and `appVersionName` (Android) synced to `1.0.6` via
+`npm run version:sync`; the iOS build number is set by CI.
+
+### Included since 1.0.4
+- Ride chat, app + email notifications (server-side triggers), booking/seat
+  integrity, monthly reward-points cap, phone-OTP registration, maps/tracking
+  robustness fixes, and a broad bug sweep. See PR #25.
+
+---
+
 ## v1.0.0 (Initial Release) - 2026-03-22
 **Release Name:** Genesis
 
