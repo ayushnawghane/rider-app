@@ -1,5 +1,9 @@
 import { supabase } from '../lib/supabase';
 
+// Unique channel topics per subscription so two subscribers to the same ride
+// never collide on a shared channel (which throws after `.subscribe()`).
+let chatSubscriptionSeq = 0;
+
 // Ride chat is a 1:1 conversation between two participants of a ride
 // (a passenger and the driver). It is backed by the `ride_messages` table,
 // whose RLS lets any legitimate ride participant read/send while the ride is
@@ -96,7 +100,7 @@ class RideChatService {
   // message on every new row for this ride. Callers filter to their thread.
   subscribe(rideId: string, callback: (message: RideMessage) => void): () => void {
     const channel = supabase
-      .channel(`ride_messages:${rideId}`)
+      .channel(`ride_messages:${rideId}:${++chatSubscriptionSeq}`)
       .on(
         'postgres_changes',
         {

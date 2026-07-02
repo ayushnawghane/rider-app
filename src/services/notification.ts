@@ -3,6 +3,9 @@ import type {
   Notification,
 } from '../types';
 
+// Monotonic counter so each realtime subscription gets a unique channel topic.
+let subscriptionSeq = 0;
+
 class NotificationService {
   // Notifications are created through a SECURITY DEFINER RPC so the app can
   // notify ANY user (e.g. a passenger notifying the ride owner). A direct
@@ -107,8 +110,13 @@ class NotificationService {
   }
 
   subscribeToNotifications(userId: string, callback: (notification: Notification) => void): () => void {
+    // Unique channel name per subscription. Supabase reuses a channel by its
+    // topic, so if two components (e.g. the home bell AND the Notifications
+    // screen) subscribed to the same `notifications:<userId>` topic, the second
+    // `.on()` would throw "cannot add postgres_changes callbacks after
+    // subscribe()" and blank the page. A per-instance suffix avoids the clash.
     const channel = supabase
-      .channel(`notifications:${userId}`)
+      .channel(`notifications:${userId}:${++subscriptionSeq}`)
       .on(
         'postgres_changes',
         {
