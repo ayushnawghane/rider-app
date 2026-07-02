@@ -80,10 +80,10 @@ const MobileBottomNav = () => {
 
   return (
     <nav
-      className="app-bottom-nav pointer-events-none px-4"
+      className="app-bottom-nav pointer-events-none px-3 pb-1"
       aria-label="Primary navigation"
     >
-      <div className="pointer-events-auto mx-auto flex max-w-md items-center justify-between gap-1 bg-transparent py-1 px-2.5">
+      <div className="pointer-events-auto mx-auto flex max-w-md items-stretch justify-around gap-1 rounded-[20px] border border-black/5 bg-white/90 px-1.5 py-1.5 shadow-strong backdrop-blur-md">
         {navItems.map(({ key, label, path, Icon, matches }) => {
           const isActive = matches(location.pathname);
 
@@ -94,15 +94,23 @@ const MobileBottomNav = () => {
               onClick={() => handleNavigate(path)}
               aria-current={isActive ? 'page' : undefined}
               aria-label={label}
-              className={`grain ${isActive ? 'grain-strong' : 'grain-soft'} relative flex items-center justify-center gap-2 overflow-hidden rounded-[18px] py-1.5 transition-all duration-300 active:scale-95 ${
-                isActive ? 'px-4 text-white shadow-glow' : 'px-3 text-ink/40 hover:text-ink/70'
-              }`}
-              style={isActive ? { background: FIRE } : undefined}
+              className="flex flex-1 flex-col items-center gap-1 py-0.5 transition active:scale-95"
             >
-              <Icon className="h-5 w-5 shrink-0" strokeWidth={2.5} />
-              {isActive && (
-                <span className="font-display text-sm font-bold tracking-tight">{label}</span>
-              )}
+              <span
+                className={`flex h-9 w-11 items-center justify-center rounded-xl transition-all duration-200 ${
+                  isActive ? 'text-white shadow-glow' : 'text-ink/40'
+                }`}
+                style={isActive ? { background: FIRE } : undefined}
+              >
+                <Icon className="h-5 w-5" strokeWidth={2.5} />
+              </span>
+              <span
+                className={`font-display text-[10px] font-bold leading-none tracking-tight ${
+                  isActive ? 'text-fire-orange' : 'text-ink/40'
+                }`}
+              >
+                {label}
+              </span>
             </button>
           );
         })}
