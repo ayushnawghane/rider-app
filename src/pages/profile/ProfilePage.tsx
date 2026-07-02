@@ -405,7 +405,7 @@ const ProfilePage = () => {
                       type="tel"
                       value={phone}
                       onChange={(event) => setPhone(event.target.value)}
-                      placeholder="+91 9876543210"
+                      placeholder="+91 9999999999"
                       className={inputClass}
                     />
                   </label>
@@ -663,7 +663,7 @@ const ProfilePage = () => {
                       type="tel"
                       value={phone}
                       onChange={(event) => setPhone(event.target.value)}
-                      placeholder="+91 9876543210"
+                      placeholder="+91 9999999999"
                       className={inputClass}
                     />
                   </label>

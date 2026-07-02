@@ -4,7 +4,7 @@ android {
     namespace = "com.blinkcar.app"
     compileSdk = rootProject.ext.compileSdkVersion
     def appVersionCode = project.findProperty("appVersionCode") ?: "1"
-    def appVersionName = project.findProperty("appVersionName") ?: "1.0.4"
+    def appVersionName = project.findProperty("appVersionName") ?: "1.0.6"
     def keystoreProperties = new Properties()
     def keystorePropertiesFile = rootProject.file("keystore.properties")
     def hasReleaseKeystore = keystorePropertiesFile.exists()
