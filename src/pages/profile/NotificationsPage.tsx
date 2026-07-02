@@ -1,4 +1,4 @@
-import { IonContent, IonPage, IonRefresher, IonRefresherContent } from '@ionic/react';
+import { IonContent, IonPage } from '@ionic/react';
 import { useCallback, useEffect, useState } from 'react';
 import { useHistory } from 'react-router';
 import { ChevronLeft } from 'lucide-react';
@@ -52,11 +52,6 @@ const NotificationsPage: React.FC = () => {
     return () => unsubscribe?.();
   }, [user]);
 
-  const handleRefresh = async (event: CustomEvent) => {
-    await fetchNotifications();
-    (event.target as HTMLIonRefresherElement).complete();
-  };
-
   const hasUnread = notifications.some((n) => !n.read);
 
   const markAllAsRead = async () => {
@@ -70,6 +65,11 @@ const NotificationsPage: React.FC = () => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
     );
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    if (!notification.read) void markAsRead(notification.id);
+    if (notification.link) history.push(notification.link);
   };
 
   const formatDate = (dateString: string) => {
@@ -109,7 +109,7 @@ const NotificationsPage: React.FC = () => {
          
           <div className="relative z-10 mx-auto max-w-2xl px-4 pb-8 pt-5">
             {/* Header */}
-            <div className="mb-6 flex items-center gap-3">
+            <div className="mb-4 flex items-center gap-3">
               <button
                 onClick={() => history.goBack()}
                 aria-label="Back"
@@ -119,7 +119,7 @@ const NotificationsPage: React.FC = () => {
               </button>
               <div className="flex-1">
                 <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Updates</p>
-                <h1 className="font-display text-[2.2rem] font-extrabold leading-[0.9] tracking-tight text-ink">Notifications</h1>
+                <h1 className="font-display text-[1.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">Notifications</h1>
               </div>
               {hasUnread && (
                 <button
@@ -134,15 +134,15 @@ const NotificationsPage: React.FC = () => {
             {loading ? (
               <div className="space-y-3">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-20 animate-pulse rounded-[22px] bg-primary-50" />
+                  <div key={i} className="h-20 animate-pulse rounded-[14px] bg-primary-50" />
                 ))}
               </div>
             ) : notifications.length === 0 ? (
-              <div className="rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+              <div className="rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
                   <AppIcon name="bell" className="h-11 w-11" />
                 </div>
-                <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">No notifications</h2>
+                <h2 className="mt-3 app-section-title">No notifications</h2>
                 <p className="mt-2 text-sm font-medium text-ink/50">You don't have any notifications yet.</p>
               </div>
             ) : (
@@ -151,8 +151,8 @@ const NotificationsPage: React.FC = () => {
                   <button
                     key={notification.id}
                     type="button"
-                    onClick={() => !notification.read && markAsRead(notification.id)}
-                    className={`flex w-full items-start gap-3 rounded-[22px] border p-4 text-left shadow-soft transition active:scale-[0.99] ${
+                    onClick={() => handleNotificationClick(notification)}
+                    className={`flex w-full items-start gap-3 rounded-[14px] border p-4 text-left shadow-soft transition active:scale-[0.99] ${
                       notification.read ? 'border-black/5 bg-white' : 'border-primary-200 bg-primary-50/50'
                     }`}
                   >

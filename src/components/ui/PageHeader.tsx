@@ -33,7 +33,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   if (variant === 'gradient') {
     return (
       <header className={`bg-gradient-to-br ${gradientClassName} app-header-top-safe px-4 pb-6 ${className}`}>
-        <div className={`flex items-center gap-4 ${subtitle ? 'mb-4' : ''} ${contentClassName}`}>
+        <div className={`flex items-center gap-3 ${subtitle ? 'mb-4' : ''} ${contentClassName}`}>
           {showBack && <BackButton variant="light" fallbackPath={backFallbackPath} onClick={onBack} />}
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-2xl font-bold text-white">{title}</h1>
@@ -63,7 +63,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   }
 
   return (
-    <header className={`app-top-safe mb-6 ${className}`}>
+    <header className={`app-top-safe mb-4 ${className}`}>
       {showBack && <BackButton label="Back" variant="text" fallbackPath={backFallbackPath} onClick={onBack} className="mb-4" />}
       <div className={contentClassName}>
         <h1 className="text-2xl font-bold text-gray-900">{title}</h1>

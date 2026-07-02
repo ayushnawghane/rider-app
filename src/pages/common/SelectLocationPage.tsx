@@ -142,10 +142,10 @@ const SelectLocationPage = () => {
         <div className="absolute -right-16 -top-12 h-72 w-72 rounded-full animate-aurora-1" style={{ background: 'radial-gradient(circle, rgba(255,200,50,0.62) 0%, transparent 62%)', filter: 'blur(48px)' }} />
       </div>
 
-      <div className="relative z-10 px-4 pb-6 pt-[calc(env(safe-area-inset-top)+20px)]">
+      <div className="relative z-10 px-4 pb-6 pt-[calc(env(safe-area-inset-top)+12px)]">
         <div className="mx-auto max-w-2xl">
           {/* Header */}
-          <div className="mb-6 flex items-center gap-3">
+          <div className="mb-4 flex items-center gap-3">
             <button
               onClick={() => history.goBack()}
               aria-label="Back"
@@ -159,7 +159,7 @@ const SelectLocationPage = () => {
             </div>
           </div>
 
-          <div className="space-y-4 rounded-[28px] border border-black/5 bg-white/85 p-4 shadow-strong backdrop-blur-md">
+          <div className="space-y-3 rounded-[18px] border border-black/5 bg-white/85 p-4 shadow-strong backdrop-blur-md">
             {!loadError ? (
               <LocationSearch
                 placeholder={placeholder}

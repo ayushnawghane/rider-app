@@ -305,10 +305,10 @@ const ProfilePage = () => {
   if (!isAuthLoaded) {
     return (
       <div className="app-top-safe min-h-screen bg-white px-4 pb-20 pt-6">
-        <div className="mx-auto max-w-2xl animate-pulse space-y-4">
-          <div className="h-36 rounded-[28px] bg-primary-50" />
-          <div className="h-48 rounded-[28px] bg-primary-50" />
-          <div className="h-40 rounded-[28px] bg-primary-50" />
+        <div className="mx-auto max-w-2xl animate-pulse space-y-3">
+          <div className="h-36 rounded-[18px] bg-primary-50" />
+          <div className="h-48 rounded-[18px] bg-primary-50" />
+          <div className="h-40 rounded-[18px] bg-primary-50" />
         </div>
       </div>
     );
@@ -335,7 +335,7 @@ const ProfilePage = () => {
         <div className="relative z-10 px-4 pb-[calc(env(safe-area-inset-bottom)+112px)] pt-[calc(env(safe-area-inset-top)+24px)]">
           <div className="mx-auto max-w-2xl">
             <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Profile setup</p>
-            <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink sm:text-5xl">
+            <h1 className="app-page-title sm:text-5xl">
               Complete your profile
             </h1>
             <p className="mt-3 text-sm font-medium text-ink/55 sm:text-base">
@@ -343,9 +343,9 @@ const ProfilePage = () => {
             </p>
           </div>
 
-          <div className="mx-auto mt-6 max-w-2xl space-y-4">
-            <section className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
-              <div className="mb-5">
+          <div className="mx-auto mt-4 max-w-2xl space-y-3">
+            <section className="app-card">
+              <div className="mb-3">
                 <div className="mb-3 flex items-center justify-between">
                   <p className="font-display text-sm font-bold text-ink/60">
                     Step {setupStep + 1} of {SETUP_STEPS.length}
@@ -364,7 +364,7 @@ const ProfilePage = () => {
               </div>
 
               {setupStep === 0 && (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="rounded-2xl border border-fire-gold/30 bg-fire-gold/10 px-4 py-3 text-[#7a4a00]">
                     <div className="flex items-start gap-3">
                       <AlertCircle size={18} className="mt-0.5 shrink-0 text-fire-orange" />
@@ -413,7 +413,7 @@ const ProfilePage = () => {
               )}
 
               {setupStep === 1 && (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <label className="block">
                     <span className={labelClass}>Language</span>
                     <select
@@ -454,7 +454,7 @@ const ProfilePage = () => {
 
             </section>
 
-            <div className="sticky bottom-0 z-20 -mx-4 mt-5 border-t border-black/5 bg-white/90 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 shadow-[0_-18px_40px_rgba(0,0,0,0.08)] backdrop-blur-xl">
+            <div className="sticky bottom-0 z-20 -mx-4 mt-3 border-t border-black/5 bg-white/90 px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-3 shadow-[0_-18px_40px_rgba(0,0,0,0.08)] backdrop-blur-xl">
               <div className="mx-auto flex max-w-2xl gap-3">
                 {setupStep > 0 && (
                   <button
@@ -515,10 +515,10 @@ const ProfilePage = () => {
   return (
     <div className="app-scroll-screen app-bottom-nav-safe relative overflow-hidden bg-white">
       <Aura />
-      <div className="relative z-10 px-4 pb-6 pt-[calc(env(safe-area-inset-top)+20px)]">
+      <div className="relative z-10 px-4 pb-6 pt-[calc(env(safe-area-inset-top)+12px)]">
         <div className="mx-auto max-w-2xl">
           {/* Header */}
-          <div className="mb-6 flex items-start justify-between">
+          <div className="mb-4 flex items-start justify-between">
             <div className="flex items-center gap-3">
               <button
                 onClick={handleBack}
@@ -529,7 +529,7 @@ const ProfilePage = () => {
               </button>
               <div>
                 <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Account</p>
-                <h1 className="font-display text-[2.4rem] font-extrabold leading-[0.9] tracking-tight text-ink">Profile</h1>
+                <h1 className="app-page-title">Profile</h1>
               </div>
             </div>
 
@@ -543,10 +543,10 @@ const ProfilePage = () => {
             </button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Identity card */}
-            <section className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
-              <div className="flex items-start gap-4">
+            <section className="app-card">
+              <div className="flex items-start gap-3">
                 <div className="relative">
                   <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-3xl font-display text-4xl font-extrabold text-white shadow-glow" style={{ background: FIRE }}>
                     {avatarImageUrl ? (
@@ -594,7 +594,7 @@ const ProfilePage = () => {
                 </div>
               </div>
 
-              <div className="mt-5 divide-y divide-black/5 overflow-hidden rounded-2xl border border-black/5 bg-paper">
+              <div className="mt-3 divide-y divide-black/5 overflow-hidden rounded-2xl border border-black/5 bg-paper">
                 <div className="flex items-center gap-3 px-4 py-3">
                   <div className="grid h-9 w-9 place-items-center rounded-xl border border-primary-100 bg-white text-fire-orange">
                     <Phone size={16} />
@@ -632,9 +632,9 @@ const ProfilePage = () => {
             </section>
 
             {editing && (
-              <section className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
+              <section className="app-card">
                 <h3 className="mb-4 font-display text-lg font-extrabold tracking-tight text-ink">Edit profile</h3>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <label className="block">
                     <span className={labelClass}>Full name</span>
                     <input
@@ -714,7 +714,7 @@ const ProfilePage = () => {
             )}
 
             {editing && !requiresProfileCompletion && (
-              <section className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
+              <section className="app-card">
                 <div className="mb-4 flex items-center gap-2">
                   <Car size={18} className="text-fire-orange" />
                   <h3 className="font-display text-lg font-extrabold tracking-tight text-ink">Vehicle details</h3>
@@ -796,7 +796,7 @@ const ProfilePage = () => {
             )}
 
             {!requiresProfileCompletion && (
-              <section className="rounded-[28px] border border-black/5 bg-white p-2 shadow-soft">
+              <section className="rounded-[18px] border border-black/5 bg-white p-2 shadow-soft">
                 {[
                   { onClick: () => history.push('/profile/kyc'), Icon: FileText, title: 'KYC verification', subtitle: kycStatus.label },
                   { onClick: () => history.push('/safety'), Icon: Shield, title: 'Safety center', subtitle: 'SOS and emergency tools' },

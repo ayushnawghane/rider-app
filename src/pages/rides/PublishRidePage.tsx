@@ -291,16 +291,16 @@ const PublishRidePage = () => {
         <div className="absolute -left-20 top-8 h-52 w-52 rounded-full animate-aurora-2" style={{ background: 'radial-gradient(circle, rgba(255,140,0,0.24) 0%, transparent 62%)', filter: 'blur(50px)' }} />
       </div>
 
-      <div className="relative z-10 px-4 pb-6 pt-[calc(env(safe-area-inset-top)+20px)]">
+      <div className="relative z-10 px-4 pb-6 pt-[calc(env(safe-area-inset-top)+12px)]">
         {/* Header */}
-        <div className="mb-5">
+        <div className="mb-3">
           <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Publish</p>
-          <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">Offer a ride</h1>
+          <h1 className="app-page-title">Offer a ride</h1>
           <p className="mt-2 text-sm font-medium text-ink/50">Share your journey and earn points</p>
         </div>
 
         {/* Form */}
-        <div className="rounded-[28px] border border-black/5 bg-white/85 p-5 shadow-strong backdrop-blur-md">
+        <div className="rounded-[18px] border border-black/5 bg-white/85 p-4 shadow-strong backdrop-blur-md">
           {Object.keys(fieldErrors).length > 0 && (
             <div className="mb-4 rounded-2xl border border-fire-red/20 bg-fire-red/5 px-3 py-2 text-sm font-medium text-fire-red">
               Please complete all required fields highlighted below.
@@ -313,7 +313,7 @@ const PublishRidePage = () => {
           )}
 
           {/* Route Selection */}
-          <div className="mb-6">
+          <div className="mb-4">
             {sectionTitle('Route details')}
 
             {/* From */}
@@ -364,7 +364,7 @@ const PublishRidePage = () => {
           </div>
 
           {/* Departure Date and Time */}
-          <div className="mb-6">
+          <div className="mb-4">
             {sectionTitle('Departure date & time')}
             <div className="grid grid-cols-2 gap-3">
               <label
@@ -419,9 +419,9 @@ const PublishRidePage = () => {
           </div>
 
           {/* Available Seats */}
-          <div className="mb-6">
+          <div className="mb-4">
             {sectionTitle('Available seats')}
-            <div className="flex items-center gap-4 rounded-2xl border border-black/5 bg-paper p-4">
+            <div className="flex items-center gap-3 rounded-2xl border border-black/5 bg-paper p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary-100 bg-white">
                 <AppIcon name="users" className="h-5 w-5" />
               </div>
@@ -432,7 +432,7 @@ const PublishRidePage = () => {
                 >
                   <Minus className="h-5 w-5 text-ink" strokeWidth={2.5} />
                 </button>
-                <span className="w-8 text-center font-display text-2xl font-extrabold text-ink">{availableSeats}</span>
+                <span className="w-8 text-center font-display text-xl font-extrabold text-ink">{availableSeats}</span>
                 <button
                   onClick={() => setAvailableSeats(Math.min(6, availableSeats + 1))}
                   className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-primary-200 bg-white transition active:scale-90 hover:bg-primary-50"
@@ -444,7 +444,7 @@ const PublishRidePage = () => {
           </div>
 
           {/* Price Per Seat */}
-          <div className="mb-6">
+          <div className="mb-4">
             {sectionTitle('Price per seat')}
             <div className="flex items-center gap-3 rounded-2xl border border-black/5 bg-paper p-4">
               <IndianRupee className="h-6 w-6 text-fire-orange" strokeWidth={2.5} />
@@ -454,7 +454,7 @@ const PublishRidePage = () => {
                 pattern="[0-9]*"
                 value={displayPositiveIntegerInput(pricePerSeat)}
                 onChange={(e) => setPricePerSeat(normalizePositiveIntegerInput(e.target.value))}
-                className={`flex-1 bg-transparent font-display text-2xl font-extrabold text-ink focus:outline-none ${lightFieldClass}`}
+                className={`flex-1 bg-transparent font-display text-xl font-extrabold text-ink focus:outline-none ${lightFieldClass}`}
                 placeholder="0"
               />
             </div>
@@ -466,7 +466,7 @@ const PublishRidePage = () => {
           </div>
 
           {/* Vehicle Details */}
-          <div className="mb-6">
+          <div className="mb-4">
             {sectionTitle('Vehicle details')}
 
             {/* Vehicle Type */}
@@ -529,7 +529,7 @@ const PublishRidePage = () => {
           </div>
 
           {/* Additional Notes */}
-          <div className="mb-6">
+          <div className="mb-4">
             {sectionTitle('Additional notes')}
             <div className="relative">
               <FileText className="absolute left-3.5 top-3.5 h-5 w-5 text-ink/35" />
@@ -544,7 +544,7 @@ const PublishRidePage = () => {
           </div>
 
           {/* Points Preview */}
-          <div className="grain grain-strong relative mb-6 overflow-hidden rounded-[24px] p-4 text-white shadow-glow" style={{ background: FIRE }}>
+          <div className="grain grain-strong relative mb-4 overflow-hidden rounded-[16px] p-4 text-white shadow-glow" style={{ background: FIRE }}>
             <div className="relative z-10 flex items-center justify-between">
               <div>
                 <p className="font-display text-xs font-bold uppercase tracking-wide text-white/80">You'll earn</p>

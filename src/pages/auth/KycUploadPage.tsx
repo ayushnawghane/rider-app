@@ -97,7 +97,7 @@ const KycUploadPage = () => {
 
           <div className="app-bottom-nav-safe relative z-10 mx-auto max-w-2xl px-4 pb-8 pt-5">
             {/* Header */}
-            <div className="mb-6 flex items-center gap-3">
+            <div className="mb-4 flex items-center gap-3">
               <button
                 onClick={() => history.goBack()}
                 aria-label="Back"
@@ -130,8 +130,8 @@ const KycUploadPage = () => {
 
               {!success ? (
                 <>
-                  <div className="rounded-[28px] border border-black/5 bg-white p-6 shadow-soft">
-                    <div className="mb-5">
+                  <div className="app-card">
+                    <div className="mb-3">
                       <h2 className="mb-2 font-display text-lg font-extrabold tracking-tight text-ink">Upload document</h2>
                       <p className="text-sm font-medium text-ink/50">
                         Accepted formats: JPEG, PNG, PDF (max 5MB). Please ensure the document is clear and readable.
@@ -140,7 +140,7 @@ const KycUploadPage = () => {
 
                     <label
                       htmlFor="file-upload"
-                      className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-all ${
+                      className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-4 transition-all ${
                         file ? 'border-primary-500 bg-primary-50' : 'border-black/15 hover:border-primary-400 hover:bg-paper'
                       }`}
                     >
@@ -174,7 +174,7 @@ const KycUploadPage = () => {
                   </div>
 
                   {user.kycStatus !== 'approved' && (
-                    <div className="sticky bottom-4 z-20 rounded-[26px] border border-white/70 bg-white/90 p-2 shadow-soft backdrop-blur">
+                    <div className="sticky bottom-4 z-20 rounded-[16px] border border-white/70 bg-white/90 p-2 shadow-soft backdrop-blur">
                       <button
                         onClick={handleUpload}
                         disabled={loading || !file}
@@ -187,7 +187,7 @@ const KycUploadPage = () => {
                     </div>
                   )}
 
-                  <div className="rounded-[28px] border border-black/5 bg-white p-6 shadow-soft">
+                  <div className="app-card">
                     <h2 className="mb-4 font-display text-lg font-extrabold tracking-tight text-ink">Requirements</h2>
                     <div className="space-y-3">
                       {requirements.map((req) => (
@@ -200,13 +200,13 @@ const KycUploadPage = () => {
                   </div>
                 </>
               ) : (
-                <div className="animate-fade-in rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+                <div className="animate-fade-in rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
                   <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
                     <CheckCircle2 className="h-10 w-10 text-emerald-600" />
                   </div>
-                  <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">Document uploaded!</h2>
+                  <h2 className="mt-3 app-section-title">Document uploaded!</h2>
                   <p className="mt-2 text-sm font-medium text-ink/50">Your KYC document has been uploaded successfully and is now under review.</p>
-                  <div className="mt-6 rounded-2xl border border-fire-gold/30 bg-fire-gold/10 p-4 text-left">
+                  <div className="mt-4 rounded-2xl border border-fire-gold/30 bg-fire-gold/10 p-4 text-left">
                     <div className="flex items-start gap-3">
                       <Clock2 className="mt-0.5 h-5 w-5 shrink-0 text-fire-orange" />
                       <div>
@@ -219,7 +219,7 @@ const KycUploadPage = () => {
                   </div>
                   <button
                     onClick={() => history.replace('/profile')}
-                    className="grain grain-strong relative mt-6 w-full overflow-hidden rounded-2xl py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+                    className="grain grain-strong relative mt-4 w-full overflow-hidden rounded-2xl py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
                     style={{ background: FIRE }}
                   >
                     Go to Profile

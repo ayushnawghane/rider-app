@@ -114,7 +114,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, hasSeenOnboarding
                             transform: brandVisible ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.96)',
                         }}
                     >
-                        <img src="/logo.png" alt="blinkcar" className="h-24 w-24 object-contain rounded-[28px]" />
+                        <img src="/logo.png" alt="blinkcar" className="h-24 w-24 object-contain rounded-[18px]" />
                         <h1 className="font-display text-[4.5rem] font-extrabold leading-[0.9] tracking-tightest text-ink">
                             blinkcar
                         </h1>
@@ -162,7 +162,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, hasSeenOnboarding
 
                     {/* Text */}
                     <div
-                        className="mb-8 transition-all duration-[350ms] ease-out"
+                        className="mb-3 transition-all duration-[350ms] ease-out"
                         style={{
                             opacity: slideVisible ? 1 : 0,
                             transform: slideVisible ? 'translateY(0)' : 'translateY(16px)',
@@ -183,7 +183,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, hasSeenOnboarding
                     </div>
 
                     {/* Dots */}
-                    <div className="mb-6 flex items-center gap-2">
+                    <div className="mb-4 flex items-center gap-2">
                         {ONBOARDING_SLIDES.map((_, i) => (
                             <button
                                 key={i}

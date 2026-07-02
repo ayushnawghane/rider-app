@@ -41,16 +41,16 @@ const DeleteAccountPage: React.FC = () => {
 
   return (
     <IonContent>
-      <div className="flex min-h-full flex-col items-center justify-center bg-white p-6">
-        <div className="w-full max-w-md overflow-hidden rounded-[32px] border border-black/5 bg-white shadow-strong">
+      <div className="flex min-h-full flex-col items-center justify-center bg-white p-4">
+        <div className="w-full max-w-md overflow-hidden rounded-[20px] border border-black/5 bg-white shadow-strong">
           {/* Header */}
-          <div className="relative overflow-hidden p-8 text-center" style={{ background: ALERT }}>
+          <div className="relative overflow-hidden p-4 text-center" style={{ background: ALERT }}>
             <ShieldAlert size={120} className="absolute -bottom-8 -right-8 text-white/10" />
             <div className="relative z-10">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/30 bg-white/20 backdrop-blur-sm">
                 <Trash2 className="text-white" size={32} />
               </div>
-              <h1 className="font-display text-2xl font-extrabold tracking-tight text-white">Delete Account</h1>
+              <h1 className="font-display text-xl font-extrabold tracking-tight text-white">Delete Account</h1>
               <p className="mt-2 text-sm font-medium text-white/90">
                 This action is permanent and cannot be undone.
               </p>
@@ -58,9 +58,9 @@ const DeleteAccountPage: React.FC = () => {
           </div>
 
           {/* Content */}
-          <div className="space-y-6 p-8">
-            <div className="space-y-4">
-              <div className="flex items-start gap-4 rounded-2xl border border-fire-gold/30 bg-fire-gold/10 p-4">
+          <div className="space-y-3 p-4">
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 rounded-2xl border border-fire-gold/30 bg-fire-gold/10 p-4">
                 <AlertTriangle className="shrink-0 text-fire-orange" size={20} />
                 <div className="text-sm text-[#7a4a00]">
                   <p className="mb-1 font-display font-bold">What happens when you delete your account?</p>
@@ -110,7 +110,7 @@ const DeleteAccountPage: React.FC = () => {
                   </button>
                 </>
               ) : (
-                <div className="space-y-4 py-4 text-center">
+                <div className="space-y-3 py-4 text-center">
                   <p className="font-medium text-ink/60">You must be logged in to delete your account.</p>
                   <button
                     onClick={() => history.push("/login")}
@@ -133,7 +133,7 @@ const DeleteAccountPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-8 text-center text-xs font-medium text-ink/35">
+        <div className="mt-3 text-center text-xs font-medium text-ink/35">
           <p>© {new Date().getFullYear()} BlinkCar. All rights reserved.</p>
           <p className="mt-1">For data portability requests, please contact support.</p>
         </div>

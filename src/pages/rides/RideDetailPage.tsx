@@ -14,8 +14,11 @@ import {
   AlertTriangle,
   Route,
   ChevronLeft,
+  ChevronRight,
+  BadgeCheck,
+  Star,
 } from 'lucide-react';
-import type { Ride } from '../../types';
+import type { Ride, DriverProfile } from '../../types';
 import { hasRequiredBookingProfile } from '../../utils/profileCompletion';
 import AppIcon from '../../components/icons/AppIcon';
 import { Skeleton, SkeletonCard } from '../../components/Skeleton';
@@ -31,6 +34,13 @@ const RideDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const [ride, setRide] = useState<Ride | null>(null);
+  const [driverProfile, setDriverProfile] = useState<DriverProfile | null>(null);
+  const [myBooking, setMyBooking] = useState<{ id: string; driverRating: number | null } | null>(null);
+  const [showRatePrompt, setShowRatePrompt] = useState(false);
+  const [ratingValue, setRatingValue] = useState(0);
+  const [ratingReview, setRatingReview] = useState('');
+  const [submittingRating, setSubmittingRating] = useState(false);
+  const [ratedNow, setRatedNow] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
   const [isJoined, setIsJoined] = useState(false);
@@ -50,6 +60,14 @@ const RideDetailPage = () => {
       const result = await rideService.getRideById(id);
       if (result.success && result.ride) {
         setRide(result.ride);
+
+        // Load the driver's public trust profile for the ride card.
+        const driverId = result.ride.driverId;
+        if (driverId) {
+          void rideService.getDriverProfile(driverId).then((dp) => {
+            if (dp.success && dp.profile) setDriverProfile(dp.profile);
+          });
+        }
 
         // Calculate route if coordinates are available
         if (result.ride.startLocationCoords && result.ride.endLocationCoords) {
@@ -84,8 +102,12 @@ const RideDetailPage = () => {
           if (participation.success) {
             setIsJoined(participation.joined);
           }
+          // Whether this passenger has already reviewed the driver.
+          const booking = await rideService.getMyBooking(result.ride.id, user.id);
+          if (booking.success) setMyBooking(booking.booking || null);
         } else {
           setIsJoined(false);
+          setMyBooking(null);
         }
       }
       setLoading(false);
@@ -153,6 +175,27 @@ const RideDetailPage = () => {
     }
   };
 
+  const handleSubmitRating = async () => {
+    if (!myBooking || ratingValue < 1 || submittingRating) return;
+    setSubmittingRating(true);
+    const result = await rideService.submitRating({
+      bookingId: myBooking.id,
+      isDriverRating: true,
+      rating: ratingValue,
+      review: ratingReview.trim() || undefined,
+    });
+    setSubmittingRating(false);
+    if (result.success) {
+      setRatedNow(true);
+      setShowRatePrompt(false);
+      setMyBooking({ ...myBooking, driverRating: ratingValue });
+    }
+  };
+
+  const canRate =
+    !!ride && ride.status === 'completed' && !!myBooking && myBooking.driverRating == null && !ratedNow;
+  const alreadyRated = !!myBooking && (myBooking.driverRating != null || ratedNow);
+
   const getStatusBadge = (status: string) => {
     const statusMap = {
       active: { icon: CheckCircle2, label: 'Ride Confirmed', cls: 'bg-fire-orange text-white shadow-glow' },
@@ -189,7 +232,7 @@ const RideDetailPage = () => {
   const BackBar = () => (
     <button
       onClick={() => history.goBack()}
-      className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white/70 py-2 pl-2.5 pr-4 font-display text-sm font-bold text-ink shadow-soft backdrop-blur-sm transition active:scale-95"
+      className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white/70 py-2 pl-2.5 pr-4 font-display text-sm font-bold text-ink shadow-soft backdrop-blur-sm transition active:scale-95"
       type="button"
     >
       <ChevronLeft className="h-4 w-4" strokeWidth={2.75} />
@@ -202,7 +245,7 @@ const RideDetailPage = () => {
       <IonPage>
         <IonContent>
           <div className="app-top-safe mx-auto max-w-2xl px-4 pb-6 pt-5">
-            <div className="space-y-4">
+            <div className="space-y-3">
               <Skeleton variant="rounded" height="32px" width="75%" />
               <SkeletonCard hasImage lines={2} />
             </div>
@@ -219,11 +262,11 @@ const RideDetailPage = () => {
           <div className="app-top-safe relative min-h-full overflow-hidden bg-white">
             <div className="relative z-10 mx-auto max-w-2xl px-4 pb-6 pt-5">
               <BackBar />
-              <div className="rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+              <div className="rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-fire-red/10">
                   <AlertTriangle className="h-10 w-10 text-fire-red" />
                 </div>
-                <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">Ride not found</h2>
+                <h2 className="mt-3 app-section-title">Ride not found</h2>
                 <p className="mt-2 text-sm font-medium text-ink/50">
                   The ride you're looking for doesn't exist or has been deleted.
                 </p>
@@ -258,7 +301,7 @@ const RideDetailPage = () => {
             <div className="app-bottom-nav-safe space-y-5">
               {/* Map Section */}
               {hasMapData && (
-                <div className="overflow-hidden rounded-[26px] border border-black/5 bg-white shadow-soft">
+                <div className="overflow-hidden rounded-[16px] border border-black/5 bg-white shadow-soft">
                   <div className="h-64">
                     <MapComponent
                       center={mapCenter}
@@ -278,14 +321,74 @@ const RideDetailPage = () => {
                 </div>
               )}
 
+              {/* Driver trust card — who you're riding with (tap for full profile) */}
+              {ride.driverId && (
+                <button
+                  type="button"
+                  onClick={() => history.push(`/driver/${ride.driverId}`)}
+                  className="app-card flex w-full items-center gap-3 text-left transition active:scale-[0.99]"
+                >
+                  <img
+                    src={driverProfile?.avatarUrl || ride.driver?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(ride.driver?.name || 'Driver')}&background=random`}
+                    alt={ride.driver?.name || 'Driver'}
+                    className="h-12 w-12 shrink-0 rounded-2xl object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="truncate font-display font-bold text-ink">{driverProfile?.name || ride.driver?.name || 'Driver'}</p>
+                      {driverProfile?.verifications.kyc && (
+                        <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                          <BadgeCheck className="h-3 w-3 fill-emerald-500 text-white" /> Verified
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm font-medium text-ink/50">
+                      {driverProfile?.rating != null ? (
+                        <>
+                          <span className="font-bold text-fire-gold">★ {driverProfile.rating.toFixed(1)}</span>
+                          <span className="text-ink/40"> · {driverProfile.reviewCount} review{driverProfile.reviewCount === 1 ? '' : 's'}</span>
+                        </>
+                      ) : (
+                        <span>New driver</span>
+                      )}
+                      <span className="text-ink/40"> · View profile</span>
+                    </p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 shrink-0 text-ink/30" />
+                </button>
+              )}
+
+              {/* Post-ride: rate the driver */}
+              {canRate && (
+                <div className="app-card">
+                  <p className="font-display font-bold text-ink">How was your ride?</p>
+                  <p className="mt-1 text-sm font-medium text-ink/50">Rate {ride.driver?.name || 'your driver'} to help other riders.</p>
+                  <button
+                    onClick={() => { setRatingValue(0); setRatingReview(''); setShowRatePrompt(true); }}
+                    className="mt-3 rounded-xl px-4 py-2.5 font-display text-sm font-bold text-white shadow-glow transition active:scale-95"
+                    style={{ background: FIRE }}
+                  >
+                    Rate your driver
+                  </button>
+                </div>
+              )}
+              {alreadyRated && (
+                <div className="app-card flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                  <p className="text-sm font-medium text-ink/60">
+                    Thanks — you rated this ride{myBooking?.driverRating ? ` ★ ${myBooking.driverRating}` : ''}.
+                  </p>
+                </div>
+              )}
+
               {/* Details Card */}
-              <div className="animate-fade-in rounded-[28px] border border-black/5 bg-white p-6 shadow-soft">
-                <div className="mb-6 flex items-start gap-3">
+              <div className="animate-fade-in app-card">
+                <div className="mb-4 flex items-start gap-3">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
                     <AppIcon name="car" className="h-7 w-7" />
                   </div>
                   <div>
-                    <h1 className="font-display text-xl font-extrabold tracking-tight text-ink">Ride details</h1>
+                    <h1 className="app-section-title">Ride details</h1>
                     <span className={`mt-1.5 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-display text-[11px] font-bold ${status.cls}`}>
                       <status.icon className="h-3.5 w-3.5" />
                       {status.label}
@@ -293,7 +396,7 @@ const RideDetailPage = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="flex items-start gap-3">
                     <Calendar className="mt-0.5 h-5 w-5 shrink-0 text-ink/35" />
                     <div>
@@ -373,7 +476,7 @@ const RideDetailPage = () => {
 
               {/* Join Card */}
               {canJoinRide && (
-                <div className="rounded-[28px] border border-black/5 bg-white p-4 shadow-soft">
+                <div className="app-card">
                   <button
                     onClick={handleJoinRide}
                     disabled={isJoining || isJoined}
@@ -420,7 +523,7 @@ const RideDetailPage = () => {
                 <button
                   onClick={handleContactDriver}
                   disabled={!ride.driverContact}
-                  className="rounded-[22px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-[14px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-fire-orange">
                     <Phone className="h-5 w-5" strokeWidth={2.5} />
@@ -431,7 +534,7 @@ const RideDetailPage = () => {
 
                 <button
                   onClick={handleRaiseDispute}
-                  className="rounded-[22px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.98]"
+                  className="rounded-[14px] border border-black/5 bg-white p-4 text-left shadow-soft transition active:scale-[0.98]"
                 >
                   <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-fire-gold/20 text-[#9a5b00]">
                     <MessageSquare className="h-5 w-5" strokeWidth={2.5} />
@@ -453,6 +556,43 @@ const RideDetailPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Rating modal */}
+        {showRatePrompt && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 px-4 pb-8 backdrop-blur-sm sm:items-center sm:pb-0">
+            <div className="w-full max-w-md app-card" role="dialog" aria-modal="true">
+              <h2 className="app-section-title">Rate your ride</h2>
+              <p className="mt-1 text-sm font-medium text-ink/50">with {ride?.driver?.name || 'your driver'}</p>
+              <div className="mt-4 flex justify-center gap-2">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button key={n} type="button" onClick={() => setRatingValue(n)} aria-label={`${n} star${n > 1 ? 's' : ''}`} className="transition active:scale-90">
+                    <Star className={`h-9 w-9 ${n <= ratingValue ? 'fill-fire-gold text-fire-gold' : 'fill-ink/10 text-ink/20'}`} />
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={ratingReview}
+                onChange={(e) => setRatingReview(e.target.value)}
+                placeholder="Add a short review (optional)"
+                rows={3}
+                maxLength={500}
+                className="mt-4 w-full resize-none rounded-xl border-2 border-black/10 p-3 text-sm font-medium focus:border-fire-orange focus:outline-none"
+              />
+              <div className="mt-4 flex gap-3">
+                <button type="button" onClick={() => setShowRatePrompt(false)} className="flex-1 rounded-xl border-2 border-black/10 py-2.5 font-display font-bold text-ink/60 transition active:scale-95">Cancel</button>
+                <button
+                  type="button"
+                  onClick={handleSubmitRating}
+                  disabled={ratingValue < 1 || submittingRating}
+                  className="flex-1 rounded-xl py-2.5 font-display font-bold text-white shadow-glow transition active:scale-95 disabled:opacity-50"
+                  style={{ background: FIRE }}
+                >
+                  {submittingRating ? 'Submitting…' : 'Submit'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </IonContent>
     </IonPage>
   );

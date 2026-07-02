@@ -22,14 +22,14 @@ const EmptyState: React.FC<EmptyStateProps> = ({
     <div className={`text-center ${className}`}>
       {icon && <div className="mx-auto mb-4 flex justify-center text-gray-300">{icon}</div>}
       <h2 className="mb-2 text-xl font-bold text-gray-900">{title}</h2>
-      {message && <p className="mb-6 text-gray-500">{message}</p>}
+      {message && <p className="mb-4 text-gray-500">{message}</p>}
       {action}
     </div>
   );
 
   if (!card) return content;
 
-  return <AppCard className="p-8">{content}</AppCard>;
+  return <AppCard className="p-4">{content}</AppCard>;
 };
 
 export default EmptyState;

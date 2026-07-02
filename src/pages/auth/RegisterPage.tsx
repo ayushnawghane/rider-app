@@ -101,26 +101,26 @@ const RegisterPage = () => {
   return (
     <Aurora variant="sunrise" grain="strong" className="min-h-screen">
       <div className="app-top-safe flex min-h-screen w-full items-center justify-center px-5 py-10">
-        <div className="w-full max-w-md animate-rise rounded-[32px] border border-white/60 bg-white/80 p-6 shadow-strong backdrop-blur-md sm:p-7">
+        <div className="w-full max-w-md animate-rise rounded-[20px] border border-white/60 bg-white/80 p-4 shadow-strong backdrop-blur-md sm:p-4">
           {/* Brand */}
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img src="/logo-mark.png" alt="Blinkcar" className="h-11 w-11 rounded-[16px] object-cover shadow-glow" />
               <div>
                 <p className="font-display text-[11px] font-extrabold lowercase tracking-tight text-fire-orange">blinkcar</p>
-                <h1 className="font-display text-xl font-extrabold tracking-tight text-ink">Create account</h1>
+                <h1 className="app-section-title">Create account</h1>
               </div>
             </div>
             <span className="rounded-full bg-fire-gold/25 px-3 py-1 font-display text-xs font-bold text-[#9a5b00]">Free</span>
           </div>
 
-          <p className="mb-6 text-sm font-medium leading-relaxed text-ink/55">
+          <p className="mb-4 text-sm font-medium leading-relaxed text-ink/55">
             {otpSent
               ? 'Enter the verification code we sent to your mobile number.'
               : 'Register with your name, email, and mobile number — we’ll verify with a one-time code.'}
           </p>
 
-          <form onSubmit={otpSent ? handleVerify : handleSendCode} className="space-y-4">
+          <form onSubmit={otpSent ? handleVerify : handleSendCode} className="space-y-3">
             <label className="block">
               <span className={labelClass}>Full name</span>
               <input

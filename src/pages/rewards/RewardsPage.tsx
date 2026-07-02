@@ -322,26 +322,26 @@ const RewardsPage = () => {
 
       <div className="relative z-10">
         {/* Header */}
-        <div className="px-5 pb-3 pt-[calc(env(safe-area-inset-top)+20px)]">
+        <div className="px-5 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
           <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Your rewards</p>
-          <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">Rewards</h1>
+          <h1 className="app-page-title">Rewards</h1>
         </div>
 
         <div className="px-4">
           {/* Hero points card */}
-          <div className="grain grain-strong relative overflow-hidden rounded-[30px] p-6 text-white shadow-glow-lg" style={{ background: FIRE }}>
+          <div className="grain grain-strong relative overflow-hidden rounded-[20px] p-4 text-white shadow-glow-lg" style={{ background: FIRE }}>
             <div className="relative z-10">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-white/80">Total points</p>
-                  <p className="mt-1 font-display text-6xl font-extrabold leading-none">{userStats.points.toLocaleString()}</p>
+                  <p className="mt-1 font-display text-5xl font-extrabold leading-none">{userStats.points.toLocaleString()}</p>
                 </div>
                 <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white/20 backdrop-blur-sm">
                   <Trophy className="h-8 w-8 text-white" strokeWidth={2.5} />
                 </div>
               </div>
 
-              <div className="mt-6">
+              <div className="mt-4">
                 <div className="mb-2 flex items-center justify-between font-display text-sm font-bold">
                   <span>Level {userStats.level}</span>
                   <span className="text-white/80">{progress}%</span>
@@ -354,14 +354,14 @@ const RewardsPage = () => {
                 </p>
               </div>
 
-              <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
+              <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
                 <span className="font-display text-sm font-extrabold uppercase tracking-wide">{tierName} Member</span>
               </div>
             </div>
           </div>
 
           {/* Monthly reward cap */}
-          <div className="mt-4 rounded-[24px] border border-black/5 bg-white p-4 shadow-soft">
+          <div className="mt-4 rounded-[16px] border border-black/5 bg-white p-4 shadow-soft">
             <div className="mb-2 flex items-center justify-between">
               <p className="font-display text-sm font-extrabold tracking-tight text-ink">This month</p>
               <p className="font-display text-sm font-bold text-ink/55">
@@ -383,14 +383,14 @@ const RewardsPage = () => {
 
           {/* Stats */}
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="rounded-[24px] border border-black/5 bg-white p-4 shadow-soft">
+            <div className="rounded-[16px] border border-black/5 bg-white p-4 shadow-soft">
               <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
                 <AppIcon name="car" className="h-6 w-6" />
               </div>
               <p className="font-display text-3xl font-extrabold leading-none text-ink">{userStats.ridesPublished}</p>
               <p className="mt-1 font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">Rides published</p>
             </div>
-            <div className="rounded-[24px] border border-black/5 bg-white p-4 shadow-soft">
+            <div className="rounded-[16px] border border-black/5 bg-white p-4 shadow-soft">
               <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
                 <AppIcon name="users" className="h-6 w-6" />
               </div>
@@ -412,7 +412,7 @@ const RewardsPage = () => {
           )}
 
           {/* Tabs */}
-          <div className="mt-5 grid grid-cols-3 gap-1 rounded-[20px] border border-black/5 bg-white/80 p-1.5 shadow-soft backdrop-blur-md">
+          <div className="mt-3 grid grid-cols-3 gap-1 rounded-[20px] border border-black/5 bg-white/80 p-1.5 shadow-soft backdrop-blur-md">
             {(['overview', 'achievements', 'history'] as const).map((tab) => {
               const isActive = activeTab === tab;
               return (
@@ -428,11 +428,11 @@ const RewardsPage = () => {
             })}
           </div>
 
-          <div className="mt-5">
+          <div className="mt-3">
             {activeTab === 'overview' && (
-              <div className="space-y-4">
-                <div className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
-                  <h2 className="mb-4 font-display text-xl font-extrabold tracking-tight text-ink">Ways to earn</h2>
+              <div className="space-y-3">
+                <div className="app-card">
+                  <h2 className="mb-4 app-section-title">Ways to earn</h2>
                   <div className="space-y-3">
                     {waysToEarn.map((way) => (
                       <div key={way.title} className="flex items-center gap-3 rounded-2xl border border-black/5 bg-paper p-3">
@@ -454,8 +454,8 @@ const RewardsPage = () => {
                   </p>
                 </div>
 
-                <div className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
-                  <h2 className="mb-4 font-display text-xl font-extrabold tracking-tight text-ink">{tierName} benefits</h2>
+                <div className="app-card">
+                  <h2 className="mb-4 app-section-title">{tierName} benefits</h2>
                   <div className="space-y-3">
                     {benefits.map((benefit) => (
                       <div key={benefit} className="flex items-center gap-3">
@@ -471,10 +471,10 @@ const RewardsPage = () => {
             )}
 
             {activeTab === 'achievements' && (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {achievements.map((achievement) => (
-                  <div key={achievement.id} className="rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
-                    <div className="flex items-center gap-4">
+                  <div key={achievement.id} className="app-card">
+                    <div className="flex items-center gap-3">
                       <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
                         <AppIcon name={achievementIconName(achievement.badgeIcon)} className="h-8 w-8" />
                       </div>
@@ -490,8 +490,8 @@ const RewardsPage = () => {
                   </div>
                 ))}
 
-                <div className="rounded-[28px] border border-black/5 bg-paper p-5 opacity-70">
-                  <div className="flex items-center gap-4">
+                <div className="rounded-[18px] border border-black/5 bg-paper p-4 opacity-70">
+                  <div className="flex items-center gap-3">
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-black/5 bg-white grayscale">
                       <AppIcon name="star" className="h-8 w-8" />
                     </div>
@@ -508,12 +508,12 @@ const RewardsPage = () => {
             {activeTab === 'history' && (
               <div className="space-y-3">
                 {pointsHistory.length === 0 && (
-                  <div className="rounded-[24px] border border-black/5 bg-white p-6 text-center shadow-soft">
+                  <div className="rounded-[16px] border border-black/5 bg-white p-4 text-center shadow-soft">
                     <p className="text-sm font-medium text-ink/55">No reward points yet. Publish or join a ride to start earning.</p>
                   </div>
                 )}
                 {pointsHistory.map((entry) => (
-                  <div key={entry.id} className="rounded-[22px] border border-black/5 bg-white p-4 shadow-soft">
+                  <div key={entry.id} className="rounded-[14px] border border-black/5 bg-white p-4 shadow-soft">
                     <div className="flex items-center gap-3">
                       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white">
                         <AppIcon name={getActionIconName(entry.action)} className="h-6 w-6" />

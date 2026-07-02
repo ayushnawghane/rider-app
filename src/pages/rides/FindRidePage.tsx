@@ -10,6 +10,7 @@ import {
   Car,
   Filter,
   ChevronRight,
+  ChevronLeft,
   Navigation,
 } from 'lucide-react';
 import type { PublishedRide } from '../../types';
@@ -91,7 +92,7 @@ const FindRidePage = () => {
           id: ride.driverId || ride.userId,
           name: ride.userId === user?.id ? 'You (Driver)' : ride.driver?.name || 'Rider',
           avatar: ride.driver?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + (ride.driverId || ride.userId),
-          rating: ride.driver?.rating || 4.8,
+          rating: ride.driver?.rating ?? 0,
           phone: ride.driverContact || ride.driver?.phone || 'N/A',
         },
         startLocation: ride.startLocation,
@@ -214,15 +215,24 @@ const FindRidePage = () => {
         <div className="absolute -left-20 top-8 h-52 w-52 rounded-full animate-aurora-2" style={{ background: 'radial-gradient(circle, rgba(255,140,0,0.26) 0%, transparent 62%)', filter: 'blur(50px)' }} />
       </div>
 
-      <div className="relative z-10 px-4 pb-24 pt-[calc(env(safe-area-inset-top)+20px)]">
+      <div className="relative z-10 px-4 pb-24 pt-[calc(env(safe-area-inset-top)+12px)]">
         {/* Header */}
-        <div className="mb-5">
-          <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Find a ride</p>
-          <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">Search</h1>
+        <div className="mb-4 flex items-center gap-3">
+          <button
+            onClick={() => history.length > 1 ? history.goBack() : history.push('/home')}
+            aria-label="Back"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-black/10 bg-white/70 text-ink shadow-soft backdrop-blur-sm transition active:scale-95"
+          >
+            <ChevronLeft size={22} strokeWidth={2.5} />
+          </button>
+          <div>
+            <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Find a ride</p>
+            <h1 className="font-display text-[1.7rem] font-extrabold leading-[0.95] tracking-tight text-ink">Search</h1>
+          </div>
         </div>
 
         {/* Search Form */}
-        <div className="mb-5 rounded-[28px] border border-black/5 bg-white/80 p-4 shadow-strong backdrop-blur-md">
+        <div className="mb-3 rounded-[18px] border border-black/5 bg-white/80 p-4 shadow-strong backdrop-blur-md">
           {/* Pickup */}
           <button
             onClick={() => history.push('/select-location', {
@@ -320,14 +330,14 @@ const FindRidePage = () => {
             )}
 
             {/* Ride Cards */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               {availableRides.map((ride) => {
                 const isBooked = joinedRideIds.has(ride.id);
                 const isOwnRide = Boolean(user?.id && (ride.driverId === user.id));
                 return (
-                  <div key={ride.id} className="rounded-[26px] border border-black/5 bg-white p-5 shadow-soft">
+                  <div key={ride.id} className="rounded-[16px] border border-black/5 bg-white p-4 shadow-soft">
                     {/* Driver Info */}
-                    <div className="mb-4 flex items-start gap-4">
+                    <div className="mb-4 flex items-start gap-3">
                       <div className="relative">
                         <div className="h-14 w-14 overflow-hidden rounded-2xl border border-black/5 bg-paper-dim">
                           <img
@@ -344,17 +354,21 @@ const FindRidePage = () => {
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="font-display font-bold text-ink">{ride.driver?.name}</h3>
-                        <div className="flex items-center gap-1 text-fire-gold">
-                          <Star className="h-4 w-4 fill-current" />
-                          <span className="text-sm font-bold">{ride.driver?.rating}</span>
-                        </div>
+                        {ride.driver?.rating ? (
+                          <div className="flex items-center gap-1 text-fire-gold">
+                            <Star className="h-4 w-4 fill-current" />
+                            <span className="text-sm font-bold">{ride.driver.rating.toFixed(1)}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs font-bold text-ink/40">New driver</span>
+                        )}
                         <div className="mt-1 flex items-center gap-1.5 text-xs font-medium text-ink/50">
                           <Car className="h-3.5 w-3.5" />
                           <span className="truncate">{ride.vehicleType} • {ride.vehicleNumber}</span>
                         </div>
                       </div>
                       <div className="flex-shrink-0 text-right">
-                        <p className="font-display text-2xl font-extrabold leading-none text-fire-orange">₹{ride.pricePerSeat}</p>
+                        <p className="font-display text-xl font-extrabold leading-none text-fire-orange">₹{ride.pricePerSeat}</p>
                         <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-ink/40">per seat</p>
                       </div>
                     </div>
@@ -430,17 +444,17 @@ const FindRidePage = () => {
 
         {/* Empty State */}
         {!loading && hasSearched && availableRides.length === 0 && (pickupLocation || dropoffLocation) && (
-          <div className="mt-8 rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-soft">
+          <div className="mt-3 rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-soft">
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white shadow-soft">
               <AppIcon name="car" className="h-12 w-12" />
             </div>
-            <h2 className="mt-5 font-display text-2xl font-extrabold tracking-tight text-ink">No rides found</h2>
+            <h2 className="mt-3 app-section-title">No rides found</h2>
             <p className="mt-2 text-sm font-medium text-ink/50">
               We couldn't find any rides for your route. Try adjusting your search or publish your own ride!
             </p>
             <button
               onClick={handlePublishFromSearch}
-              className="grain grain-strong relative mt-6 w-full overflow-hidden rounded-2xl px-4 py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+              className="grain grain-strong relative mt-4 w-full overflow-hidden rounded-2xl px-4 py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
               style={{ background: FIRE }}
             >
               Publish a Ride

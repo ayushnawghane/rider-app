@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { useIonViewWillEnter } from '@ionic/react';
 import { useHistory, useLocation } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
-import { Phone, MessageCircle, Map, Star, Bell } from 'lucide-react';
+import { Phone, MessageCircle, Map, Star, Bell, ChevronRight } from 'lucide-react';
 import AppIcon, { type AppIconName } from '../../components/icons/AppIcon';
-import type { PublishedRide } from '../../types';
-import { locationService, mapsService, notificationService } from '../../services';
+import type { PublishedRide, Ride } from '../../types';
+import { locationService, mapsService, notificationService, rideService } from '../../services';
 import { isProfileIncomplete, isProfileNameIncomplete } from '../../utils/profileCompletion';
 
 interface Location {
@@ -35,6 +35,16 @@ const toLocalDateValue = (date: Date) => {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+const nextRideMeta = (ride: Ride) => {
+  const when = new Date(ride.date).toLocaleString('en-US', {
+    weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+  });
+  if (ride.userRole === 'driver') {
+    const left = Math.max(0, (ride.availableSeats ?? 0) - (ride.bookedSeats ?? 0));
+    return `${when} · ${ride.bookedSeats ?? 0} joined · ${left} seat${left === 1 ? '' : 's'} left`;
+  }
+  return `${when} · You're riding`;
+};
 
 const HomePage = () => {
   const { user, isAuthLoaded } = useAuth();
@@ -50,8 +60,28 @@ const HomePage = () => {
     if (result.success) setUnreadCount(result.count || 0);
   };
 
+  // The single ride the user is most likely opening the app to check: their
+  // nearest upcoming or currently-active ride (as driver or passenger).
+  const refreshNextRide = async () => {
+    if (!user?.id) {
+      setNextRide(null);
+      return;
+    }
+    const result = await rideService.getRides(user.id);
+    if (!result.success || !result.rides) {
+      setNextRide(null);
+      return;
+    }
+    const upcoming = result.rides
+      .filter((ride) => ride.status === 'active' || ride.status === 'pending')
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    // Prefer an active ride; otherwise the soonest upcoming one.
+    setNextRide(upcoming.find((r) => r.status === 'active') || upcoming[0] || null);
+  };
+
   useEffect(() => {
     void refreshUnread();
+    void refreshNextRide();
     if (!user?.id) return;
     const unsubscribe = notificationService.subscribeToNotifications(user.id, () => {
       void refreshUnread();
@@ -60,15 +90,17 @@ const HomePage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  // Recompute when returning to Home (e.g. after reading notifications).
+  // Recompute when returning to Home (e.g. after reading notifications or booking).
   useIonViewWillEnter(() => {
     void refreshUnread();
+    void refreshNextRide();
   });
 
   const [pickup, setPickup] = useState<Location | null>(null);
   const [dropoff, setDropoff] = useState<Location | null>(null);
   const [passengerCount, setPassengerCount] = useState<number>(1);
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [nextRide, setNextRide] = useState<Ride | null>(null);
   const [departureDate, setDepartureDate] = useState(() => toLocalDateValue(new Date()));
   const [dismissedProfilePrompt, setDismissedProfilePrompt] = useState(false);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
@@ -260,9 +292,9 @@ const HomePage = () => {
       {/* Content */}
       <div className="relative z-10">
         {/* Header */}
-        <div className="px-5 pb-2 pt-[calc(env(safe-area-inset-top)+20px)]">
+        <div className="px-5 pb-2 pt-[calc(env(safe-area-inset-top)+12px)]">
           {/* Top row: brand + profile */}
-          <div className="mb-5 flex items-center justify-between">
+          <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <img src="/logo-mark.png" alt="Blinkcar" className="h-10 w-10 rounded-[14px] object-cover shadow-glow" />
               <span className="font-display text-lg font-extrabold lowercase tracking-tight text-ink">blinkcar</span>
@@ -303,12 +335,12 @@ const HomePage = () => {
 
           {/* Greeting + illustration */}
           <div className="flex items-end justify-between">
-            <div className="pb-3">
-              <p className="mb-1 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Welcome back</p>
-              <h1 className="font-display text-[2.6rem] font-extrabold leading-[0.9] tracking-tight text-ink">
+            <div className="pb-2">
+              <p className="mb-0.5 font-display text-xs font-bold uppercase tracking-[0.2em] text-fire-orange">Welcome back</p>
+              <h1 className="font-display text-[2rem] font-extrabold leading-[0.95] tracking-tight text-ink">
                 Hi, {greetingName}
               </h1>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
+              <div className="mt-2.5 flex flex-wrap items-center gap-2">
                 <button
                   onClick={handleDetectCurrentLocation}
                   className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/55 px-3 py-1.5 shadow-soft backdrop-blur-sm transition active:scale-95 disabled:opacity-75"
@@ -334,35 +366,43 @@ const HomePage = () => {
             </div>
 
             <div className="-mb-1 -mr-1 flex-shrink-0">
-              <img src="/home.png" alt="Car illustration" className="h-40 w-48 object-contain object-bottom drop-shadow-xl" />
+              <img src="/home.png" alt="Car illustration" className="h-28 w-40 object-contain object-bottom drop-shadow-xl" />
             </div>
           </div>
         </div>
 
         {/* Main content */}
         <div className="mt-2 px-4">
-          {/* Search & Route Card */}
-          <div className="mb-4 rounded-[28px] border border-black/5 bg-white/80 p-4 shadow-strong backdrop-blur-md">
-            {/* Search Bar */}
+          {/* Contextual: the ride you're most likely here to check — shown only
+              when the user actually has an upcoming or active ride. */}
+          {nextRide && (
             <button
               type="button"
-              onClick={() => history.push('/select-location', {
-                type: 'dropoff',
-                returnTo: '/home',
-                pickup: pickup || undefined,
-                dropoff: dropoff || undefined,
-              })}
-              className="relative mb-4 flex w-full items-center rounded-2xl border border-black/10 bg-paper py-3.5 pl-11 pr-4 text-left text-ink/40 transition focus:outline-none focus:ring-2 focus:ring-primary-500 active:scale-[0.99]"
-              aria-label="Search destinations"
+              onClick={() => history.push(nextRide.status === 'active' ? `/rides/active/${nextRide.id}` : `/rides/detail/${nextRide.id}`)}
+              className="mb-3 flex w-full items-center gap-3 rounded-2xl border border-primary-100 bg-white/90 p-3 text-left shadow-soft backdrop-blur-md transition active:scale-[0.99]"
             >
-              <AppIcon name="search" className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2" />
-              <span className="block truncate font-medium">{dropoff?.address || 'Search destinations...'}</span>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-glow" style={{ background: FIRE }}>
+                <AppIcon name="car" className="h-5 w-5 text-white" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-display text-[10px] font-bold uppercase tracking-[0.14em] text-fire-orange">
+                  {nextRide.status === 'active' ? 'Ride in progress' : 'Your next trip'}
+                </span>
+                <span className="block truncate font-display text-sm font-bold text-ink">
+                  {nextRide.startLocation.split(',')[0]} → {nextRide.endLocation.split(',')[0]}
+                </span>
+                <span className="block truncate text-xs font-medium text-ink/50">{nextRideMeta(nextRide)}</span>
+              </span>
+              <ChevronRight className="h-5 w-5 shrink-0 text-ink/30" />
             </button>
+          )}
 
+          {/* Search & Route Card */}
+          <div className="mb-4 rounded-[16px] border border-black/5 bg-white/80 p-4 shadow-strong backdrop-blur-md">
             {/* From/To Selection */}
-            <div className="mb-4 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-3">
+            <div className="mb-3 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-3">
               <div className="min-w-0">
-                <label className="mb-1.5 block font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">From</label>
+                <label className="mb-1 block font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">From</label>
                 <button
                   onClick={() => history.push('/select-location', {
                     type: 'pickup',
@@ -370,7 +410,7 @@ const HomePage = () => {
                     pickup: pickup || undefined,
                     dropoff: dropoff || undefined,
                   })}
-                  className="h-14 w-full min-w-0 rounded-2xl border-2 border-primary-100 bg-primary-50/40 px-3 text-left transition-colors hover:border-primary-300"
+                  className="h-11 w-full min-w-0 rounded-xl border-2 border-primary-100 bg-primary-50/40 px-3 text-left transition-colors hover:border-primary-300"
                   title={pickup?.address || 'Pick Up'}
                 >
                   <span className="block w-full overflow-hidden text-ellipsis whitespace-nowrap font-display font-bold text-primary-700">
@@ -381,14 +421,14 @@ const HomePage = () => {
 
               <button
                 onClick={handleSwapLocations}
-                className="mt-5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-primary-100 bg-white shadow-soft transition-transform active:scale-90"
+                className="mt-2.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary-100 bg-white shadow-soft transition-transform active:scale-90"
                 aria-label="Swap locations"
               >
                 <AppIcon name="swap" className="h-5 w-5" />
               </button>
 
               <div className="min-w-0">
-                <label className="mb-1.5 block font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">To</label>
+                <label className="mb-1 block font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">To</label>
                 <button
                   onClick={() => history.push('/select-location', {
                     type: 'dropoff',
@@ -396,7 +436,7 @@ const HomePage = () => {
                     pickup: pickup || undefined,
                     dropoff: dropoff || undefined,
                   })}
-                  className="h-14 w-full min-w-0 rounded-2xl border-2 border-primary-100 bg-primary-50/40 px-3 text-left transition-colors hover:border-primary-300"
+                  className="h-11 w-full min-w-0 rounded-xl border-2 border-primary-100 bg-primary-50/40 px-3 text-left transition-colors hover:border-primary-300"
                   title={dropoff?.address || 'Drop Off'}
                 >
                   <span className="block w-full overflow-hidden text-ellipsis whitespace-nowrap font-display font-bold text-primary-700">
@@ -407,13 +447,13 @@ const HomePage = () => {
             </div>
 
             {/* Passengers + Date */}
-            <div className="mb-4 space-y-3">
-              <div className="flex items-center gap-3 rounded-2xl border border-black/5 bg-paper p-3">
+            <div className="mb-3 space-y-2">
+              <div className="flex items-center gap-2.5 rounded-xl border border-black/5 bg-paper p-2.5">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary-100 bg-white">
                   <AppIcon name="users" className="h-5 w-5" />
                 </div>
                 <span className="font-display text-[11px] font-bold uppercase tracking-wide text-ink/45">Seats</span>
-                <div className="flex flex-1 items-center justify-end gap-4">
+                <div className="flex flex-1 items-center justify-end gap-3">
                   <button
                     onClick={() => setPassengerCount(Math.max(1, passengerCount - 1))}
                     className="flex h-9 w-9 items-center justify-center rounded-xl border border-black/10 bg-white font-bold text-ink transition hover:bg-paper active:scale-90"
@@ -429,7 +469,7 @@ const HomePage = () => {
                   </button>
                 </div>
               </div>
-              <label className="flex items-center gap-3 rounded-2xl border border-black/5 bg-paper p-3">
+              <label className="flex items-center gap-2.5 rounded-xl border border-black/5 bg-paper p-2.5">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary-100 bg-white">
                   <AppIcon name="clock" className="h-5 w-5" />
                 </div>
@@ -450,14 +490,14 @@ const HomePage = () => {
             )}
             <button
               onClick={handleFindDrivers}
-              className="grain grain-strong relative w-full overflow-hidden rounded-2xl py-4 font-display text-lg font-bold tracking-tight text-white shadow-glow transition-all hover:shadow-glow-lg active:scale-[0.98]"
+              className="grain grain-strong relative w-full overflow-hidden rounded-xl py-3 font-display text-base font-bold tracking-tight text-white shadow-glow transition-all hover:shadow-glow-lg active:scale-[0.98]"
               style={{ background: FIRE }}
             >
               Find Drivers
             </button>
             <button
               onClick={() => history.push('/rides')}
-              className="mt-3 w-full rounded-2xl border-2 border-primary-200 py-3.5 font-display font-bold text-primary-700 transition-colors hover:border-primary-300 hover:bg-primary-50"
+              className="mt-2 w-full rounded-xl border-2 border-primary-200 py-2.5 font-display font-bold text-primary-700 transition-colors hover:border-primary-300 hover:bg-primary-50"
             >
               View Your Rides
             </button>
@@ -465,8 +505,8 @@ const HomePage = () => {
 
           {/* Active Ride Card */}
           {activeRide && (
-            <div className="mb-4 rounded-[28px] border border-black/5 bg-white p-4 shadow-soft">
-              <div className="mb-4 flex items-start gap-4">
+            <div className="mb-4 app-card">
+              <div className="mb-4 flex items-start gap-3">
                 <div className="relative">
                   <div className="h-16 w-16 overflow-hidden rounded-2xl bg-paper-dim">
                     <img src={activeRide.driver?.avatar || 'https://via.placeholder.com/64'} alt="Driver" className="h-full w-full object-cover" />
@@ -490,7 +530,7 @@ const HomePage = () => {
                 </div>
               </div>
 
-              <div className="mb-4 flex items-center gap-4 text-sm text-ink/60">
+              <div className="mb-4 flex items-center gap-3 text-sm text-ink/60">
                 <span>Pickup : {activeRide.startLocation}</span>
                 <span className="text-ink/30">|</span>
                 <span>Drop Off : {activeRide.endLocation}</span>
@@ -524,7 +564,7 @@ const HomePage = () => {
                 { onClick: () => history.push('/rides'), label: 'Your Rides', name: 'route' },
               ] as { onClick: () => void; label: string; name: AppIconName }[]).map((action) => (
                 <button key={action.label} onClick={action.onClick} className="flex flex-col items-center gap-2 transition active:scale-95">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-[22px] border border-primary-100/80 bg-gradient-to-br from-primary-50 to-white shadow-soft">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-[14px] border border-primary-100/80 bg-gradient-to-br from-primary-50 to-white shadow-soft">
                     <AppIcon name={action.name} className="h-9 w-9" />
                   </div>
                   <span className="text-center font-display text-[11px] font-bold leading-tight text-ink/70">{action.label}</span>
@@ -535,15 +575,15 @@ const HomePage = () => {
 
           {/* Popular Routes Section */}
           <div className="mb-7">
-            <h2 className="mb-1 font-display text-2xl font-extrabold tracking-tight text-ink">Popular routes</h2>
+            <h2 className="mb-1 app-section-title">Popular routes</h2>
             <p className="mb-4 text-sm font-medium text-ink/50">Top picks for your next trip</p>
 
-            <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 scrollbar-hide">
+            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
               {popularRoutes.map((route) => (
                 <button
                   key={route.city}
                   type="button"
-                  className="w-44 flex-shrink-0 overflow-hidden rounded-[26px] border border-black/5 bg-white text-left shadow-soft transition active:scale-95"
+                  className="w-44 flex-shrink-0 overflow-hidden rounded-[16px] border border-black/5 bg-white text-left shadow-soft transition active:scale-95"
                   onClick={() => handlePopularRouteSelect(route)}
                   aria-label={`Find rides to ${route.city}`}
                 >
@@ -568,10 +608,10 @@ const HomePage = () => {
           </div>
 
           {/* Promotional Banner */}
-          <div className="relative mb-6 overflow-hidden rounded-[28px] border border-black/5 bg-white p-5 shadow-soft">
-            <div className="flex items-center gap-4">
+          <div className="relative mb-4 overflow-hidden app-card">
+            <div className="flex items-center gap-3">
               <div className="flex-1">
-                <h3 className="mb-1.5 font-display text-2xl font-extrabold leading-[0.95] tracking-tight text-ink">Earn while<br />you travel</h3>
+                <h3 className="mb-1.5 font-display text-xl font-extrabold leading-[0.95] tracking-tight text-ink">Earn while<br />you travel</h3>
                 <p className="mb-4 text-sm font-medium text-ink/55">Get 2x points on your first 3 rides this month</p>
                 <button
                   onClick={() => history.push('/rewards')}
@@ -591,12 +631,12 @@ const HomePage = () => {
 
       {showProfilePrompt && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 px-4 pb-8 backdrop-blur-sm sm:items-center sm:pb-0">
-          <div className="w-full max-w-md rounded-[28px] border border-black/5 bg-white p-6 shadow-strong" aria-modal="true" role="dialog">
-            <h2 className="font-display text-2xl font-extrabold tracking-tight text-ink">Complete your profile</h2>
+          <div className="w-full max-w-md rounded-[18px] border border-black/5 bg-white p-4 shadow-strong" aria-modal="true" role="dialog">
+            <h2 className="app-section-title">Complete your profile</h2>
             <p className="mt-2 text-sm text-ink/60">
               Add your name, email, and mobile number to finish setup and make your account easier to identify.
             </p>
-            <div className="mt-6 flex items-center gap-3">
+            <div className="mt-4 flex items-center gap-3">
               <button
                 onClick={handleDismissProfilePrompt}
                 className="flex-1 rounded-2xl border border-black/10 px-4 py-3 font-display text-sm font-bold text-ink/70 transition hover:bg-paper"

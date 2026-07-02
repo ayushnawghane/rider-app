@@ -109,6 +109,28 @@ export interface Reward {
   createdAt: string;
 }
 
+export interface DriverReview {
+  id: string;
+  rating: number;
+  review: string;
+  createdAt: string;
+  reviewerName: string;
+  reviewerAvatar?: string;
+}
+
+export interface DriverProfile {
+  id: string;
+  name: string;
+  avatarUrl?: string;
+  memberSince: string;
+  ridesPublished: number;
+  rating: number | null;
+  reviewCount: number;
+  vehicle?: VehicleDetails;
+  verifications: { phone: boolean; email: boolean; kyc: boolean };
+  reviews: DriverReview[];
+}
+
 export interface RideParticipant {
   id: string;
   rideId: string;
@@ -205,6 +227,7 @@ export interface Notification {
   message: string;
   type: 'ride' | 'dispute' | 'system';
   read: boolean;
+  link?: string;
   createdAt: string;
 }
 

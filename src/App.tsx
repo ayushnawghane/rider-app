@@ -19,6 +19,7 @@ import PublishRidePage from './pages/rides/PublishRidePage';
 import FindRidePage from './pages/rides/FindRidePage';
 import RideHistoryPage from './pages/rides/RideHistoryPage';
 import RideDetailPage from './pages/rides/RideDetailPage';
+import DriverProfilePage from './pages/rides/DriverProfilePage';
 import ActiveRidePage from './pages/rides/ActiveRidePage';
 import EditRidePage from './pages/rides/EditRidePage';
 import SupportPage from './pages/support/SupportPage';
@@ -61,6 +62,7 @@ const FindRideScreen = withIonPage(FindRidePage);
 const RideHistoryScreen = withIonPage(RideHistoryPage);
 const SelectLocationScreen = withIonPage(SelectLocationPage);
 const EditRideScreen = withIonPage(EditRidePage);
+const DriverProfileScreen = withIonPage(DriverProfilePage);
 const RewardsScreen = withIonPage(RewardsPage);
 const InboxScreen = withIonPage(InboxPage);
 const SafetyScreen = withIonPage(SafetyPage);
@@ -122,6 +124,7 @@ const AppRoutes: React.FC = () => {
         <Route exact path="/rides/edit/:id" render={renderPrivate(EditRideScreen)} />
         <Route exact path="/rides/detail/:id" render={renderPrivate(RideDetailPage)} />
         <Route exact path="/rides/:id([0-9a-fA-F-]{36})" render={renderPrivate(RideDetailPage)} />
+        <Route exact path="/driver/:id" render={renderPrivate(DriverProfileScreen)} />
         <Route exact path="/rides/active/:id" render={renderPrivate(ActiveRidePage)} />
         <Route exact path="/trips/tracking/:id" render={renderPrivate(TripTrackingScreen)} />
         <Route exact path="/rewards" render={renderPrivate(RewardsScreen)} />

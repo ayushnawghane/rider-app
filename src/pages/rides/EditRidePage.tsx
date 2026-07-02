@@ -163,7 +163,7 @@ const EditRidePage = () => {
 
     if (submitError && !startLocation) {
         return (
-            <div className="h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
+            <div className="h-screen bg-gray-50 flex flex-col items-center justify-center p-4 text-center">
                 <EmptyState
                     icon={<AlertTriangle className="h-16 w-16 text-gray-300" />}
                     title="Notice"
@@ -188,7 +188,7 @@ const EditRidePage = () => {
 
             {/* Form */}
             <div className="px-4 -mt-4">
-                <AppCard className="p-5">
+                <AppCard className="p-4">
                     {Object.keys(fieldErrors).length > 0 && (
                         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                             Please complete all required fields highlighted below.
@@ -201,7 +201,7 @@ const EditRidePage = () => {
                     )}
 
                     {/* Route Display (Read Only) */}
-                    <div className="mb-6 opacity-70">
+                    <div className="mb-4 opacity-70">
                         <h2 className="text-lg font-semibold text-gray-900 mb-4">Route Details</h2>
 
                         {/* From */}
@@ -237,7 +237,7 @@ const EditRidePage = () => {
                     </div>
 
                     {/* Departure Time */}
-                    <div className="mb-6">
+                    <div className="mb-4">
                         <h2 className="text-lg font-semibold text-gray-900 mb-4">Departure Time</h2>
                         <div
                             className={`flex items-center gap-3 p-4 rounded-xl border-2 ${fieldErrors.departureTime ? 'border-red-300 bg-red-50' : 'border-transparent bg-gray-50'
@@ -266,9 +266,9 @@ const EditRidePage = () => {
                     </div>
 
                     {/* Available Seats */}
-                    <div className="mb-6">
+                    <div className="mb-4">
                         <h2 className="text-lg font-semibold text-gray-900 mb-4">Available Seats</h2>
-                        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                        <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
                             <Users className="w-5 h-5 text-primary-500" />
                             <div className="flex items-center gap-6">
                                 <button
@@ -296,7 +296,7 @@ const EditRidePage = () => {
                     </div>
 
                     {/* Price Per Seat */}
-                    <div className="mb-6">
+                    <div className="mb-4">
                         <h2 className="text-lg font-semibold text-gray-900 mb-4">Price Per Seat</h2>
                         <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
                             <IndianRupee className="w-5 h-5 text-primary-500" />
@@ -313,7 +313,7 @@ const EditRidePage = () => {
                     </div>
 
                     {/* Vehicle Details */}
-                    <div className="mb-6">
+                    <div className="mb-4">
                         <h2 className="text-lg font-semibold text-gray-900 mb-4">Vehicle Details</h2>
 
                         {/* Vehicle Type */}
@@ -365,7 +365,7 @@ const EditRidePage = () => {
                     </div>
 
                     {/* Additional Notes */}
-                    <div className="mb-6">
+                    <div className="mb-4">
                         <h2 className="text-lg font-semibold text-gray-900 mb-4">Additional Notes</h2>
                         <div className="relative">
                             <FileText className="absolute left-3 top-3 w-5 h-5 text-gray-400" />

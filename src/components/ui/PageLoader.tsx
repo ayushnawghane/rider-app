@@ -15,7 +15,7 @@ const PageLoader: React.FC<PageLoaderProps> = () => {
     <div className="min-h-screen px-5 pt-14" style={{ background: 'var(--bg)' }}>
       <Skeleton variant="text" width="60%" height="32px" className="mb-2" />
       <Skeleton variant="text" width="40%" height="16px" className="mb-7" />
-      <div className="space-y-4">
+      <div className="space-y-3">
         <Skeleton variant="rounded" height="120px" />
         <Skeleton variant="rounded" height="88px" />
         <Skeleton variant="rounded" height="88px" />

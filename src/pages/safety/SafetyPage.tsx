@@ -199,7 +199,7 @@ const SafetyPage: React.FC = () => {
       <div className="relative z-10 px-4 pb-6 pt-[calc(env(safe-area-inset-top)+18px)]">
         <div className="mx-auto max-w-2xl">
           {/* Header */}
-          <header className="mb-6 flex items-center gap-3">
+          <header className="mb-4 flex items-center gap-3">
             <button
               onClick={() => history.goBack()}
               aria-label="Back"
@@ -216,9 +216,9 @@ const SafetyPage: React.FC = () => {
           {!sosSent ? (
             <>
               {/* Your Location */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <h2 className="mb-3 font-display text-lg font-extrabold tracking-tight text-ink">Your location</h2>
-                <div className="relative h-44 overflow-hidden rounded-[24px] border border-black/5 bg-paper shadow-soft">
+                <div className="relative h-44 overflow-hidden rounded-[16px] border border-black/5 bg-paper shadow-soft">
                   {currentLocation ? (
                     <>
                       <MapComponent
@@ -277,18 +277,18 @@ const SafetyPage: React.FC = () => {
               </div>
 
               {/* SOS Card */}
-              <div className="mb-6 rounded-[28px] p-6 text-center shadow-strong" style={{ background: ALERT }}>
+              <div className="mb-4 rounded-[18px] p-4 text-center shadow-strong" style={{ background: ALERT }}>
                 <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
                   <ShieldAlert className="h-8 w-8 text-white" strokeWidth={2.5} />
                 </div>
-                <h2 className="font-display text-2xl font-extrabold tracking-tight text-white">Emergency SOS</h2>
+                <h2 className="font-display text-xl font-extrabold tracking-tight text-white">Emergency SOS</h2>
                 <p className="mx-auto mt-2 max-w-sm text-sm font-medium text-white/90">
                   In case of emergency, tap the button below to alert our support team with your live location.
                 </p>
                 <button
                   onClick={handleSOS}
                   disabled={loading || !currentLocation}
-                  className="mt-5 w-full rounded-2xl bg-white py-4 font-display text-lg font-extrabold tracking-tight text-[#D81E00] shadow-lg transition active:scale-[0.98] disabled:opacity-70"
+                  className="mt-3 w-full rounded-2xl bg-white py-4 font-display text-lg font-extrabold tracking-tight text-[#D81E00] shadow-lg transition active:scale-[0.98] disabled:opacity-70"
                 >
                   {loading ? 'Sending Alert...' : 'SOS EMERGENCY'}
                 </button>
@@ -298,11 +298,11 @@ const SafetyPage: React.FC = () => {
               </div>
 
               {/* Safety Tips */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <h2 className="mb-3 font-display text-lg font-extrabold tracking-tight text-ink">Safety tips</h2>
                 <div className="space-y-2.5">
                   {safetyTips.map((tip) => (
-                    <div key={tip.id} className="flex items-start gap-3 rounded-[22px] border border-black/5 bg-white p-3.5 shadow-soft">
+                    <div key={tip.id} className="flex items-start gap-3 rounded-[14px] border border-black/5 bg-white p-3.5 shadow-soft">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary-100 bg-gradient-to-br from-primary-50 to-white text-fire-orange">
                         {tipIcon(tip.id)}
                       </div>
@@ -339,11 +339,11 @@ const SafetyPage: React.FC = () => {
               </div>
             </>
           ) : (
-            <div className="rounded-[28px] border border-black/5 bg-white p-6 text-center shadow-strong">
+            <div className="rounded-[18px] border border-black/5 bg-white p-4 text-center shadow-strong">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
                 <CheckCircle2 className="h-9 w-9 text-emerald-600" />
               </div>
-              <h2 className="mt-4 font-display text-2xl font-extrabold tracking-tight text-emerald-600">SOS Alert Sent!</h2>
+              <h2 className="mt-4 font-display text-xl font-extrabold tracking-tight text-emerald-600">SOS Alert Sent!</h2>
               <p className="mt-2 text-sm font-medium text-ink/55">
                 Our support team has been notified with your live location and will contact you immediately.
               </p>
@@ -359,7 +359,7 @@ const SafetyPage: React.FC = () => {
 
               <button
                 onClick={() => history.replace('/home')}
-                className="grain grain-strong relative mt-6 w-full overflow-hidden rounded-2xl py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
+                className="grain grain-strong relative mt-4 w-full overflow-hidden rounded-2xl py-3.5 font-display font-bold text-white shadow-glow transition active:scale-[0.98]"
                 style={{ background: FIRE }}
               >
                 Return to Home

@@ -19,8 +19,8 @@ const HomeSkeleton: React.FC = () => {
 
       <div className="relative z-10">
         {/* Header */}
-        <div className="px-5 pb-2 pt-[calc(env(safe-area-inset-top)+20px)]">
-          <div className="mb-5 flex items-center justify-between">
+        <div className="px-5 pb-2 pt-[calc(env(safe-area-inset-top)+12px)]">
+          <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <img src="/logo-mark.png" alt="Blinkcar" className="h-10 w-10 rounded-[14px] object-cover shadow-glow" />
               <span className="font-display text-lg font-extrabold lowercase tracking-tight text-ink">blinkcar</span>
@@ -39,7 +39,7 @@ const HomeSkeleton: React.FC = () => {
 
         {/* Search card */}
         <div className="mt-2 px-4">
-          <div className="rounded-[28px] border border-black/5 bg-white/80 p-4 shadow-strong backdrop-blur-md">
+          <div className="rounded-[18px] border border-black/5 bg-white/80 p-4 shadow-strong backdrop-blur-md">
             <Skeleton variant="rounded" height="50px" className="mb-4" />
             <div className="mb-4 grid grid-cols-[1fr_auto_1fr] items-end gap-3">
               <Skeleton variant="rounded" height="56px" />
@@ -66,7 +66,7 @@ const HomeSkeleton: React.FC = () => {
           {/* Routes */}
           <div className="mt-7">
             <Skeleton variant="text" width="160px" height="24px" className="mb-3" />
-            <div className="flex gap-4 overflow-hidden">
+            <div className="flex gap-3 overflow-hidden">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="w-44 shrink-0">
                   <Skeleton variant="rounded" height="128px" className="mb-2" />
