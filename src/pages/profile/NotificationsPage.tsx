@@ -67,6 +67,11 @@ const NotificationsPage: React.FC = () => {
     );
   };
 
+  const handleNotificationClick = (notification: Notification) => {
+    if (!notification.read) void markAsRead(notification.id);
+    if (notification.link) history.push(notification.link);
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -146,7 +151,7 @@ const NotificationsPage: React.FC = () => {
                   <button
                     key={notification.id}
                     type="button"
-                    onClick={() => !notification.read && markAsRead(notification.id)}
+                    onClick={() => handleNotificationClick(notification)}
                     className={`flex w-full items-start gap-3 rounded-[14px] border p-4 text-left shadow-soft transition active:scale-[0.99] ${
                       notification.read ? 'border-black/5 bg-white' : 'border-primary-200 bg-primary-50/50'
                     }`}

@@ -281,9 +281,9 @@ const ChatThread = ({ rideId, initialPeerId }: { rideId: string; initialPeerId?:
   }
 
   return (
-    <div className="mx-auto flex h-full max-w-2xl flex-col">
+    <div className="mx-auto flex h-full min-h-0 w-full max-w-2xl flex-col">
       {/* Header */}
-      <div className="flex items-center gap-3 pb-3">
+      <div className="flex shrink-0 items-center gap-3 pb-3">
         <button onClick={() => history.push('/inbox')} className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-soft">
           <ArrowLeft className="h-5 w-5 text-ink" />
         </button>
@@ -301,7 +301,7 @@ const ChatThread = ({ rideId, initialPeerId }: { rideId: string; initialPeerId?:
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto rounded-[14px] border border-black/5 bg-white/70 p-3">
+      <div ref={scrollRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto rounded-[14px] border border-black/5 bg-white/70 p-3">
         {messages.length === 0 ? (
           <div className="flex h-full min-h-[160px] items-center justify-center text-center">
             <p className="text-sm font-medium text-ink/40">
@@ -329,7 +329,7 @@ const ChatThread = ({ rideId, initialPeerId }: { rideId: string; initialPeerId?:
 
       {/* Composer */}
       {canSend ? (
-        <div className="pt-3">
+        <div className="shrink-0 pt-3">
           {error && <p className="mb-2 text-xs font-semibold text-fire-red">{error}</p>}
           <div className="flex items-center gap-2">
             <input
@@ -358,7 +358,7 @@ const ChatThread = ({ rideId, initialPeerId }: { rideId: string; initialPeerId?:
           </div>
         </div>
       ) : (
-        <div className="pt-3">
+        <div className="shrink-0 pt-3">
           <div className="rounded-[18px] border border-dashed border-primary-200 bg-paper p-4 text-center text-xs font-semibold text-ink/50">
             This ride has ended, so the chat is now read-only.
           </div>
@@ -370,21 +370,36 @@ const ChatThread = ({ rideId, initialPeerId }: { rideId: string; initialPeerId?:
 
 const InboxPage = () => {
   const location = useLocation<InboxLocationState>();
-  const rideId = location.state?.rideId;
-  const peerId = location.state?.peerId;
+  // Accept the ride/peer from router state OR the query string, so deep links
+  // from a notification (/inbox?rideId=…&peerId=…) open the right chat.
+  const params = new URLSearchParams(location.search);
+  const rideId = location.state?.rideId || params.get('rideId') || undefined;
+  const peerId = location.state?.peerId || params.get('peerId') || undefined;
 
   return (
-    <div className="app-scroll-screen app-bottom-nav-safe relative overflow-hidden bg-white">
+    // A bounded, non-scrolling column exactly the height of the visible area
+    // (viewport minus the bottom nav). The chat scrolls INSIDE the messages
+    // area; the page itself must not scroll or the composer leaks off-screen.
+    <div
+      className="relative flex flex-col overflow-hidden bg-white"
+      style={{ height: 'calc(100vh - var(--app-bottom-nav-height))' }}
+    >
       {/* Grainy orange aura, right-weighted */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[320px]">
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[220px]">
         <div
           className="absolute inset-0"
           style={{ background: 'radial-gradient(120% 72% at 82% -10%, rgba(255,107,0,0.4) 0%, rgba(255,160,30,0.15) 46%, rgba(255,255,255,0) 74%)' }}
         />
       </div>
 
-      <div className="relative z-10 flex h-full flex-col px-4 pb-6 pt-[calc(env(safe-area-inset-top)+12px)]">
-        {rideId ? <ChatThread rideId={rideId} initialPeerId={peerId} /> : <ConversationList />}
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
+        {rideId ? (
+          <ChatThread rideId={rideId} initialPeerId={peerId} />
+        ) : (
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <ConversationList />
+          </div>
+        )}
       </div>
     </div>
   );

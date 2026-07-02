@@ -152,6 +152,7 @@ class NotificationService {
       message: data.message,
       type: data.type,
       read: data.read,
+      link: data.link || undefined,
       createdAt: data.created_at,
     };
   }

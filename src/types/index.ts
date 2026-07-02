@@ -227,6 +227,7 @@ export interface Notification {
   message: string;
   type: 'ride' | 'dispute' | 'system';
   read: boolean;
+  link?: string;
   createdAt: string;
 }
 
