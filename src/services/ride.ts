@@ -3,6 +3,7 @@ import type {
   Ride,
   RideCreateParams,
   RideParticipant,
+  DriverProfile,
 } from '../types';
 import { RIDE_REWARD_POINTS, type RideRewardAction } from './rewards/rules';
 import { getTimeAdjustedRideStatus } from './rides/lifecycle';
@@ -443,6 +444,65 @@ class RideService {
 
       return { success: true, ride: await this.reconcileRideTiming(this.mapRideToRide(data)) };
     } catch (error) {
+      return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
+  // Public driver profile for the trust surfaces: identity + verifications +
+  // rating summary + reviews. Profile is publicly readable; the rating/reviews
+  // come from SECURITY DEFINER RPCs (bookings themselves are owner-only).
+  async getDriverProfile(driverId: string): Promise<{ success: boolean; profile?: DriverProfile; error?: string }> {
+    try {
+      const [{ data: p, error: pErr }, { data: summaryRows }, { data: reviewRows }] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, full_name, first_name, last_name, avatar_url, kyc_status, created_at, rides_published, rating_as_driver, vehicle_details, email, phone')
+          .eq('id', driverId)
+          .maybeSingle(),
+        supabase.rpc('get_driver_rating_summary', { target_driver_id: driverId }),
+        supabase.rpc('get_driver_reviews', { target_driver_id: driverId, max_rows: 20 }),
+      ]);
+
+      if (pErr) return { success: false, error: pErr.message };
+      if (!p) return { success: false, error: 'Driver not found' };
+
+      const summary = Array.isArray(summaryRows) ? summaryRows[0] : summaryRows;
+      const reviewCount = Number(summary?.review_count ?? 0);
+      const avgRating = summary?.avg_rating != null ? Number(summary.avg_rating) : null;
+
+      const email = (p.email as string | null) || '';
+      const phone = (p.phone as string | null) || '';
+      const name =
+        (p.full_name as string | null)?.trim() ||
+        [p.first_name, p.last_name].filter(Boolean).join(' ').trim() ||
+        'Driver';
+
+      const profile: DriverProfile = {
+        id: p.id,
+        name,
+        avatarUrl: (p.avatar_url as string | null) || undefined,
+        memberSince: p.created_at,
+        ridesPublished: (p.rides_published as number | null) ?? 0,
+        rating: avgRating ?? (reviewCount === 0 ? null : Number(p.rating_as_driver ?? 0) || null),
+        reviewCount,
+        vehicle: (p.vehicle_details as DriverProfile['vehicle']) || undefined,
+        verifications: {
+          phone: Boolean(phone) && !phone.startsWith('temp_') && !phone.startsWith('phone-'),
+          email: Boolean(email) && !email.toLowerCase().endsWith('@otp.riderapp.local'),
+          kyc: p.kyc_status === 'approved',
+        },
+        reviews: (reviewRows || []).map((r: any) => ({
+          id: r.id,
+          rating: r.rating,
+          review: r.review || '',
+          createdAt: r.created_at,
+          reviewerName: r.reviewer_name || 'Passenger',
+          reviewerAvatar: r.reviewer_avatar || undefined,
+        })),
+      };
+
+      return { success: true, profile };
+    } catch {
       return { success: false, error: 'An unexpected error occurred' };
     }
   }

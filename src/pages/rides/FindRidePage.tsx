@@ -92,7 +92,7 @@ const FindRidePage = () => {
           id: ride.driverId || ride.userId,
           name: ride.userId === user?.id ? 'You (Driver)' : ride.driver?.name || 'Rider',
           avatar: ride.driver?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + (ride.driverId || ride.userId),
-          rating: ride.driver?.rating || 4.8,
+          rating: ride.driver?.rating ?? 0,
           phone: ride.driverContact || ride.driver?.phone || 'N/A',
         },
         startLocation: ride.startLocation,
@@ -354,10 +354,14 @@ const FindRidePage = () => {
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="font-display font-bold text-ink">{ride.driver?.name}</h3>
-                        <div className="flex items-center gap-1 text-fire-gold">
-                          <Star className="h-4 w-4 fill-current" />
-                          <span className="text-sm font-bold">{ride.driver?.rating}</span>
-                        </div>
+                        {ride.driver?.rating ? (
+                          <div className="flex items-center gap-1 text-fire-gold">
+                            <Star className="h-4 w-4 fill-current" />
+                            <span className="text-sm font-bold">{ride.driver.rating.toFixed(1)}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs font-bold text-ink/40">New driver</span>
+                        )}
                         <div className="mt-1 flex items-center gap-1.5 text-xs font-medium text-ink/50">
                           <Car className="h-3.5 w-3.5" />
                           <span className="truncate">{ride.vehicleType} • {ride.vehicleNumber}</span>

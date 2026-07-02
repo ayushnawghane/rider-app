@@ -14,8 +14,10 @@ import {
   AlertTriangle,
   Route,
   ChevronLeft,
+  ChevronRight,
+  BadgeCheck,
 } from 'lucide-react';
-import type { Ride } from '../../types';
+import type { Ride, DriverProfile } from '../../types';
 import { hasRequiredBookingProfile } from '../../utils/profileCompletion';
 import AppIcon from '../../components/icons/AppIcon';
 import { Skeleton, SkeletonCard } from '../../components/Skeleton';
@@ -31,6 +33,7 @@ const RideDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const [ride, setRide] = useState<Ride | null>(null);
+  const [driverProfile, setDriverProfile] = useState<DriverProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
   const [isJoined, setIsJoined] = useState(false);
@@ -50,6 +53,14 @@ const RideDetailPage = () => {
       const result = await rideService.getRideById(id);
       if (result.success && result.ride) {
         setRide(result.ride);
+
+        // Load the driver's public trust profile for the ride card.
+        const driverId = result.ride.driverId;
+        if (driverId) {
+          void rideService.getDriverProfile(driverId).then((dp) => {
+            if (dp.success && dp.profile) setDriverProfile(dp.profile);
+          });
+        }
 
         // Calculate route if coordinates are available
         if (result.ride.startLocationCoords && result.ride.endLocationCoords) {
@@ -276,6 +287,43 @@ const RideDetailPage = () => {
                     </span>
                   </div>
                 </div>
+              )}
+
+              {/* Driver trust card — who you're riding with (tap for full profile) */}
+              {ride.driverId && (
+                <button
+                  type="button"
+                  onClick={() => history.push(`/driver/${ride.driverId}`)}
+                  className="app-card flex w-full items-center gap-3 text-left transition active:scale-[0.99]"
+                >
+                  <img
+                    src={driverProfile?.avatarUrl || ride.driver?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(ride.driver?.name || 'Driver')}&background=random`}
+                    alt={ride.driver?.name || 'Driver'}
+                    className="h-12 w-12 shrink-0 rounded-2xl object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="truncate font-display font-bold text-ink">{driverProfile?.name || ride.driver?.name || 'Driver'}</p>
+                      {driverProfile?.verifications.kyc && (
+                        <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                          <BadgeCheck className="h-3 w-3 fill-emerald-500 text-white" /> Verified
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm font-medium text-ink/50">
+                      {driverProfile?.rating != null ? (
+                        <>
+                          <span className="font-bold text-fire-gold">★ {driverProfile.rating.toFixed(1)}</span>
+                          <span className="text-ink/40"> · {driverProfile.reviewCount} review{driverProfile.reviewCount === 1 ? '' : 's'}</span>
+                        </>
+                      ) : (
+                        <span>New driver</span>
+                      )}
+                      <span className="text-ink/40"> · View profile</span>
+                    </p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 shrink-0 text-ink/30" />
+                </button>
               )}
 
               {/* Details Card */}
